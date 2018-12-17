@@ -7,13 +7,17 @@ The `urlpatterns` list routes URLs to views. For more information please see:
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
+from rest_framework.schemas import get_schema_view
 
 from .api.views import index_view, MessageViewSet
 
 router = routers.DefaultRouter()
 router.register('messages', MessageViewSet)
+schema_view = get_schema_view(title='Sdorica Inspector API')
 
 urlpatterns = [
+
+    path('schema/', schema_view),
 
     # http://localhost:8000/
     path('', index_view, name='index'),
@@ -23,6 +27,9 @@ urlpatterns = [
 
     # http://localhost:8000/api/admin/
     path('api/admin/', admin.site.urls),
+
+    path('api-auth/', include('rest_framework.urls')),
+
 ]
 
 

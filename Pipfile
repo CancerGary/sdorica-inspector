@@ -11,6 +11,10 @@ whitenoise = "==4.0"
 dj-database-url = "*"
 "psycopg2" = "*"
 unitypack = "*"
+httpie = "*"
+coreapi = "*"
+coreapi-cli = "*"
+pyyaml = "*"
 
 [dev-packages]
 
