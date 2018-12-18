@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import VueDemo from '@/components/VueDemo'
-import Messages from '@/components/Messages'
+import Home from "./components/Home";
+import GameVersionList from "./components/GameVersionList";
 
 Vue.use(Router)
 
@@ -10,12 +10,12 @@ export default new Router({
     {
       path: '/',
       name: 'home',
-      component: VueDemo
+      component: Home
     },
     {
-      path: '/messages',
-      name: 'messages',
-      component: Messages
+      path: '/game_version',
+      name: 'game_version',
+      component: GameVersionList
     }
   ]
 })

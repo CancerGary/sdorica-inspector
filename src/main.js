@@ -10,6 +10,9 @@ Vue.config.productionTip = false
 import Vuetify from 'vuetify'
 import 'vuetify/dist/vuetify.min.css'
 
+const axios = require('axios');
+Vue.prototype.$http = axios
+
 Vue.use(Vuetify)
 
 const vue = new Vue({

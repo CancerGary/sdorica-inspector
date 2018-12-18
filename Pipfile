@@ -15,6 +15,7 @@ httpie = "*"
 coreapi = "*"
 coreapi-cli = "*"
 pyyaml = "*"
+django-cors-headers = "*"
 
 [dev-packages]
 
