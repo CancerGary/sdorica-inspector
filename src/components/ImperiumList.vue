@@ -80,6 +80,19 @@
         <v-btn color="primary" @click="initialize">Reset</v-btn>
       </template>
     </v-data-table>
+    <v-snackbar
+        v-model="snackbar"
+        :timeout="6000"
+    >
+      {{snackbarMessage}}
+      <v-btn
+          color="pink"
+          flat
+          @click="snackbar = false"
+      >
+        Close
+      </v-btn>
+    </v-snackbar>
   </div>
 </template>
 
@@ -98,7 +111,7 @@
         {text: 'Create Time', value: 'create_time'},
         {text: 'MD5', value: 'md5'},
         {text: 'GV', value: 'game_version'},
-        {text: 'Type',value: 'type_id',sortable: false},
+        {text: 'Type', value: 'type_id', sortable: false},
         {text: 'Actions', value: 'name', sortable: false}
       ],
       table_data: [],
@@ -107,7 +120,10 @@
       defaultItem: {
         name: ''
       },
-      upload_file: null
+      upload_file: null,
+      snackbar:false,
+      snackbarMessage: false,
+      error: null
     }),
 
     computed: {
@@ -172,15 +188,22 @@
         if (this.editedItem.upload_file) form.append('upload_file', this.editedItem.upload_file);
         if (this.editedIndex > -1) {
           //Object.assign(this.table_data[this.editedIndex], this.editedItem)
-          this.$http.patch(this.editedItem.url, form).then(response => (
-            Object.assign(this.table_data[this.editedIndex], response.data)
-          ))
+          this.$http.patch(this.editedItem.url, form).then(response => {
+            Object.assign(this.table_data[this.editedIndex], response.data);
+            this.showSnackbarMessage('Success');
+          }).catch(error => {
+            this.showSnackbarMessage(error.response.data)
+          })
         } else {
           this.$http.post('/api/imperium/', form).then(response => (
             this.table_data.push(response.data)
           ))
         }
         this.close()
+      },
+      showSnackbarMessage(msg){
+        this.snackbarMessage=msg;
+        this.snackbar=true;
       }
     }
   }
