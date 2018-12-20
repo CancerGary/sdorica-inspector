@@ -42,7 +42,7 @@
         <td>{{ props.item.id }}</td>
         <td>{{ props.item.name }}</td>
         <td>{{ props.item.create_time }}</td>
-        <td class="layout px-0">
+        <td class="justify-center layout px-0">
           <v-icon
               small
               class="mr-2"

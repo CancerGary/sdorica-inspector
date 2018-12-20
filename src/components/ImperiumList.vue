@@ -53,7 +53,7 @@
         <td>{{ props.item.md5 }}</td>
         <td>{{ props.item.game_version }}</td>
         <td>{{ props.item.type_id }}</td>
-        <td class="layout px-0">
+        <td class="justify-center layout px-0">
           <v-icon
               small
               class="mr-2"
@@ -93,6 +93,7 @@
         Close
       </v-btn>
     </v-snackbar>
+    <v-treeview :items="[{name:'test',id:1,children:[{name:'test',id:2},{name:'test',id:3}]}]"></v-treeview>
   </div>
 </template>
 
@@ -169,7 +170,7 @@
       },
 
       showItem(item) {
-
+        this.$router.push({ name: 'imperium_show', params: { imperium_id: item.id }})
       },
 
       close() {
