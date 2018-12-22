@@ -56,8 +56,10 @@ def handle_type(f):
             result['keys'] = [x[1] for x in keys_index_sorted]
             index_sorted = [x[0] for x in keys_index_sorted]
             result['rows'] = [[x[i] for i in index_sorted] for x in result['rows']]
+            if 'Key' in result['keys']:  # special handler for language data "Keys"
+                result['rows'] = sorted(result['rows'],key=lambda x:x[result['keys'].index('Key')])
             r_.append(result)
-        return tag,r_
+        return tag,sorted(r_,key=lambda x:x['title'])
     elif tag in ['D']:  # D
         line_count = handle_number(f, 0xdc, 0x90)
         if DEBUG_MODE:
