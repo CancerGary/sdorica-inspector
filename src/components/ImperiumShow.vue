@@ -13,7 +13,7 @@
 
         var id = 0;
 
-        function handle(root) {
+        function handle(root,alterKey) {
           var result = [];
 
           // fallback
@@ -32,7 +32,7 @@
                   var result__=[];
                   cObject.rows.forEach(function (item,index) {
                     id+=1;
-                    result__.push({id:id,name:(keyIndex > -1 ?item[keyIndex]:index),children:handle(item)})
+                    result__.push({id:id,name:(keyIndex > -1 ?item[keyIndex]:index),children:handle(item,cObject.keys)})
                   })
                   result_.push({id:baseId,name:cObject.title,children:result__})
                 }
@@ -43,7 +43,8 @@
               if (root[key].constructor === Object || root[key].constructor === Array) {
                 result.push({id: id, name: key + ' [' + root[key].constructor.name + ']', children: handle(root[key])});
               } else {
-                result.push({id: id, name: key + ' : ' + root[key]})
+                if (alterKey) result.push({id: id, name: key + ' [' + alterKey[key] + '] : ' + root[key]});
+                else result.push({id: id, name: key + ' : ' + root[key]});
               }
             }
           } else {
