@@ -2,6 +2,8 @@ import io
 import typing
 import struct
 import json
+import collections
+
 DEBUG_MODE=False
 def handle_number(f, double_flag, base):
     i = f.read(1)
@@ -36,7 +38,7 @@ def handle_type(f):
             if DEBUG_MODE:
                 print(key, l)
             result[key]=l
-        return tag,result
+        return tag,dict(sorted(result.items()))
     elif tag in ['H','I','L']:  # H I L
         return tag,handle_string(f)
     elif tag in ['C']:  # C
@@ -49,6 +51,11 @@ def handle_type(f):
             # c2=handle_number(f,)
             f.read(1)  # 0x83 ??
             result['keys'],result['rows']=handle_type(f)
+            # change order of columns
+            keys_index_sorted = sorted(enumerate(result['keys']), key=lambda x: x[1])
+            result['keys'] = [x[1] for x in keys_index_sorted]
+            index_sorted = [x[0] for x in keys_index_sorted]
+            result['rows'] = [[x[i] for i in index_sorted] for x in result['rows']]
             r_.append(result)
         return tag,r_
     elif tag in ['D']:  # D
@@ -116,7 +123,7 @@ def handle_file(f):
         tag,data=handle_type(f)
         if data:
             result[tag]=data
-    return result
+    return dict(sorted(result.items()))
 
 if __name__ == '__main__':
     json.dump(handle_file(open('localization_11_01', 'rb')),open('result','w'),indent=2)

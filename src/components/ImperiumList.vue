@@ -93,7 +93,6 @@
         Close
       </v-btn>
     </v-snackbar>
-    <v-treeview :items="[{name:'test',id:1,children:[{name:'test',id:2},{name:'test',id:3}]}]"></v-treeview>
   </div>
 </template>
 
