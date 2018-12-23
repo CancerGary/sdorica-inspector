@@ -1,5 +1,6 @@
 import os
 
+from django_filters.rest_framework import DjangoFilterBackend
 from django.conf import settings
 from django.core.files.storage import default_storage
 from django.views.generic import TemplateView
@@ -30,6 +31,8 @@ class ImperiumViewSet(viewsets.ModelViewSet):
     """
     queryset = Imperium.objects.all()
     serializer_class = ImperiumSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filter_fields = ('game_version', 'type_id')
 
     @action(detail=True)
     def unpack(self,request, *args, **kwargs):

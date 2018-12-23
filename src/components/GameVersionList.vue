@@ -107,10 +107,6 @@
       this.initialize()
     },
 
-    mounted() {
-      this.initialize()
-    },
-
     methods: {
       initialize() {
         this.$http.get('/api/game_version/').then(response => (

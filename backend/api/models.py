@@ -1,12 +1,14 @@
 import hashlib
 import os
+from enum import Enum
+
 from django.conf import settings
 from django.db import models
 from rest_framework import serializers
 from django.core.files.storage import default_storage
 from . import imperium_reader
 
-class ImperiumType:
+class ImperiumType(Enum):
     unknown = 0
     gamedata = 1
     android = 2
@@ -23,7 +25,7 @@ class GameVersion(models.Model):
 class Imperium(models.Model):
     game_version = models.ForeignKey(GameVersion,related_name='imperiums',on_delete=models.CASCADE,null=True) # maybe change delete mode here ?
     create_time = models.DateTimeField(auto_now_add=True)
-    type_id = models.IntegerField(default=ImperiumType.unknown)
+    type_id = models.IntegerField(default=ImperiumType.unknown,choices=[(itype.value,itype) for itype in ImperiumType])
     name = models.CharField(max_length=100)
     md5 = models.CharField(max_length=32)
 

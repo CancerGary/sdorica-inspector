@@ -22,10 +22,10 @@
                   <v-text-field v-model="editedItem.name" label="Imperium Name"></v-text-field>
                 </v-flex>
                 <v-flex xs12>
-                  <v-text-field v-model="editedItem.type_id" label="Type ID"></v-text-field>
+                  <v-select v-model="editedItem.type_id" label="Type" :items="imperiumTypeSelect"></v-select>
                 </v-flex>
                 <v-flex xs12>
-                  <v-text-field v-model="editedItem.game_version" label="Game Version"></v-text-field>
+                  <v-select v-model="editedItem.game_version" label="Game Version" :items="gameVersionSelect"></v-select>
                 </v-flex>
                 <upload-button :fileChangedCallback="fileChanged"></upload-button>
               </v-layout>
@@ -49,10 +49,11 @@
       <template slot="items" slot-scope="props">
         <td>{{ props.item.id }}</td>
         <td>{{ props.item.name }}</td>
-        <td>{{ props.item.create_time }}</td>
-        <td>{{ props.item.md5 }}</td>
-        <td>{{ props.item.game_version }}</td>
-        <td>{{ props.item.type_id }}</td>
+        <td>{{ $moment(props.item.create_time).format("YYYY-MM-DDTHH:mm") }}</td>
+        <!--<td>{{props.item.create_time}}</td>-->
+        <td>{{ props.item.md5.slice(0,6) }}</td>
+        <td>{{ gameVersionName[props.item.game_version] }}</td>
+        <td>{{ imperiumType[props.item.type_id] }}</td>
         <td class="justify-center layout px-0">
           <v-icon
               small
@@ -123,7 +124,11 @@
       upload_file: null,
       snackbar:false,
       snackbarMessage: false,
-      error: null
+      error: null,
+      imperiumTypeSelect:[],
+      gameVersionSelect:[],
+      gameVersionName:{},
+      imperiumType:['unknown','gamedata','android','androidExp','localization']
     }),
 
     computed: {
@@ -142,10 +147,6 @@
       this.initialize()
     },
 
-    mounted() {
-      this.initialize()
-    },
-
     methods: {
       fileChanged(file) {
         console.log(file);
@@ -155,6 +156,14 @@
         this.$http.get('/api/imperium/').then(response => (
           this.table_data = response.data
         ))
+        this.$http.get('/api/game_version/').then(response => {
+          this.gameVersionSelect = [];
+          response.data.forEach(item => {
+            this.gameVersionSelect.push({text: item.name, value: item.id});
+            this.gameVersionName[item.id]=item.name;
+          })
+        })
+        this.imperiumType.forEach((item,index)=>{this.imperiumTypeSelect.push({text:item,value:index})})
       },
 
       editItem(item) {

@@ -11,9 +11,12 @@ import Vuetify from 'vuetify'
 import 'vuetify/dist/vuetify.min.css'
 
 const axios = require('axios');
+import moment from "moment";
+Vue.prototype.$moment = moment;
 Vue.prototype.$http = axios
 
 Vue.use(Vuetify)
+
 
 const vue = new Vue({
   router,
