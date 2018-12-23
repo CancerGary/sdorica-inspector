@@ -27,6 +27,15 @@ class Imperium(models.Model):
     name = models.CharField(max_length=100)
     md5 = models.CharField(max_length=32)
 
+    def load_data(self):
+        return imperium_reader.handle_file(
+            open(os.path.join(settings.INSPECTOR_DATA_ROOT, 'imperium', self.md5), 'rb'))
+
+    def save_data(self,file):
+        self.md5 = hashlib.md5(file.open().read()).hexdigest()
+        default_storage.save(os.path.join(settings.INSPECTOR_DATA_ROOT, 'imperium', self.md5),
+                             content=file)
+
 class AssetBundle(models.Model):
     md5 = models.CharField(max_length=32)
     name = models.CharField(max_length=100)
@@ -66,23 +75,19 @@ class ImperiumSerializer(serializers.Serializer):
     url = serializers.HyperlinkedIdentityField(view_name='imperium-detail')
 
     def create(self, validated_data):
+        i = Imperium.objects.create(name=validated_data['name'], type_id=validated_data['type_id'],
+                                game_version=validated_data['game_version'],
+                                md5='0'*32)
         if validated_data.get('upload_file'):
-            md5 = hashlib.md5(validated_data.get('upload_file').open().read()).hexdigest()
-            default_storage.save(os.path.join(settings.INSPECTOR_DATA_ROOT,'imperium',md5),content=validated_data['upload_file'])
-        else:
-            md5='0'*32
-        return Imperium.objects.create(name=validated_data['name'],type_id=validated_data['type_id'],
-                                       game_version=validated_data['game_version'],
-                                       md5=md5)
+            i.save_data(validated_data.get('upload_file'))
+        i.save()
+        return i
 
     def update(self, instance, validated_data):
         if validated_data.get('upload_file'):
-            instance.md5 = hashlib.md5(validated_data.get('upload_file').open().read()).hexdigest()
-            default_storage.save(os.path.join(settings.INSPECTOR_DATA_ROOT,'imperium',instance.md5),content=validated_data['upload_file'])
-        else:
-            # instance.name=validated_data.get('name',instance.name)
-            for attr, value in validated_data.items():
-                setattr(instance, attr, value)
+            instance.save_data(validated_data.get('upload_file'))
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
         instance.save()
         return instance
 
@@ -95,3 +100,7 @@ class ImperiumSerializer(serializers.Serializer):
         except:
             raise serializers.ValidationError("Not a readable imperium file")
         return value
+
+class ImperiumDiffSerializer(serializers.Serializer):
+    old = serializers.PrimaryKeyRelatedField(queryset=Imperium.objects.all())
+    new = serializers.PrimaryKeyRelatedField(queryset=Imperium.objects.all())

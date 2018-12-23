@@ -9,7 +9,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from backend.api import imperium_reader
-from .models import GameVersion, GameVersionSerializer, Imperium, ImperiumSerializer
+from .models import GameVersion, GameVersionSerializer, Imperium, ImperiumSerializer,ImperiumDiffSerializer
 import hashlib
 
 # Serve Vue Application
@@ -34,5 +34,12 @@ class ImperiumViewSet(viewsets.ModelViewSet):
     @action(detail=True)
     def unpack(self,request, *args, **kwargs):
         imperium = self.get_object()
-        return Response(imperium_reader.handle_file(
-            open(os.path.join(settings.INSPECTOR_DATA_ROOT,'imperium',imperium.md5),'rb')))
+        return Response(imperium.load_data())
+
+    @action(detail=False,methods=['GET'])
+    def diff(self, request):
+        serializer = ImperiumDiffSerializer(data=request.query_params)
+        if serializer.is_valid(raise_exception=True):
+        # print(serializer.validated_data)
+            return Response(imperium_reader.c_diff(serializer.validated_data['old'].load_data(),
+                                                   serializer.validated_data['new'].load_data()))

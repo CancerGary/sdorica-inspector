@@ -16,6 +16,7 @@ coreapi = "*"
 coreapi-cli = "*"
 pyyaml = "*"
 django-cors-headers = "*"
+jsondiff = "*"
 
 [dev-packages]
 
