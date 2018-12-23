@@ -1,9 +1,12 @@
 import os
 
+from django.shortcuts import redirect, render
 from django_filters.rest_framework import DjangoFilterBackend
 from django.conf import settings
 from django.core.files.storage import default_storage
 from django.views.generic import TemplateView
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
 from rest_framework import viewsets,mixins
 from rest_framework.decorators import action
@@ -14,8 +17,18 @@ from .models import GameVersion, GameVersionSerializer, Imperium, ImperiumSerial
 import hashlib
 
 # Serve Vue Application
-index_view = never_cache(TemplateView.as_view(template_name='index.html'))
+index_view = login_required(never_cache(TemplateView.as_view(template_name='index.html')))
 
+# login page
+def login_view(request):
+    alert_msg=""
+    if request.method == 'POST' and request.POST.get('username') and request.POST.get('password'):
+        user = authenticate(request, username=request.POST.get('username'), password=request.POST.get('password'))
+        if user is not None:
+            login(request, user)
+            return redirect('/')
+        alert_msg='Invalid username or password. Maybe you can contact Puggi for help.'
+    return render(request,template_name='login.html',context={'alert':alert_msg})
 
 class GameVersionViewSet(viewsets.ModelViewSet):
     """

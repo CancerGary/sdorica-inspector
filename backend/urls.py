@@ -9,7 +9,7 @@ from django.urls import path, include
 from rest_framework import routers
 from rest_framework.schemas import get_schema_view
 
-from .api.views import index_view, GameVersionViewSet, ImperiumViewSet
+from .api.views import index_view, GameVersionViewSet, ImperiumViewSet, login_view
 
 router = routers.DefaultRouter()
 router.register('game_version', GameVersionViewSet)
@@ -31,6 +31,7 @@ urlpatterns = [
 
     path('api-auth/', include('rest_framework.urls')),
 
+    path('login', login_view)
 ]
 
 
