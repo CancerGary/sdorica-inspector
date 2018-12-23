@@ -4,6 +4,7 @@ import Home from "./components/Home";
 import GameVersionList from "./components/GameVersionList";
 import ImperiumList from "./components/ImperiumList";
 import ImperiumShow from "./components/ImperiumShow";
+import ImperiumDiff from "./components/ImperiumDiff";
 
 Vue.use(Router)
 
@@ -23,6 +24,11 @@ export default new Router({
       path: '/imperium',
       name: 'imperium',
       component: ImperiumList
+    },
+    {
+      path: '/imperium/diff',
+      name: 'imperium_diff',
+      component: ImperiumDiff
     },
     {
       path: '/imperium/:imperium_id',

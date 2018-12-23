@@ -31,6 +31,14 @@
               <v-list-tile-title>Imperium</v-list-tile-title>
             </v-list-tile-content>
           </router-link>
+          <router-link tag="v-list-tile" to="/imperium/diff">
+            <v-list-tile-action>
+              <v-icon>compare_arrows</v-icon>
+            </v-list-tile-action>
+            <v-list-tile-content>
+              <v-list-tile-title>Imperium Diff</v-list-tile-title>
+            </v-list-tile-content>
+          </router-link>
         </v-list>
       </v-navigation-drawer>
       <v-toolbar color="indigo" dark fixed app>
