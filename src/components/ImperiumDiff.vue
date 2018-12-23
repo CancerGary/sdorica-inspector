@@ -1,14 +1,21 @@
 <template>
   <div>
     <v-layout row wrap>
-      <v-flex md5>
+      <v-flex sm5 order-sm1>
         <v-select
             :items="imperiumList"
             v-model="oldSelect"
             label="Old"
         ></v-select>
       </v-flex>
-      <v-flex md2>
+      <v-flex sm5 order-sm3>
+        <v-select
+            :items="imperiumList"
+            v-model="newSelect"
+            label="New"
+        ></v-select>
+      </v-flex>
+      <v-flex xs12 sm2 order-sm2>
         <v-layout row align-end justify-center>
           <div>
             <v-btn color="info" @click="loadDiffData">
@@ -18,17 +25,10 @@
           </div>
         </v-layout>
       </v-flex>
-      <v-flex md5>
-        <v-select
-            :items="imperiumList"
-            v-model="newSelect"
-            label="New"
-        ></v-select>
-      </v-flex>
     </v-layout>
     <v-layout row wrap>
-      <v-flex>
-        <v-card xs12>
+      <v-flex xs12 sm6>
+        <v-card>
           <v-card-title primary-title>
             <div>
               <h3 class="headline mb-0">Old - {{imperiumInfoOld.name}}</h3>
@@ -39,8 +39,8 @@
           </v-card-text>
         </v-card>
       </v-flex>
-      <v-flex>
-        <v-card xs12>
+      <v-flex xs12 sm6>
+        <v-card>
           <v-card-title primary-title>
             <div>
               <h3 class="headline mb-0">New - {{imperiumInfoNew.name}}</h3>
@@ -52,8 +52,10 @@
         </v-card>
       </v-flex>
     </v-layout>
-    <h3>Treeview</h3>
+    <h1 class="display-1">Treeview</h1>
     <ImperiumTreeview :imperium-data="imperiumDiffData"></ImperiumTreeview>
+    <p v-if="!loading && Object.keys(imperiumDiffData).length === 0">No Comparison yet.</p>
+    <p v-if="loading">Loading...</p>
   </div>
 </template>
 
@@ -70,7 +72,8 @@
         newSelect: null,
         imperiumDiffData: {},
         imperiumInfoOld: {},
-        imperiumInfoNew: {}
+        imperiumInfoNew: {},
+        loading:false
       }
     },
     watch: {
@@ -94,9 +97,11 @@
     },
     methods: {
       loadDiffData() {
+        this.loading=true;
         this.$http.get('/api/imperium/diff/', {params:{old: this.oldSelect, new: this.newSelect}}).then(response => {
           console.log(response.data);
           this.imperiumDiffData = response.data;
+          this.loading=false;
         })
       }
     }
