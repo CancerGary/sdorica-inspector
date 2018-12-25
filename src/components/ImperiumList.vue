@@ -19,7 +19,13 @@
             <v-container grid-list-md>
               <v-layout wrap>
                 <v-flex xs12>
+                  <p>Notice that the system will use the file you upload first. If the file is missing, the system will fetch it from UUID.</p>
+                </v-flex>
+                <v-flex xs12>
                   <v-text-field v-model="editedItem.name" label="Imperium Name"></v-text-field>
+                </v-flex>
+                <v-flex xs12>
+                  <v-text-field v-model="editedItem.uuid" label="UUID (optional)"></v-text-field>
                 </v-flex>
                 <v-flex xs12>
                   <v-select v-model="editedItem.type_id" label="Type" :items="imperiumTypeSelect"></v-select>
@@ -51,7 +57,8 @@
         <td>{{ props.item.name }}</td>
         <td>{{ $moment(props.item.create_time).format("YYYY-MM-DDTHH:mm") }}</td>
         <!--<td>{{props.item.create_time}}</td>-->
-        <td>{{ props.item.md5.slice(0,6) }}</td>
+        <!--<td>{{ props.item.md5.slice(0,6) }}</td>-->
+        <td>{{ props.item.uuid?props.item.uuid.slice(0,6):null }}</td>
         <td>{{ gameVersionName[props.item.game_version] }}</td>
         <td>{{ imperiumType[props.item.type_id] }}</td>
         <td class="justify-center layout px-0">
@@ -110,7 +117,8 @@
         {text: 'ID', value: 'id'},
         {text: 'Name', value: 'name'},
         {text: 'Create Time', value: 'create_time'},
-        {text: 'MD5', value: 'md5'},
+        // {text: 'MD5', value: 'md5'},
+        {text:'UUID', value:'uuid'},
         {text: 'GV', value: 'game_version'},
         {text: 'Type', value: 'type_id', sortable: false},
         {text: 'Actions', value: 'name', sortable: false}
@@ -194,12 +202,14 @@
         form.append('name', this.editedItem.name);
         form.append('type_id', this.editedItem.type_id);
         form.append('game_version', this.editedItem.game_version);
+        if (this.editedItem.uuid) form.append('uuid', this.editedItem.uuid);
         if (this.editedItem.upload_file) form.append('upload_file', this.editedItem.upload_file);
         if (this.editedIndex > -1) {
           //Object.assign(this.table_data[this.editedIndex], this.editedItem)
           this.$http.patch(this.editedItem.url, form).then(response => {
             Object.assign(this.table_data[this.editedIndex], response.data);
             this.showSnackbarMessage('Success');
+            this.close();
           }).catch(error => {
             this.showSnackbarMessage(error.response.data)
           })
@@ -208,7 +218,6 @@
             this.table_data.push(response.data)
           ))
         }
-        this.close()
       },
       showSnackbarMessage(msg){
         this.snackbarMessage=msg;
