@@ -30,7 +30,7 @@ class GameVersion(models.Model):
 class Imperium(models.Model):
     game_version = models.ForeignKey(GameVersion,related_name='imperiums',on_delete=models.CASCADE,null=True) # maybe change delete mode here ?
     create_time = models.DateTimeField(auto_now_add=True)
-    type_id = models.IntegerField(default=ImperiumType.unknown,choices=[(itype.value,itype.name) for itype in ImperiumType])
+    type_id = models.IntegerField(default=0,choices=[(itype.value,itype.name) for itype in ImperiumType])
     name = models.CharField(max_length=100)
     md5 = models.CharField(max_length=32)
     uuid = models.UUIDField(null=True)
@@ -90,7 +90,7 @@ class GameVersionSerializer(serializers.HyperlinkedModelSerializer):
 class ImperiumSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
     name = serializers.CharField(max_length=100)
-    type_id = serializers.IntegerField()
+    type_id = serializers.ChoiceField(choices=[(itype.value,itype.name) for itype in ImperiumType])
     game_version = serializers.PrimaryKeyRelatedField(queryset=GameVersion.objects.all())
     upload_file = serializers.FileField(write_only=True,required=False)
     create_time = serializers.DateTimeField(read_only=True)
