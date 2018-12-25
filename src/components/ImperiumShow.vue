@@ -7,7 +7,7 @@
         </div>
       </v-card-title>
       <v-card-text>
-        <div v-for="(value,index) in imperiumInfo">{{index}}: {{value}}</div>
+        <div v-for="(value,index) in imperiumInfo" :key="index">{{index}}: {{value}}</div>
       </v-card-text>
     </v-card>
     <h3>Treeview</h3>
@@ -29,11 +29,11 @@
     },
     created() {
       this.$http.get('/api/imperium/' + this.$route.params.imperium_id).then(response => {
-        console.log(response.data);
+        //console.log(response.data);
         this.imperiumInfo = response.data;
       })
       this.$http.get('/api/imperium/' + this.$route.params.imperium_id + '/unpack/').then(response => {
-        console.log(response.data);
+        //console.log(response.data);
         this.imperiumData = response.data;
       })
     }

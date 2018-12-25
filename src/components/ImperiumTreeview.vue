@@ -71,7 +71,7 @@
         }
 
         var d = handle(this.imperiumData);
-        console.log(d);
+        //console.log(d);
         this.items = d;
       }
     }

@@ -35,7 +35,7 @@
             </div>
           </v-card-title>
           <v-card-text>
-            <div v-for="(value,index) in imperiumInfoOld">{{index}}: {{value}}</div>
+            <div v-for="(value,index) in imperiumInfoOld" :key="index">{{index}}: {{value}}</div>
           </v-card-text>
         </v-card>
       </v-flex>
@@ -47,7 +47,7 @@
             </div>
           </v-card-title>
           <v-card-text>
-            <div v-for="(value,index) in imperiumInfoNew">{{index}}: {{value}}</div>
+            <div v-for="(value,index) in imperiumInfoNew" :key="index">{{index}}: {{value}}</div>
           </v-card-text>
         </v-card>
       </v-flex>
@@ -99,7 +99,7 @@
       loadDiffData() {
         this.loading=true;
         this.$http.get('/api/imperium/diff/', {params:{old: this.oldSelect, new: this.newSelect}}).then(response => {
-          console.log(response.data);
+          //console.log(response.data);
           this.imperiumDiffData = response.data;
           this.loading=false;
         })

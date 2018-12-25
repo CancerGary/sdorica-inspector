@@ -107,7 +107,7 @@
 <script>
   import UploadButton from 'vuetify-upload-button';
 
-  const qs = require('qs');
+  // const qs = require('qs');
   export default {
     name: "ImperiumList",
     components: {UploadButton},
@@ -157,7 +157,7 @@
 
     methods: {
       fileChanged(file) {
-        console.log(file);
+        //console.log(file);
         this.editedItem.upload_file = file;
       },
       initialize() {

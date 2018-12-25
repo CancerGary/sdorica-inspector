@@ -15,7 +15,7 @@ $backend.interceptors.response.use(function (response) {
   return response
 }, function (error) {
   // eslint-disable-next-line
-  console.log(error)
+  //console.log(error)
   return Promise.reject(error)
 })
 
