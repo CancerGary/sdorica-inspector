@@ -25,6 +25,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='imperium',
             name='type_id',
-            field=models.IntegerField(choices=[(0, backend.api.models.ImperiumType(0)), (1, backend.api.models.ImperiumType(1)), (2, backend.api.models.ImperiumType(2)), (3, backend.api.models.ImperiumType(3)), (4, backend.api.models.ImperiumType(4))], default=backend.api.models.ImperiumType(0)),
+            field=models.IntegerField(choices=[(0, 'unknown'), (1, 'gamedata'), (2, 'android'), (3, 'androidExp'), (4, 'localization')], default='unknown'),
         ),
     ]
