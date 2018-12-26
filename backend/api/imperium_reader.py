@@ -6,6 +6,11 @@ import json
 import collections
 
 DEBUG_MODE=False
+
+class ImperiumHandleError(Exception):
+    def __init__(self,message):
+        self.message=message
+
 def handle_number(f, double_flag, base):
     i = f.read(1)
     if i[0] == double_flag:
@@ -117,17 +122,22 @@ def handle_type(f):
 
 
 def handle_file(f):
-    i = f.read(1)
-    result=dict()
-    # print(i)
-    for _ in range(i[0] - 0x80):
-        if DEBUG_MODE:
-            print(_)
-        tag,data=handle_type(f)
-        if data:
-            result[tag]=data
-    return dict(sorted(result.items()))
-
+    try:
+        i = f.read(1)
+        result=dict()
+        # print(i)
+        for _ in range(i[0] - 0x80):
+            if DEBUG_MODE:
+                print(_)
+            tag,data=handle_type(f)
+            if data:
+                result[tag]=data
+        return dict(sorted(result.items()))
+    except Exception as e:
+        if __name__ == '__main__':
+            raise e
+        else:
+            raise ImperiumHandleError(str(e))
 
 def c_diff(old_i, new_i):
     old = old_i.get('C')
