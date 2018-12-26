@@ -121,11 +121,9 @@ class ImperiumSerializer(serializers.Serializer):
             # print(value)
             if value: # InMemoryUploadedFile
                 imperium_reader.handle_file(value.open())
-                try:
-                    i = Imperium.objects.get(md5=hashlib.md5(value.open().read()).hexdigest())
+                i = Imperium.objects.filter(md5=hashlib.md5(value.open().read()).hexdigest()).first()
+                if i:
                     raise serializers.ValidationError("Imperium exists. ( id={} , name={} )".format(i.id,i.name))
-                except Imperium.DoesNotExist:
-                    pass
         except imperium_reader.ImperiumHandleError:
             raise serializers.ValidationError("Not a readable imperium file")
         return value
@@ -134,16 +132,15 @@ class ImperiumSerializer(serializers.Serializer):
         try:
             # print(value)
             if value:
-                try:
-                    i = Imperium.objects.get(uuid=value)
-                    raise serializers.ValidationError("Imperium exists. ( id={} , name={} )".format(i.id,i.name))
-                except Imperium.DoesNotExist:
-                    pass
-                url = 'https://sdorica.rayark.download/{type}/client_gamedata/{uuid}/default/gamedata'.format(type=imperium_type_id_to_name.get(int(self.initial_data.get('type_id'))),uuid=value)
+                i = Imperium.objects.filter(uuid=value).first()
+                if i:
+                    raise serializers.ValidationError("Imperium exists. ( id={} , name={} )".format(i.id, i.name))
+                url = 'https://sdorica.rayark.download/{type}/client_gamedata/{uuid}/default/gamedata'\
+                    .format(type=imperium_type_id_to_name.get(int(self.initial_data.get('type_id'))),uuid=value)
                 # print(url,requests.head(url,timeout=3).status_code)
                 if requests.head(url,timeout=3).status_code!=200:
-                    raise Exception
-        except:
+                    raise RuntimeError
+        except RuntimeError:
             traceback.print_exc()
             raise serializers.ValidationError("Can't fetch the file by the UUID")
         return value
