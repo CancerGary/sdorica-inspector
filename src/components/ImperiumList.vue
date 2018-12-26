@@ -19,7 +19,8 @@
             <v-container grid-list-md>
               <v-layout wrap>
                 <v-flex xs12>
-                  <p>Notice that the system will use the file you upload first. If the file is missing, the system will fetch it from UUID.</p>
+                  <p>Notice that the system will use the file you upload first. If the file is missing, the system will fetch it from UUID <b>only if UUID exists. </b></p>
+                  <p>The form will auto complete UUID by the name of the file you upload.</p>
                 </v-flex>
                 <v-flex xs12>
                   <v-text-field v-model="editedItem.name" label="Imperium Name"></v-text-field>
@@ -33,7 +34,7 @@
                 <v-flex xs12>
                   <v-select v-model="editedItem.game_version" label="Game Version" :items="gameVersionSelect"></v-select>
                 </v-flex>
-                <upload-button :fileChangedCallback="fileChanged"></upload-button>
+                <v-flex xs12><upload-button :fileChangedCallback="fileChanged"></upload-button><span v-if="editedItem.upload_file">{{editedItem.upload_file.name}}</span></v-flex>
               </v-layout>
             </v-container>
           </v-card-text>
@@ -159,6 +160,10 @@
       fileChanged(file) {
         //console.log(file);
         this.editedItem.upload_file = file;
+        if (file.name.length===36) {
+          this.showSnackbarMessage('UUID detected');
+          this.editedItem.uuid=file.name;
+        }
       },
       initialize() {
         this.$http.get('/api/imperium/').then(response => (
