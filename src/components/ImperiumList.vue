@@ -57,7 +57,7 @@
         <td>{{ props.item.name }}</td>
         <td>{{ $moment(props.item.create_time).format("YYYY-MM-DDTHH:mm") }}</td>
         <!--<td>{{props.item.create_time}}</td>-->
-        <!--<td>{{ props.item.md5.slice(0,6) }}</td>-->
+        <td>{{ props.item.md5.slice(0,6) }}</td>
         <td>{{ props.item.uuid?props.item.uuid.slice(0,6):null }}</td>
         <td>{{ gameVersionName[props.item.game_version] }}</td>
         <td>{{ imperiumType[props.item.type_id] }}</td>
@@ -117,7 +117,7 @@
         {text: 'ID', value: 'id'},
         {text: 'Name', value: 'name'},
         {text: 'Create Time', value: 'create_time'},
-        // {text: 'MD5', value: 'md5'},
+        {text: 'MD5', value: 'md5'},
         {text:'UUID', value:'uuid'},
         {text: 'GV', value: 'game_version'},
         {text: 'Type', value: 'type_id', sortable: false},
