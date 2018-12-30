@@ -18,6 +18,8 @@ class ImperiumType(Enum):
     android = 2
     androidExp = 3
     localization = 4
+    charAssets = 5
+    settings = 6
 
 imperium_type_id_to_name={itype.value:itype.name for itype in ImperiumType}
 class TranslateLanguage:
@@ -43,7 +45,8 @@ class Imperium(models.Model):
         if os.path.exists(filename):
             pass
         elif self.uuid:
-            self.download_data_by_uuid()
+            if not self.download_data_by_uuid():
+                return {'Puggi': "Unknown type, can't fetch"}
         else:
             return {'Puggi':'File is missing.'}
         return imperium_reader.handle_file(open(self.get_filename(), 'rb'))
@@ -53,12 +56,15 @@ class Imperium(models.Model):
         default_storage.save(self.get_filename(),content=stream)
 
     def download_data_by_uuid(self):
-        url = 'https://sdorica.rayark.download/{type}/client_gamedata/{uuid}/default/gamedata'.format(
-            type=imperium_type_id_to_name.get(self.type_id), uuid=self.uuid)
-        # TODO: check url exists
-        self.save_data(BytesIO(requests.get(url,timeout=3).content))
-        self.save()
-
+        if self.type_id != 0 :
+            url = 'https://sdorica.rayark.download/{type}/client_gamedata/{uuid}/default/gamedata'.format(
+                type=imperium_type_id_to_name.get(self.type_id), uuid=self.uuid)
+            # TODO: check url exists
+            self.save_data(BytesIO(requests.get(url,timeout=3).content))
+            self.save()
+            return True
+        else:
+            return False
 class AssetBundle(models.Model):
     md5 = models.CharField(max_length=32)
     name = models.CharField(max_length=100)
@@ -135,11 +141,12 @@ class ImperiumSerializer(serializers.Serializer):
                 i = Imperium.objects.filter(uuid=value).first()
                 if i:
                     raise serializers.ValidationError("Imperium exists. ( id={} , name={} )".format(i.id, i.name))
-                url = 'https://sdorica.rayark.download/{type}/client_gamedata/{uuid}/default/gamedata'\
-                    .format(type=imperium_type_id_to_name.get(int(self.initial_data.get('type_id'))),uuid=value)
-                # print(url,requests.head(url,timeout=3).status_code)
-                if requests.head(url,timeout=3).status_code!=200:
-                    raise RuntimeError
+                if self.initial_data.get('type_id') != '0' :  # not unknown
+                    url = 'https://sdorica.rayark.download/{type}/client_gamedata/{uuid}/default/gamedata'\
+                        .format(type=imperium_type_id_to_name.get(int(self.initial_data.get('type_id'))),uuid=value)
+                    # print(url,requests.head(url,timeout=3).status_code)
+                    if requests.head(url,timeout=3).status_code!=200:
+                        raise RuntimeError
         except RuntimeError:
             traceback.print_exc()
             raise serializers.ValidationError("Can't fetch the file by the UUID")

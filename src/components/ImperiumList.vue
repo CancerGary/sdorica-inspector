@@ -137,7 +137,7 @@
       imperiumTypeSelect:[],
       gameVersionSelect:[],
       gameVersionName:{},
-      imperiumType:['unknown','gamedata','android','androidExp','localization']
+      imperiumType:['unknown','gamedata','android','androidExp','localization','charAssets','settings']
     }),
 
     computed: {
