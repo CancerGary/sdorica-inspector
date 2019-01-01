@@ -33,7 +33,7 @@
             for (var key in root) {
               //debugger;
               // special optimize
-              // C : [{keys:[],title:"",]
+              // C : [{keys:[],title:"",type:[],rows:[]}]
               if (key === 'C') {
                 var result_ = [];
                 for (var i in root[key]) {
@@ -44,10 +44,14 @@
                   var result__ = [];
                   cObject.rows.forEach(function (item, index) {
                     id += 1;
+                    var newKeys=[];
+                    cObject.keys.forEach((item,index)=>{
+                      newKeys.push(`${item}:${cObject.type[index]}`)
+                    });
                     result__.push({
                       id: id,
                       name: (keyIndex > -1 ? item[keyIndex] : index),
-                      children: handle(item, cObject.keys)
+                      children: handle(item, newKeys)
                     })
                   })
                   result_.push({id: baseId, name: cObject.title, children: result__})
