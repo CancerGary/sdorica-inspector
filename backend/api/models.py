@@ -139,7 +139,7 @@ class ImperiumSerializer(serializers.Serializer):
             # print(value)
             if value:
                 i = Imperium.objects.filter(uuid=value).first()
-                if i:
+                if i and (not i == self.instance):
                     raise serializers.ValidationError("Imperium exists. ( id={} , name={} )".format(i.id, i.name))
                 if self.initial_data.get('type_id') != '0' :  # not unknown
                     url = 'https://sdorica.rayark.download/{type}/client_gamedata/{uuid}/default/gamedata'\
