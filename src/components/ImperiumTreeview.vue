@@ -36,6 +36,7 @@
               // C : [{keys:[],title:"",type:[],rows:[]}]
               if (key === 'C') {
                 var result_ = [];
+                // loop by table
                 for (var i in root[key]) {
                   var cObject = root[key][i];
                   var keyIndex = cObject.keys.indexOf('Key');

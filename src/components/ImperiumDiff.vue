@@ -1,6 +1,10 @@
 <template>
   <div>
     <v-layout row wrap>
+      <p>Caution: You should select two files which their type are same.
+        Currently only localization gets good support.</p>
+    </v-layout>
+    <v-layout row wrap>
       <v-flex sm5 order-sm1>
         <v-select
             :items="imperiumList"
@@ -89,9 +93,9 @@
       }
     },
     created() {
-      this.$http.get('/api/imperium/',{params:{type_id:4}}).then(response => { // 4 -> localization id
+      this.$http.get('/api/imperium/').then(response => { // 4 -> localization id
         response.data.forEach(item => {
-          this.imperiumList.push({text: item.name, value: item.id});
+          this.imperiumList.push({text: `[${item.type_id}] ${item.name}`, value: item.id});
         });
       })
     },

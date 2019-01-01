@@ -194,7 +194,8 @@ def c_diff(old_i, new_i):
 
                 if result_rows:
                     result_rows = sorted(result_rows, key=lambda x: x[key_index])
-                    result.append({'title': new_table['title'], 'keys': new_table['keys'], 'rows': result_rows})
+                    result.append({'title': new_table['title'], 'keys': new_table['keys'],
+                                   'rows': result_rows, 'type': new_table['type']})
 
             # old does't have, it's new
             else:
