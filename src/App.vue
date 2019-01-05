@@ -53,16 +53,44 @@
       <v-footer color="indigo" app inset>
         <span class="white--text">&copy; CancerGary</span>
       </v-footer>
+      <v-snackbar
+        v-model="snackbarState"
+        :timeout="6000"
+    >
+      {{snackbarMessage}}
+      <v-btn
+          color="pink"
+          flat
+          @click="snackbarState = false"
+      >
+        Close
+      </v-btn>
+    </v-snackbar>
     </v-app>
   </div>
 
 </template>
 
 <script>
+  import { mapState } from 'vuex'
   export default {
     data: () => ({
-      drawer: null
-    })
+      drawer: null,
+    }),
+    methods:{
+
+    },
+    computed:{
+      ...mapState(['snackbarMessage']),
+      snackbarState:{
+        get: function () {
+          return this.$store.state.snackbarState
+        },
+        set: function (newValue) { // because v-snackbar will change v-model by itself
+          this.$store.commit('setToastState',newValue)
+        }
+      }
+    }
   }
 </script>
 <style>

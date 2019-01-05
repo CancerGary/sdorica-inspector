@@ -20,9 +20,11 @@ Vue.prototype.$moment = moment;
 
 Vue.use(Vuetify)
 
+import store from './state'
 
 const vue = new Vue({
   router,
+  store,
   render: h => h(App)
 })
 

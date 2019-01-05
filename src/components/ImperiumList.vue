@@ -89,19 +89,6 @@
         <v-btn color="primary" @click="initialize">Reset</v-btn>
       </template>
     </v-data-table>
-    <v-snackbar
-        v-model="snackbar"
-        :timeout="6000"
-    >
-      {{snackbarMessage}}
-      <v-btn
-          color="pink"
-          flat
-          @click="snackbar = false"
-      >
-        Close
-      </v-btn>
-    </v-snackbar>
   </div>
 </template>
 
@@ -228,9 +215,8 @@
           })
         }
       },
-      showSnackbarMessage(msg){
-        this.snackbarMessage=msg;
-        this.snackbar=true;
+      showSnackbarMessage(msg){1
+        this.$store.commit('toastMsg',msg)
       }
     }
   }
