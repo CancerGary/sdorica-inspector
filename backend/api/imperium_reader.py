@@ -96,6 +96,8 @@ def handle_type(f):
                     l.append(struct.unpack('>I', f.read(4))[0])
                 elif k == 0xd1:  # 2 bytes int
                     l.append(struct.unpack('>H', f.read(2))[0])
+                elif k == 0xd0:  # 1 byte int
+                    l.append(struct.unpack('>B', f.read(1))[0])
                 elif k == 0xda or (0xa0 <= k < 0xc0):  # string
                     f.seek(f.tell() - 1)  # go back for string handler get the length
                     l.append(handle_string(f))
