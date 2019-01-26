@@ -18,6 +18,8 @@ pyyaml = "*"
 django-cors-headers = "*"
 jsondiff = "*"
 django-filter = "*"
+celery = "*"
+redis = "*"
 
 [dev-packages]
 

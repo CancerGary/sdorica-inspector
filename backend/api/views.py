@@ -13,13 +13,17 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from backend.api import imperium_reader
-from .models import GameVersion, GameVersionSerializer, Imperium, ImperiumSerializer,ImperiumDiffSerializer
+from .models import GameVersion, GameVersionSerializer, Imperium, ImperiumSerializer, ImperiumDiffSerializer, \
+    ImperiumType
 import hashlib
+
+from . import tasks
 
 # Serve Vue Application
 index_view = login_required(never_cache(TemplateView.as_view(template_name='index.html')))
 
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+
 
 # disable csrf check
 class CsrfExemptSessionAuthentication(SessionAuthentication):
@@ -27,16 +31,18 @@ class CsrfExemptSessionAuthentication(SessionAuthentication):
     def enforce_csrf(self, request):
         return
 
+
 # login page
 def login_view(request):
-    alert_msg=""
+    alert_msg = ""
     if request.method == 'POST' and request.POST.get('username') and request.POST.get('password'):
         user = authenticate(request, username=request.POST.get('username'), password=request.POST.get('password'))
         if user is not None:
             login(request, user)
             return redirect('/')
-        alert_msg='Invalid username or password. Maybe you can contact Puggi for help.'
-    return render(request,template_name='login.html',context={'alert':alert_msg})
+        alert_msg = 'Invalid username or password. Maybe you can contact Puggi for help.'
+    return render(request, template_name='login.html', context={'alert': alert_msg})
+
 
 class GameVersionViewSet(viewsets.ModelViewSet):
     """
@@ -62,14 +68,28 @@ class ImperiumViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
 
     @action(detail=True)
-    def unpack(self,request, *args, **kwargs):
+    def unpack(self, request, *args, **kwargs):
         imperium = self.get_object()
         return Response(imperium.load_data())
 
-    @action(detail=False,methods=['GET'])
+    @action(detail=True)
+    def download_ab(self, request, *args, **kwargs):
+        imperium = self.get_object()
+        if imperium.type_id in [ImperiumType.android.value,ImperiumType.androidExp.value]:
+            # TODO: check whether this imperium task has been submitted here [need a new column]
+            data = imperium.load_data()
+            if isinstance(data.get('A'),dict):
+                target = os.path.join(settings.INSPECTOR_DATA_ROOT, 'assetbundle')
+                for ab_info in list(data['A'].values()):
+                    tasks.ab_task.delay(ab_info,target)
+                return Response('Add to tasks')
+        else:
+            return Response('Bad type')
+
+    @action(detail=False, methods=['GET'])
     def diff(self, request):
         serializer = ImperiumDiffSerializer(data=request.query_params)
         if serializer.is_valid(raise_exception=True):
-        # print(serializer.validated_data)
+            # print(serializer.validated_data)
             return Response(imperium_reader.c_diff(serializer.validated_data['old'].load_data(),
                                                    serializer.validated_data['new'].load_data()))
