@@ -9,8 +9,9 @@ from django.conf import settings
 import requests
 import traceback
 
+
 @app.task
-def ab_task(ab_info: dict,target):
+def ab_task(ab_info: dict, target):
     md5, uid, url = ab_info
     target_md5 = os.path.join(target, md5)
     target_uid = os.path.join(target, uid)
@@ -35,18 +36,29 @@ def ab_task(ab_info: dict,target):
         except requests.RequestException:
             traceback.print_exc()
             continue
+
+
 @app.task
-def mark_done(_,imperium_id):
+def mark_done(_, imperium_id):
     print(imperium_id)
     i = Imperium.objects.get(id=imperium_id)
     i.finished = True
     i.save()
 
+
 @app.task
 def ab_list_task(imperium_id):
     data = Imperium.objects.get(id=imperium_id).load_data()
     if isinstance(data.get('A'), dict):
-        target = os.path.join(settings.INSPECTOR_DATA_ROOT, 'assetbundle')
-        result = chord([ab_task.s(i,target) for i in list(data['A'].values())])(mark_done.s(imperium_id))
+        target_dir = os.path.join(settings.INSPECTOR_DATA_ROOT, 'assetbundle')
+        subtasks_info = []
+        for md5, uid, url in data['A'].values():
+            target_md5 = os.path.join(target_dir, md5)
+            if os.path.exists(target_md5) and hashlib.md5(open(target_md5, 'rb').read()).hexdigest() == md5:
+                continue
+            else:
+                subtasks_info.append((md5, uid, url))
+
+        result = chord([ab_task.s(i, target_dir) for i in subtasks_info])(mark_done.s(imperium_id))
         # print('group result',result.ready())
         return result

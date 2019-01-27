@@ -20,6 +20,8 @@ jsondiff = "*"
 django-filter = "*"
 celery = "*"
 redis = "*"
+flower = "*"
+watchdog = "*"
 
 [dev-packages]
 
