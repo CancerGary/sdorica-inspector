@@ -1,5 +1,6 @@
 import os
 
+from celery.result import AsyncResult
 from django.shortcuts import redirect, render
 from django_filters.rest_framework import DjangoFilterBackend
 from django.conf import settings
@@ -18,7 +19,7 @@ from .models import GameVersion, GameVersionSerializer, Imperium, ImperiumSerial
 import hashlib
 
 from . import tasks
-
+from .celery import app as celery_app
 # Serve Vue Application
 index_view = login_required(never_cache(TemplateView.as_view(template_name='index.html')))
 
@@ -76,13 +77,15 @@ class ImperiumViewSet(viewsets.ModelViewSet):
     def download_ab(self, request, *args, **kwargs):
         imperium = self.get_object()
         if imperium.type_id in [ImperiumType.android.value,ImperiumType.androidExp.value]:
-            # TODO: check whether this imperium task has been submitted here [need a new column]
-            data = imperium.load_data()
-            if isinstance(data.get('A'),dict):
-                target = os.path.join(settings.INSPECTOR_DATA_ROOT, 'assetbundle')
-                for ab_info in list(data['A'].values()):
-                    tasks.ab_task.delay(ab_info,target)
-                return Response('Add to tasks')
+            if imperium.finished:
+                return Response('Finished')
+            elif imperium.celery_task_id:
+                # TODO: retrieve progress detail
+                return Response('Handling')
+            else:
+                imperium.celery_task_id = tasks.ab_list_task.delay(imperium.id).id
+                imperium.save()
+                return Response('Starting')
         else:
             return Response('Bad type')
 

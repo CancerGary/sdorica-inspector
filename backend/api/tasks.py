@@ -1,5 +1,9 @@
 import os
 import hashlib
+
+from celery import group, chord
+
+from .models import Imperium
 from .celery import app
 from django.conf import settings
 import requests
@@ -31,3 +35,18 @@ def ab_task(ab_info: dict,target):
         except requests.RequestException:
             traceback.print_exc()
             continue
+@app.task
+def mark_done(_,imperium_id):
+    print(imperium_id)
+    i = Imperium.objects.get(id=imperium_id)
+    i.finished = True
+    i.save()
+
+@app.task
+def ab_list_task(imperium_id):
+    data = Imperium.objects.get(id=imperium_id).load_data()
+    if isinstance(data.get('A'), dict):
+        target = os.path.join(settings.INSPECTOR_DATA_ROOT, 'assetbundle')
+        result = chord([ab_task.s(i,target) for i in list(data['A'].values())])(mark_done.s(imperium_id))
+        # print('group result',result.ready())
+        return result

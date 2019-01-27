@@ -36,6 +36,8 @@ class Imperium(models.Model):
     name = models.CharField(max_length=100)
     md5 = models.CharField(max_length=32)
     uuid = models.UUIDField(null=True)
+    celery_task_id = models.UUIDField(null=True)
+    finished = models.BooleanField(default=False)
 
     def get_filename(self):
         return os.path.join(os.path.join(settings.INSPECTOR_DATA_ROOT, 'imperium', self.md5))
@@ -103,6 +105,7 @@ class ImperiumSerializer(serializers.Serializer):
     uuid = serializers.UUIDField(required=False)
     md5 = serializers.CharField(read_only=True)
     url = serializers.HyperlinkedIdentityField(view_name='imperium-detail')
+    finished = serializers.BooleanField(read_only=True)
 
     def create(self, validated_data):
         i = Imperium.objects.create(name=validated_data['name'], type_id=validated_data['type_id'],
