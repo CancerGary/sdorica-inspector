@@ -70,7 +70,12 @@ class Imperium(models.Model):
 class AssetBundle(models.Model):
     md5 = models.CharField(max_length=32)
     name = models.CharField(max_length=100)
-    imperium = models.ManyToManyField(Imperium)
+    url = models.CharField(max_length=200,null=True)
+    imperiums = models.ManyToManyField(Imperium)
+
+class Container(models.Model):
+    name = models.CharField(max_length=256,db_index=True)
+    asset_bundles = models.ManyToManyField(AssetBundle)
 
 class Asset(models.Model):
     name = models.CharField(max_length=100)
