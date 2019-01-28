@@ -19,7 +19,8 @@
             <v-container grid-list-md>
               <v-layout wrap>
                 <v-flex xs12>
-                  <p>Notice that the system will use the file you upload first. If the file is missing, the system will fetch it from UUID <b>only if UUID exists. </b></p>
+                  <p>Notice that the system will use the file you upload first. If the file is missing, the system will
+                    fetch it from UUID <b>only if UUID exists. </b></p>
                   <p>The form will auto complete UUID by the name of the file you upload.</p>
                 </v-flex>
                 <v-flex xs12>
@@ -32,9 +33,12 @@
                   <v-select v-model="editedItem.type_id" label="Type" :items="imperiumTypeSelect"></v-select>
                 </v-flex>
                 <v-flex xs12>
-                  <v-select v-model="editedItem.game_version" label="Game Version" :items="gameVersionSelect"></v-select>
+                  <v-select v-model="editedItem.game_version" label="Game Version"
+                            :items="gameVersionSelect"></v-select>
                 </v-flex>
-                <v-flex xs12><upload-button :fileChangedCallback="fileChanged"></upload-button><span v-if="editedItem.upload_file">{{editedItem.upload_file.name}}</span></v-flex>
+                <v-flex xs12>
+                  <upload-button :fileChangedCallback="fileChanged"></upload-button>
+                  <span v-if="editedItem.upload_file">{{editedItem.upload_file.name}}</span></v-flex>
               </v-layout>
             </v-container>
           </v-card-text>
@@ -63,6 +67,13 @@
         <td>{{ gameVersionName[props.item.game_version] }}</td>
         <td>{{ imperiumType[props.item.type_id] }}</td>
         <td class="justify-center layout px-0">
+          <v-icon v-if="['android','androidExp'].indexOf(imperiumType[props.item.type_id]) > -1"
+                  small
+                  class="mr-2"
+                  @click="handleImperium(props.item)"
+          >
+            {{props.item.finished?'done':(props.item.celery_task_id?'cached':'play_arrow')}}
+          </v-icon>
           <v-icon
               small
               class="mr-2"
@@ -106,7 +117,7 @@
         {text: 'Name', value: 'name'},
         {text: 'Create Time', value: 'create_time'},
         {text: 'MD5', value: 'md5'},
-        {text:'UUID', value:'uuid'},
+        {text: 'UUID', value: 'uuid'},
         {text: 'GV', value: 'game_version'},
         {text: 'Type', value: 'type_id', sortable: false},
         {text: 'Actions', value: 'name', sortable: false}
@@ -118,13 +129,13 @@
         name: ''
       },
       upload_file: null,
-      snackbar:false,
+      snackbar: false,
       snackbarMessage: false,
       error: null,
-      imperiumTypeSelect:[],
-      gameVersionSelect:[],
-      gameVersionName:{},
-      imperiumType:['unknown','gamedata','android','androidExp','localization','charAssets','settings']
+      imperiumTypeSelect: [],
+      gameVersionSelect: [],
+      gameVersionName: {},
+      imperiumType: ['unknown', 'gamedata', 'android', 'androidExp', 'localization', 'charAssets', 'settings']
     }),
 
     computed: {
@@ -147,9 +158,9 @@
       fileChanged(file) {
         //console.log(file);
         this.editedItem.upload_file = file;
-        if (file.name.length===36) {
+        if (file.name.length === 36) {
           this.showSnackbarMessage('UUID detected');
-          this.editedItem.uuid=file.name;
+          this.editedItem.uuid = file.name;
         }
       },
       initialize() {
@@ -160,10 +171,12 @@
           this.gameVersionSelect = [];
           response.data.forEach(item => {
             this.gameVersionSelect.push({text: item.name, value: item.id});
-            this.gameVersionName[item.id]=item.name;
+            this.gameVersionName[item.id] = item.name;
           })
         })
-        this.imperiumType.forEach((item,index)=>{this.imperiumTypeSelect.push({text:item,value:index})})
+        this.imperiumType.forEach((item, index) => {
+          this.imperiumTypeSelect.push({text: item, value: index})
+        })
       },
 
       editItem(item) {
@@ -178,7 +191,14 @@
       },
 
       showItem(item) {
-        this.$router.push({ name: 'imperium_show', params: { imperium_id: item.id }})
+        this.$router.push({name: 'imperium_show', params: {imperium_id: item.id}})
+      },
+
+      handleImperium(item) {
+        if (!item.finished) this.$http.get(item.url + 'download_ab/').then(response => {
+          this.showSnackbarMessage(response.data)
+          item.celery_task_id = 'l'; // for icon show :D
+        })
       },
 
       close() {
@@ -215,8 +235,9 @@
           })
         }
       },
-      showSnackbarMessage(msg){1
-        this.$store.commit('toastMsg',msg)
+      showSnackbarMessage(msg) {
+        1
+        this.$store.commit('toastMsg', msg)
       }
     }
   }
