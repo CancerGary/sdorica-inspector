@@ -15,11 +15,12 @@ from rest_framework.response import Response
 
 from backend.api import imperium_reader
 from .models import GameVersion, GameVersionSerializer, Imperium, ImperiumSerializer, ImperiumDiffSerializer, \
-    ImperiumType
+    ImperiumType, ImperiumABDiffSerializer
 import hashlib
 
 from . import tasks
 from .celery import app as celery_app
+
 # Serve Vue Application
 index_view = login_required(never_cache(TemplateView.as_view(template_name='index.html')))
 
@@ -76,7 +77,7 @@ class ImperiumViewSet(viewsets.ModelViewSet):
     @action(detail=True)
     def download_ab(self, request, *args, **kwargs):
         imperium = self.get_object()
-        if imperium.type_id in [ImperiumType.android.value,ImperiumType.androidExp.value]:
+        if imperium.type_id in [ImperiumType.android.value, ImperiumType.androidExp.value]:
             if imperium.finished:
                 return Response('Finished')
             elif imperium.celery_task_id:
@@ -96,3 +97,29 @@ class ImperiumViewSet(viewsets.ModelViewSet):
             # print(serializer.validated_data)
             return Response(imperium_reader.c_diff(serializer.validated_data['old'].load_data(),
                                                    serializer.validated_data['new'].load_data()))
+
+    @action(detail=False, methods=['GET'])
+    def diff_ab(self, request):
+        serializer = ImperiumABDiffSerializer(data=request.query_params)
+        if serializer.is_valid(raise_exception=True):
+            # print(serializer.validated_data)
+            left = serializer.validated_data['old'].assetbundle_set.all()
+            right = serializer.validated_data['new'].assetbundle_set.all()
+            # compare by asset bundle name
+            d_left = {i.name: i for i in left}
+            d_right = {i.name: i for i in right}
+            dlk = d_left.keys()
+            drk = d_right.keys()
+            delete = {k: {'md5': d_left[k].md5,
+                          'data': sorted([i['name'] for i in d_left[k].container_set.values('name')])}
+                      for k in dlk - drk}
+            add = {k: {'md5': d_right[k].md5,
+                       'data': sorted([i['name'] for i in d_right[k].container_set.values('name')])}
+                   for k in drk - dlk}
+            change = dict()
+            for k in dlk & drk:
+                cl = {i['name'] for i in d_left[k].container_set.values('name')}
+                cr = {i['name'] for i in d_right[k].container_set.values('name')}
+                if (cl != cr):
+                    change[k] = {'delete': cl - cr, 'add': cr - cl,'md5' :(d_left[k].md5,d_right[k].md5)}
+            return Response({'delete': delete, 'add': add, 'change:': change})

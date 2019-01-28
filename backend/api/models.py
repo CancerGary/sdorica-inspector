@@ -110,6 +110,7 @@ class ImperiumSerializer(serializers.Serializer):
     uuid = serializers.UUIDField(required=False)
     md5 = serializers.CharField(read_only=True)
     url = serializers.HyperlinkedIdentityField(view_name='imperium-detail')
+    celery_task_id = serializers.UUIDField(read_only=True)
     finished = serializers.BooleanField(read_only=True)
 
     def create(self, validated_data):
@@ -163,3 +164,17 @@ class ImperiumSerializer(serializers.Serializer):
 class ImperiumDiffSerializer(serializers.Serializer):
     old = serializers.PrimaryKeyRelatedField(queryset=Imperium.objects.all())
     new = serializers.PrimaryKeyRelatedField(queryset=Imperium.objects.all())
+
+    def validate(self, data):
+        if data['old'].type_id != data['new'].type_id:
+            raise serializers.ValidationError("must be same type")
+        return data
+
+class ImperiumABDiffSerializer(ImperiumDiffSerializer):
+    def validate(self,data):
+        for side in ['old','new']:
+            if data[side].type_id not in [ImperiumType.android.value,ImperiumType.androidExp.value]:
+                raise serializers.ValidationError("{} must be asset bundle list.".format(side))
+            if not data[side].finished:
+                raise serializers.ValidationError("{} haven't been handled yet.".format(side))
+        return data
