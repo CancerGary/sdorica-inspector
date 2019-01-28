@@ -2,6 +2,7 @@ import os
 import hashlib
 
 from celery import group, chord
+from django.db import transaction
 
 from .models import Imperium, AssetBundle, Container
 import unitypack
@@ -51,7 +52,7 @@ def ab_task(ab_info: dict, target):
         except requests.RequestException as e:
             if retry:
                 retry -= 1
-                traceback.print_exc()
+                # traceback.print_exc()
                 continue
             else:
                 raise e
@@ -68,24 +69,32 @@ def build_index_and_done(finished_ab_info, imperium_id):
     rev_dict = {w[0]: k for k, w in data['A'].items()}
 
     ab_objects = []
-    for md5, url, target_md5 in finished_ab_info:
-        ab = AssetBundle(md5=md5, name=rev_dict[md5], url=url)
-        ab.save()
-        ab_objects.append(ab)
-        # create containers
-        c_objects = []
-        # use set to sure each name add only once
-        for container_name in set(get_containers_from_ab(unitypack.load(open(target_md5, 'rb')))):
-            try:
-                container = Container.objects.get(name=container_name)
-            except Container.DoesNotExist:
-                container = Container(name=container_name)
-                # because bulk_create can't get the primary key, we save data in a classic way
-                container.save()
-            c_objects.append(container)
 
-        # add relations by group
-        ab.container_set.add(*c_objects)
+    for md5, url, target_md5 in finished_ab_info:
+        with transaction.atomic():
+            ab = AssetBundle(md5=md5, name=rev_dict[md5], url=url)
+            ab.save()
+            ab_objects.append(ab)
+            # create containers
+            try:
+                c = get_containers_from_ab(unitypack.load(open(target_md5, 'rb')))
+            except:
+                continue
+            # use set to sure each name add only once
+            container_name_set = set(c)
+            container_name_list = list(container_name_set)
+            # print(len(container_name_set))
+
+            # SQL may be too long, so make smaller sets to execute
+            for first in range(0, len(container_name_list), 500):
+                # calc containers not in database
+                part = container_name_list[first:first + 500]
+                part_exclude = set(part) - {i['name'] for i in Container.objects.filter(name__in=part).values('name')}
+                # print('exclude:',container_name_exclude_set)
+                # then create those not in database
+                Container.objects.bulk_create([Container(name=n) for n in part_exclude])
+                # query once to add the relations
+                ab.container_set.add(*list(Container.objects.filter(name__in=part)))  # filter here
 
     # add relations by group too
     imperium.assetbundle_set.add(*ab_objects)
