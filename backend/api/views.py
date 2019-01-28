@@ -122,4 +122,4 @@ class ImperiumViewSet(viewsets.ModelViewSet):
                 cr = {i['name'] for i in d_right[k].container_set.values('name')}
                 if (cl != cr):
                     change[k] = {'delete': cl - cr, 'add': cr - cl,'md5' :(d_left[k].md5,d_right[k].md5)}
-            return Response({'delete': delete, 'add': add, 'change:': change})
+            return Response({'delete': delete, 'add': add, 'change': change})

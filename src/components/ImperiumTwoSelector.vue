@@ -2,7 +2,7 @@
   <v-layout row wrap>
     <v-flex xs12>
       <v-card>
-        <v-card-title>
+        <v-card-title primary-title>
           <div>
             <div class="headline">Select Imperium</div>
             <p>Caution: You should select two files which their type are same.</p></div>
@@ -23,7 +23,7 @@
                   label="New"
               ></v-select>
             </v-flex>
-            <v-flex xs12 sm2 order-sm2 class="d-flex justify-center align-center">
+            <v-flex xs12 sm2 order-sm2 class="d-flex">
                   <v-btn color="info" @click="imperiumInfoNew.type_id===imperiumInfoOld.type_id?$emit('compare',oldSelect,newSelect):$store.commit('toastMsg', 'Type not same')">
                     <v-icon>compare_arrows</v-icon>
                     Start
@@ -35,7 +35,7 @@
     </v-flex>
     <v-flex xs12 sm6>
       <v-card>
-        <v-card-title primary-title>
+        <v-card-title>
           <div>
             <div class="headline">Old - {{imperiumInfoOld.name}}</div>
           </div>
@@ -47,7 +47,7 @@
     </v-flex>
     <v-flex xs12 sm6>
       <v-card>
-        <v-card-title primary-title>
+        <v-card-title>
           <div>
             <div class="headline">New - {{imperiumInfoNew.name}}</div>
           </div>

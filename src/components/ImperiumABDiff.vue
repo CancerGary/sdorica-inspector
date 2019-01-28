@@ -7,10 +7,32 @@
           <v-card-title>
             <div class="headline">Compare Result</div>
           </v-card-title>
-          <v-card-text>
-            <div>
-              <p>result</p>
+          <v-card-text style="word-break: break-all;font-family: Menlo,Monaco,Consolas,'Courier New',monospace">
+            <div v-if="imperiumDiffData">
+              <v-layout row wrap>
+                <v-flex xs12>Asset Bundle Delete & Add</v-flex>
+                <v-flex xs12 sm6 class="red--text">
+                  <div>[-]</div>
+                  <div v-for="(data,bundleName) in imperiumDiffData.delete">{{bundleName}} | {{data.md5}}</div>
+                </v-flex>
+                <v-flex xs12 sm6 class="green--text">
+                  <div>[+]</div>
+                  <div v-for="(data,bundleName) in imperiumDiffData.add">{{bundleName}} | {{data.md5}}</div>
+                </v-flex>
+              </v-layout>
+                <v-layout row wrap v-for="(data,bundleName) in imperiumDiffData.change">
+                  <v-flex xs12>{{bundleName}}</v-flex>
+                  <v-flex xs12 sm6 class="red--text">
+                    <div>[-] {{data.md5[0]}}</div>
+                    <div v-for="containerName in data.delete">{{containerName}}</div>
+                  </v-flex>
+                  <v-flex xs12 sm6 class="green--text">
+                    <div>[+] {{data.md5[1]}}</div>
+                    <div v-for="containerName in data.add">{{containerName}}</div>
+                  </v-flex>
+                </v-layout>
             </div>
+            <div v-else>No comparison yet.</div>
           </v-card-text>
         </v-card>
       </v-flex>
@@ -28,12 +50,12 @@
     data() {
       return {
         imperiumList: [],
-        imperiumDiffData: {},
-        loading: false
+        imperiumDiffData: null,
+        loading: false,
       }
     },
     created() {
-      this.$http.get('/api/imperium/',{params:{finished:'true'}}).then(response => { // 4 -> localization id
+      this.$http.get('/api/imperium/', {params: {finished: 'true'}}).then(response => { // 4 -> localization id
         response.data.forEach(item => {
           this.imperiumList.push({text: `[${item.type_id}] ${item.name}`, value: item.id});
         });
