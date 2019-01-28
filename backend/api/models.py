@@ -172,6 +172,7 @@ class ImperiumDiffSerializer(serializers.Serializer):
 
 class ImperiumABDiffSerializer(ImperiumDiffSerializer):
     def validate(self,data):
+        super(ImperiumABDiffSerializer, self).validate(data)
         for side in ['old','new']:
             if data[side].type_id not in [ImperiumType.android.value,ImperiumType.androidExp.value]:
                 raise serializers.ValidationError("{} must be asset bundle list.".format(side))

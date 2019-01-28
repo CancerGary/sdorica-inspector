@@ -6612,10 +6612,10 @@ vuetify-upload-button@^1.2.1:
   resolved "https://registry.yarnpkg.com/vuetify-upload-button/-/vuetify-upload-button-1.2.1.tgz#2fcbfe07b2466b6f4ee0612db3f96d8602ade88b"
   integrity sha512-67i+e5NLJRBCG0KAEGCOmZ8tByk+Jbuw9PB9JfPi3tS3z+3H+cVObFJN/bhYnIIM0xKAJrVwDyBg8TuPFaiflQ==
 
-vuetify@^1.3.12:
-  version "1.3.12"
-  resolved "https://registry.yarnpkg.com/vuetify/-/vuetify-1.3.12.tgz#a605a978e88385ace60301fc50502fe53ae940fb"
-  integrity sha512-CJccj0EQcda6Hj5p4P0SKsaN5rkNj5HkZOGkXJOl6v+NJRM2tibrbNtFIGlEBMl+b2j8AnnLVkN3Q5T2nfed8w==
+vuetify@1.4.3:
+  version "1.4.3"
+  resolved "http://registry.npm.taobao.org/vuetify/download/vuetify-1.4.3.tgz#dfa187a2bd37427c352bdd194837430a06b45735"
+  integrity sha1-36GHor03Qnw1K90ZSDdDCga0VzU=
 
 vuex@^3.0.1:
   version "3.0.1"

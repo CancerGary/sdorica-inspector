@@ -236,7 +236,6 @@
         }
       },
       showSnackbarMessage(msg) {
-        1
         this.$store.commit('toastMsg', msg)
       }
     }

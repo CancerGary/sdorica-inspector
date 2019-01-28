@@ -64,7 +64,7 @@ class ImperiumViewSet(viewsets.ModelViewSet):
     queryset = Imperium.objects.all()
     serializer_class = ImperiumSerializer
     filter_backends = (DjangoFilterBackend,)
-    filter_fields = ('game_version', 'type_id')
+    filter_fields = ('game_version', 'type_id','finished')
 
     authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated,)
@@ -99,7 +99,7 @@ class ImperiumViewSet(viewsets.ModelViewSet):
                                                    serializer.validated_data['new'].load_data()))
 
     @action(detail=False, methods=['GET'])
-    def diff_ab(self, request):
+    def ab_diff(self, request):
         serializer = ImperiumABDiffSerializer(data=request.query_params)
         if serializer.is_valid(raise_exception=True):
             # print(serializer.validated_data)

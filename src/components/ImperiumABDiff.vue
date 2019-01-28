@@ -5,13 +5,11 @@
       <v-flex xs12>
         <v-card>
           <v-card-title>
-            <div class="headline">Compare Tree View</div>
+            <div class="headline">Compare Result</div>
           </v-card-title>
           <v-card-text>
             <div>
-              <ImperiumTreeview :imperium-data="imperiumDiffData"></ImperiumTreeview>
-              <p v-if="!loading && Object.keys(imperiumDiffData).length === 0">No Comparison yet.</p>
-              <p v-if="loading">Loading...</p>
+              <p>result</p>
             </div>
           </v-card-text>
         </v-card>
@@ -25,7 +23,7 @@
   import ImperiumTwoSelector from "./ImperiumTwoSelector";
 
   export default {
-    name: "ImperiumDiff",
+    name: "ImperiumABDiff",
     components: {ImperiumTwoSelector, ImperiumTreeview},
     data() {
       return {
@@ -35,7 +33,7 @@
       }
     },
     created() {
-      this.$http.get('/api/imperium/').then(response => { // 4 -> localization id
+      this.$http.get('/api/imperium/',{params:{finished:'true'}}).then(response => { // 4 -> localization id
         response.data.forEach(item => {
           this.imperiumList.push({text: `[${item.type_id}] ${item.name}`, value: item.id});
         });
@@ -44,7 +42,7 @@
     methods: {
       loadDiffData(old_id, new_id) {
         this.loading = true;
-        this.$http.get('/api/imperium/diff/', {params: {old: old_id, new: new_id}}).then(response => {
+        this.$http.get('/api/imperium/ab_diff/', {params: {old: old_id, new: new_id}}).then(response => {
           //console.log(response.data);
           this.imperiumDiffData = response.data;
           this.loading = false;

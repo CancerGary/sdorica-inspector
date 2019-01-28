@@ -39,6 +39,14 @@
               <v-list-tile-title>Imperium Diff</v-list-tile-title>
             </v-list-tile-content>
           </router-link>
+          <router-link tag="v-list-tile" to="/imperium/ab_diff">
+            <v-list-tile-action>
+              <v-icon>note_add</v-icon>
+            </v-list-tile-action>
+            <v-list-tile-content>
+              <v-list-tile-title>Imperium AB Diff</v-list-tile-title>
+            </v-list-tile-content>
+          </router-link>
         </v-list>
       </v-navigation-drawer>
       <v-toolbar color="indigo" dark fixed app>
@@ -46,7 +54,7 @@
         <v-toolbar-title>Application</v-toolbar-title>
       </v-toolbar>
       <v-content>
-      <v-container fluid>
+      <v-container fluid grid-list-lg>
         <router-view></router-view>
       </v-container>
       </v-content>
@@ -100,6 +108,6 @@
     -moz-osx-font-smoothing: grayscale;
     /*text-align: center;*/
     color: #2c3e50;
-    margin-top: 60px;
+    /*margin-top: 60px;*/
   }
 </style>
