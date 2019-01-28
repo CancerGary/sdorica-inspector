@@ -10,7 +10,7 @@
           <v-card-text style="word-break: break-all;font-family: Menlo,Monaco,Consolas,'Courier New',monospace">
             <div v-if="imperiumDiffData">
               <v-layout row wrap>
-                <v-flex xs12>Asset Bundle Delete & Add</v-flex>
+                <v-flex xs12>Delete & Add</v-flex>
                 <v-flex xs12 sm6 class="red--text">
                   <div>[-]</div>
                   <div v-for="(data,bundleName) in imperiumDiffData.delete">{{bundleName}} | {{data.md5}}</div>
@@ -20,17 +20,23 @@
                   <div v-for="(data,bundleName) in imperiumDiffData.add">{{bundleName}} | {{data.md5}}</div>
                 </v-flex>
               </v-layout>
-                <v-layout row wrap v-for="(data,bundleName) in imperiumDiffData.change">
-                  <v-flex xs12>{{bundleName}}</v-flex>
-                  <v-flex xs12 sm6 class="red--text">
-                    <div>[-] {{data.md5[0]}}</div>
-                    <div v-for="containerName in data.delete">{{containerName}}</div>
-                  </v-flex>
-                  <v-flex xs12 sm6 class="green--text">
-                    <div>[+] {{data.md5[1]}}</div>
-                    <div v-for="containerName in data.add">{{containerName}}</div>
-                  </v-flex>
-                </v-layout>
+              <v-layout row wrap>
+                <v-flex xs12>Size change only</v-flex>
+                <v-flex xs12>
+                  <div v-for="(data,bundleName) in imperiumDiffData.nochange">{{bundleName}} | {{data[0]}} | {{data[1]}}</div>
+                </v-flex>
+              </v-layout>
+              <v-layout row wrap v-for="(data,bundleName) in imperiumDiffData.change">
+                <v-flex xs12>{{bundleName}}</v-flex>
+                <v-flex xs12 sm6 class="red--text">
+                  <div>[-] {{data.md5[0]}}</div>
+                  <div v-for="containerName in data.delete">{{containerName}}</div>
+                </v-flex>
+                <v-flex xs12 sm6 class="green--text">
+                  <div>[+] {{data.md5[1]}}</div>
+                  <div v-for="containerName in data.add">{{containerName}}</div>
+                </v-flex>
+              </v-layout>
             </div>
             <div v-else>No comparison yet.</div>
           </v-card-text>

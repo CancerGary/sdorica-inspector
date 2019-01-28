@@ -116,10 +116,14 @@ class ImperiumViewSet(viewsets.ModelViewSet):
             add = {k: {'md5': d_right[k].md5,
                        'data': sorted([i['name'] for i in d_right[k].container_set.values('name')])}
                    for k in drk - dlk}
+            # only size changed
+            nochange = dict()
             change = dict()
             for k in dlk & drk:
                 cl = {i['name'] for i in d_left[k].container_set.values('name')}
                 cr = {i['name'] for i in d_right[k].container_set.values('name')}
                 if (cl != cr):
                     change[k] = {'delete': cl - cr, 'add': cr - cl,'md5' :(d_left[k].md5,d_right[k].md5)}
-            return Response({'delete': delete, 'add': add, 'change': change})
+                elif d_left[k].md5 != d_right[k].md5:
+                    nochange[k] = (d_left[k].md5 , d_right[k].md5)
+            return Response({'delete': delete, 'add': add, 'change': change,'nochange':nochange})
