@@ -6,3 +6,7 @@ export const toastMsg = (state, payload) => {
 export const setToastState = (state, payload) => {
   state.snackbarState = payload;
 }
+
+export const updateConvertRule = (state,payload) => {
+  state.convertRule = payload
+}

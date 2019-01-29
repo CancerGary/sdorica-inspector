@@ -1,5 +1,6 @@
 const state = {
   snackbarMessage:"",
-  snackbarState:false
+  snackbarState:false,
+  convertRule:[]
 }
 export default state;

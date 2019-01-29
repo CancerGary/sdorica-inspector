@@ -52,12 +52,15 @@
       <v-toolbar color="indigo" dark fixed app>
         <v-toolbar-side-icon @click.stop="drawer = !drawer"></v-toolbar-side-icon>
         <v-toolbar-title>Application</v-toolbar-title>
+        <v-spacer></v-spacer>
+        <v-toolbar-side-icon @click.stop="convertConfigDrawer = !convertConfigDrawer"></v-toolbar-side-icon>
       </v-toolbar>
       <v-content>
         <v-container fluid grid-list-lg>
           <router-view></router-view>
         </v-container>
       </v-content>
+      <helper-side-drawer v-bind:show.sync="convertConfigDrawer"></helper-side-drawer>
       <v-footer color="indigo" app inset>
         <span class="white--text">&copy; CancerGary</span>
       </v-footer>
@@ -85,12 +88,14 @@
 
 <script>
   import {mapState} from 'vuex'
+  import HelperSideDrawer from "./components/HelperSideDrawer";
 
   export default {
+    components: {HelperSideDrawer},
     data: () => ({
-      drawer: null,
+      drawer: false,
+      convertConfigDrawer: false,
       convertResult: null,
-      convertRule: [],
       convertTooltipX: 0,
       convertTooltipY: 0,
       convertTooltipShow: false,
@@ -101,7 +106,7 @@
         var selectedText = window.getSelection().toString();
         // console.log(selectedText)
         var convertResult = [];
-        this.convertRule.forEach((value, index) => {
+        this.$store.state.convertRule.forEach((value, index) => {
           if (selectedText.search(value.pattern) > -1) convertResult.push(`${value.pattern}: ${value.text} `);
         })
         this.convertResult = convertResult.join(';')
@@ -120,7 +125,7 @@
     },
     created() {
       this.$http.get('/api/convert_rule').then((response) => {
-        this.convertRule = response.data;
+        this.$store.commit('updateConvertRule',response.data);
       })
     },
     computed: {
