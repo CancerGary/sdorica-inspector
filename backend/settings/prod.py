@@ -4,6 +4,12 @@ import os
 import dj_database_url
 from .dev import *
 
+try:
+    import pymysql
+
+    pymysql.install_as_MySQLdb()
+except:
+    pass
 ############
 # DATABASE #
 ############
@@ -12,7 +18,6 @@ DATABASES = {
         default=os.getenv('DATABASE_URL')
     )
 }
-
 
 ############
 # SECURITY #

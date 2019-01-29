@@ -22,6 +22,7 @@ celery = "*"
 redis = "*"
 flower = "*"
 watchdog = "*"
+pymysql = "*"
 
 [dev-packages]
 
