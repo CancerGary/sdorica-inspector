@@ -15,7 +15,7 @@ from rest_framework.response import Response
 
 from backend.api import imperium_reader
 from .models import GameVersion, GameVersionSerializer, Imperium, ImperiumSerializer, ImperiumDiffSerializer, \
-    ImperiumType, ImperiumABDiffSerializer
+    ImperiumType, ImperiumABDiffSerializer, ConvertRule, ConvertRuleSerializer
 import hashlib
 
 from . import tasks
@@ -127,3 +127,13 @@ class ImperiumViewSet(viewsets.ModelViewSet):
                 elif d_left[k].md5 != d_right[k].md5:
                     nochange[k] = (d_left[k].md5 , d_right[k].md5)
             return Response({'delete': delete, 'add': add, 'change': change,'nochange':nochange})
+
+class ConvertRuleViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows convert rules to be viewed or edited.
+    """
+    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
+    permission_classes = (permissions.IsAuthenticated,)
+
+    queryset = ConvertRule.objects.all()
+    serializer_class = ConvertRuleSerializer

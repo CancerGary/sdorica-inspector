@@ -22,8 +22,6 @@ class ImperiumType(Enum):
     settings = 6
 
 imperium_type_id_to_name={itype.value:itype.name for itype in ImperiumType}
-class TranslateLanguage:
-    english = 0
 
 class GameVersion(models.Model):
     name = models.CharField(max_length=100)
@@ -89,10 +87,9 @@ class AssetObject(models.Model):
     # maybe save Object._obj data
     asset = models.ForeignKey(Asset,on_delete=models.CASCADE)
 
-class TranslateTable(models.Model):
-    key = models.CharField(max_length=40)
+class ConvertRule(models.Model):
+    pattern = models.CharField(max_length=100)
     text = models.TextField(null=True)
-    language =models.IntegerField(default=0)
 
 class GameVersionSerializer(serializers.HyperlinkedModelSerializer):
     imperiums = serializers.HyperlinkedRelatedField(many=True,read_only=True,view_name='imperium-detail')
@@ -179,3 +176,8 @@ class ImperiumABDiffSerializer(ImperiumDiffSerializer):
             if not data[side].finished:
                 raise serializers.ValidationError("{} haven't been handled yet.".format(side))
         return data
+
+class ConvertRuleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ConvertRule
+        fields = ('id', 'pattern', 'text')

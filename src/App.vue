@@ -1,5 +1,5 @@
 <template>
-  <div id="app">
+  <div id="app" @click="convertSelectedText" @mouseup="changeConvertTooltipPosition">
     <v-app id="inspire">
       <v-navigation-drawer
           fixed
@@ -54,48 +54,75 @@
         <v-toolbar-title>Application</v-toolbar-title>
       </v-toolbar>
       <v-content>
-      <v-container fluid grid-list-lg>
-        <router-view></router-view>
-      </v-container>
+        <v-container fluid grid-list-lg>
+          <router-view></router-view>
+        </v-container>
       </v-content>
       <v-footer color="indigo" app inset>
         <span class="white--text">&copy; CancerGary</span>
       </v-footer>
       <v-snackbar
-        v-model="snackbarState"
-        :timeout="6000"
-    >
-      {{snackbarMessage}}
-      <v-btn
-          color="pink"
-          flat
-          @click="snackbarState = false"
+          v-model="snackbarState"
+          :timeout="6000"
       >
-        Close
-      </v-btn>
-    </v-snackbar>
+        {{snackbarMessage}}
+        <v-btn
+            color="pink"
+            flat
+            @click="snackbarState = false"
+        >
+          Close
+        </v-btn>
+      </v-snackbar>
+       <v-tooltip bottom v-model="convertTooltipShow" :absolute="true" :position-x="convertTooltipX" :position-y="convertTooltipY">
+      <span>{{convertResult?convertResult:'Nothing matched.'}}</span>
+    </v-tooltip>
     </v-app>
   </div>
 
 </template>
 
 <script>
-  import { mapState } from 'vuex'
+  import {mapState} from 'vuex'
+
   export default {
     data: () => ({
       drawer: null,
+      convertResult: null,
+      convertRule: [],
+      convertTooltipX:0,
+      convertTooltipY:0,
+      convertTooltipShow:false
     }),
-    methods:{
-
+    methods: {
+      convertSelectedText() {
+        var selectedText = window.getSelection().toString();
+        var convertResult = [];
+        this.convertRule.forEach((value, index)=>{
+          if (selectedText.search(value.pattern) > -1) convertResult.push(`${value.pattern}: ${value.text} `);
+        })
+        this.convertResult = convertResult.join(';')
+        this.convertTooltipShow = Boolean(selectedText)
+      },
+      changeConvertTooltipPosition(e){
+        //console.log(e)
+        this.convertTooltipX=e.clientX;
+        this.convertTooltipY=e.clientY;
+      }
     },
-    computed:{
+    created() {
+      this.$http.get('/api/convert_rule').then((response)=>{
+        this.convertRule = response.data;
+      })
+    },
+    computed: {
       ...mapState(['snackbarMessage']),
-      snackbarState:{
+      snackbarState: {
         get: function () {
           return this.$store.state.snackbarState
         },
         set: function (newValue) { // because v-snackbar will change v-model by itself
-          this.$store.commit('setToastState',newValue)
+          this.$store.commit('setToastState', newValue)
         }
       }
     }
