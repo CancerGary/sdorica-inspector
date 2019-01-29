@@ -1,5 +1,5 @@
 <template>
-  <div id="app" @click="convertSelectedText" @mouseup="changeConvertTooltipPosition">
+  <div id="app" @click="convertSelectedText" @mouseup="changeConvertTooltipPosition" v-touchend="tooltipTouchend">
     <v-app id="inspire">
       <v-navigation-drawer
           fixed
@@ -74,9 +74,10 @@
           Close
         </v-btn>
       </v-snackbar>
-       <v-tooltip bottom v-model="convertTooltipShow" :absolute="true" :position-x="convertTooltipX" :position-y="convertTooltipY">
-      <span>{{convertResult?convertResult:'Nothing matched.'}}</span>
-    </v-tooltip>
+      <v-tooltip bottom v-model="convertTooltipShow" :absolute="true" :position-x="convertTooltipX"
+                 :position-y="convertTooltipY">
+        <span>{{convertResult?convertResult:'Nothing matched.'}}</span>
+      </v-tooltip>
     </v-app>
   </div>
 
@@ -90,28 +91,35 @@
       drawer: null,
       convertResult: null,
       convertRule: [],
-      convertTooltipX:0,
-      convertTooltipY:0,
-      convertTooltipShow:false
+      convertTooltipX: 0,
+      convertTooltipY: 0,
+      convertTooltipShow: false,
+      lastTouchmoveEvent: null
     }),
     methods: {
       convertSelectedText() {
         var selectedText = window.getSelection().toString();
+        // console.log(selectedText)
         var convertResult = [];
-        this.convertRule.forEach((value, index)=>{
+        this.convertRule.forEach((value, index) => {
           if (selectedText.search(value.pattern) > -1) convertResult.push(`${value.pattern}: ${value.text} `);
         })
         this.convertResult = convertResult.join(';')
         this.convertTooltipShow = Boolean(selectedText)
       },
-      changeConvertTooltipPosition(e){
+      changeConvertTooltipPosition(e) {
         //console.log(e)
-        this.convertTooltipX=e.clientX;
-        this.convertTooltipY=e.clientY;
+        this.convertTooltipX = e.clientX ? e.clientX : e.changedTouches[0].clientX;
+        this.convertTooltipY = e.clientY ? e.clientY : e.changedTouches[0].clientY;
+      },
+      tooltipTouchend(e) {
+        //
+        this.convertSelectedText();
+        this.changeConvertTooltipPosition(e)
       }
     },
     created() {
-      this.$http.get('/api/convert_rule').then((response)=>{
+      this.$http.get('/api/convert_rule').then((response) => {
         this.convertRule = response.data;
       })
     },
