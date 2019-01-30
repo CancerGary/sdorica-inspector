@@ -106,7 +106,7 @@
     methods: {
       // console.log(item);
       openRuleEditDialog(index) {
-        if (index) {
+        if (typeof index === 'number') {
           this.ruleOnEditing = JSON.parse(JSON.stringify(this.$store.state.convertRule[index]));
           this.ruleIndex = index;
         } else {
