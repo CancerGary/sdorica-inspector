@@ -109,6 +109,7 @@ def ab_list_task(imperium_id):
     data = imperium.load_data()
     if isinstance(data.get('A'), dict):
         target_dir = os.path.join(settings.INSPECTOR_DATA_ROOT, 'assetbundle')
+        os.makedirs(target_dir,exist_ok=True)
         subtasks_info = []
         ab_objects = []
         for md5, uid, url in data['A'].values():
