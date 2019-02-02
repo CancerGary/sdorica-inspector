@@ -13,17 +13,47 @@
                 <v-flex xs12>Delete & Add</v-flex>
                 <v-flex xs12 sm6 class="red--text">
                   <div>[-]</div>
-                  <div v-for="(data,bundleName) in imperiumDiffData.delete">{{bundleName}} | {{data.md5}}</div>
+                  <v-expansion-panel>
+                    <v-expansion-panel-content
+                        v-for="(data,bundleName) in imperiumDiffData.delete"
+                        :key="bundleName"
+                    >
+                      <div slot="header">
+                        <div>{{bundleName}} [{{data.data.length}}] | {{data.md5}}</div>
+                      </div>
+                      <v-card>
+                        <v-card-text>
+                          <div v-for="c in data.data">{{c}}</div>
+                        </v-card-text>
+                      </v-card>
+                    </v-expansion-panel-content>
+                  </v-expansion-panel>
                 </v-flex>
                 <v-flex xs12 sm6 class="green--text">
                   <div>[+]</div>
-                  <div v-for="(data,bundleName) in imperiumDiffData.add">{{bundleName}} | {{data.md5}}</div>
+                  <v-expansion-panel>
+                    <v-expansion-panel-content
+                        v-for="(data,bundleName) in imperiumDiffData.add"
+                        :key="bundleName"
+                    >
+                      <div slot="header">
+                        <div>{{bundleName}} [{{data.data.length}}] | {{data.md5}}</div>
+                      </div>
+                      <v-card>
+                        <v-card-text>
+                          <div v-for="c in data.data">{{c}}</div>
+                        </v-card-text>
+                      </v-card>
+                    </v-expansion-panel-content>
+                  </v-expansion-panel>
                 </v-flex>
               </v-layout>
               <v-layout row wrap>
                 <v-flex xs12>Size change only</v-flex>
                 <v-flex xs12>
-                  <div v-for="(data,bundleName) in imperiumDiffData.nochange">{{bundleName}} | {{data[0]}} | {{data[1]}}</div>
+                  <div v-for="(data,bundleName) in imperiumDiffData.nochange">{{bundleName}} | {{data[0]}} |
+                    {{data[1]}}
+                  </div>
                 </v-flex>
               </v-layout>
               <v-layout row wrap v-for="(data,bundleName) in imperiumDiffData.change">
