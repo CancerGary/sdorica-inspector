@@ -27,6 +27,8 @@ $ python manage.py migrate
 
 ```
 $ python manage.py runserver
+$ celery -A backend.api.celery worker --loglevel=info
+$ celery -A backend.api.celery flower  # run flower if you need monitor
 ```
 
 From another tab in the same directory:
@@ -55,4 +57,7 @@ $ python manage.py runserver
 
 ## Deploy
 
+* Clone the repo
 * Set `ALLOWED_HOSTS` on `backend.settings.prod.py`
+* Run `deploy.sh` to install the requirements and build frontend code.
+* run `run.sh` to start the server
