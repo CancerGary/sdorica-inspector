@@ -24,6 +24,14 @@
           <v-list-tile-title>Convert Rules list</v-list-tile-title>
         </v-list-tile-content>
       </v-list-tile>
+      <v-list-tile v-if="currentABData" @click="0" class="copy-button" data-clipboard-action="copy">
+        <v-list-tile-action>
+          <v-icon>mdi-content-copy</v-icon>
+        </v-list-tile-action>
+        <v-list-tile-content>
+          <v-list-tile-title>Copy selected md5 url</v-list-tile-title>
+        </v-list-tile-content>
+      </v-list-tile>
     </v-list>
 
     <!--convert rule edit form-->
@@ -84,11 +92,16 @@
 
 <script>
   import {mapState} from 'vuex'
+  import ClipboardJS from 'clipboard';
 
   export default {
     name: "HelperSideDrawer",
     props: {
-      show: Boolean
+      show: Boolean,
+      currentABData: {
+        type: Object,
+        default: null
+      }
     },
     data() {
       return {
@@ -100,8 +113,23 @@
           text: ""
         },
         ruleIndex: -1,
-        showState: false
+        showState: false,
+        copyButton: null
       }
+    },
+    mounted() {
+      this.copyButton = new ClipboardJS('.copy-button', {
+        text: (trigger) => {
+          return this.currentABData.url
+        }
+      });
+
+      this.copyButton.on('success', () => {
+        this.$store.commit('toastMsg', 'Copied.')
+      });
+      this.copyButton.on('error', () => {
+        this.$store.commit('toastMsg', this.currentABData.url)
+      });
     },
     methods: {
       // console.log(item);
@@ -138,8 +166,7 @@
             this.ruleEditDialog = false;
           })
         }
-
-      }
+      },
     },
     computed: {
       ...mapState(['convertRule']),

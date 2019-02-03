@@ -1,7 +1,7 @@
 import os
 
 from celery.result import AsyncResult
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from django.conf import settings
 from django.core.files.storage import default_storage
@@ -15,7 +15,8 @@ from rest_framework.response import Response
 
 from backend.api import imperium_reader
 from .models import GameVersion, GameVersionSerializer, Imperium, ImperiumSerializer, ImperiumDiffSerializer, \
-    ImperiumType, ImperiumABDiffSerializer, ConvertRule, ConvertRuleSerializer, Container, ContainerSerializer
+    ImperiumType, ImperiumABDiffSerializer, ConvertRule, ConvertRuleSerializer, Container, ContainerSerializer, \
+    AssetBundleSerializer, AssetBundle
 import hashlib
 
 from . import tasks
@@ -155,3 +156,18 @@ class ContainerViewSet(viewsets.GenericViewSet):
         for i in request.query_params.get('query').split(' '):
             result = result.filter(name__contains=i)
         return Response(ContainerSerializer(result,many=True).data)
+
+class AssetBundleViewSet(viewsets.GenericViewSet):
+    """
+    API endpoint that allows containers to be viewed or edited.
+    """
+    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
+    permission_classes = (permissions.IsAuthenticated,)
+
+    queryset = AssetBundle.objects.all()
+
+    def retrieve(self,request, pk=None):
+        try:
+            return Response(AssetBundleSerializer(self.queryset.get(md5=pk)).data)
+        except AssetBundle.DoesNotExist:
+            return Response(AssetBundleSerializer(get_object_or_404(self.queryset, pk=pk)).data)

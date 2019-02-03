@@ -9,13 +9,15 @@ from django.urls import path, include
 from rest_framework import routers
 from rest_framework.schemas import get_schema_view
 
-from .api.views import index_view, GameVersionViewSet, ImperiumViewSet, login_view, ConvertRuleViewSet,ContainerViewSet
+from .api.views import index_view, GameVersionViewSet, ImperiumViewSet, login_view, ConvertRuleViewSet, \
+    ContainerViewSet, AssetBundleViewSet
 
 router = routers.DefaultRouter()
 router.register('game_version', GameVersionViewSet)
 router.register('imperium',ImperiumViewSet)
 router.register('convert_rule',ConvertRuleViewSet)
 router.register('container',ContainerViewSet)
+router.register('asset_bundle',AssetBundleViewSet)
 
 schema_view = get_schema_view(title='Sdorica Inspector API')
 

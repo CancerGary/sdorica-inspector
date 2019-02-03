@@ -183,12 +183,18 @@ class ConvertRuleSerializer(serializers.ModelSerializer):
         fields = ('id', 'pattern', 'text')
 
 class AssetBundleSerializer(serializers.ModelSerializer):
+    imperiums = serializers.SlugRelatedField(many=True,read_only=True,slug_field='name')
+    class Meta:
+        model = AssetBundle
+        fields = ('name','md5','url','imperiums')
+
+class AssetBundleSimpleSerializer(serializers.ModelSerializer):
     class Meta:
         model = AssetBundle
         fields = ('name', 'md5')
 
 class ContainerSerializer(serializers.ModelSerializer):
-    asset_bundles = AssetBundleSerializer(many=True,read_only=True)
+    asset_bundles = AssetBundleSimpleSerializer(many=True,read_only=True)
     class Meta:
         model = Container
         fields = ('id', 'name','asset_bundles')

@@ -33,7 +33,7 @@
           </router-link>
           <router-link tag="v-list-tile" to="/imperium/diff">
             <v-list-tile-action>
-              <v-icon>compare_arrows</v-icon>
+              <v-icon>mdi-file-compare</v-icon>
             </v-list-tile-action>
             <v-list-tile-content>
               <v-list-tile-title>Imperium Diff</v-list-tile-title>
@@ -68,7 +68,7 @@
           <router-view></router-view>
         </v-container>
       </v-content>
-      <helper-side-drawer v-bind:show.sync="convertConfigDrawer"></helper-side-drawer>
+      <helper-side-drawer v-bind:show.sync="convertConfigDrawer" :current-a-b-data="currentABData"></helper-side-drawer>
       <v-footer color="indigo" app inset>
         <span class="white--text">&copy; CancerGary</span>
       </v-footer>
@@ -107,23 +107,36 @@
       convertTooltipX: 0,
       convertTooltipY: 0,
       convertTooltipShow: false,
-      lastTouchmoveEvent: null
+      lastTouchmoveEvent: null,
+      currentABData: null
     }),
     methods: {
       convertSelectedText() {
-        var selectedText = window.getSelection().toString();
+        var selectedText = window.getSelection().toString().trim();
         // console.log(selectedText)
-        var convertResult = [];
-        this.$store.state.convertRule.forEach((value, index) => {
-          if (selectedText.search(value.pattern) > -1) convertResult.push(`${value.pattern}: ${value.text} `);
-        })
-        this.convertResult = convertResult.join(';')
-        this.convertTooltipShow = Boolean(selectedText)
+        if (/^[a-f0-9]{32}$/.test(selectedText)) {
+          // md5 -> query
+          this.convertResult = 'Loading...';
+          this.convertTooltipShow = true;
+          this.$http.get(`/api/asset_bundle/${selectedText}/`).then((response) => {
+            this.convertResult = response.data.imperiums.join(', ');
+            this.currentABData = response.data;
+          }).catch(error => {
+            this.convertResult = 'No result.';
+          })
+        } else {
+          var convertResult = [];
+          this.$store.state.convertRule.forEach((value, index) => {
+            if (selectedText.search(value.pattern) > -1) convertResult.push(`${value.pattern}: ${value.text} `);
+          })
+          this.convertResult = convertResult.join('; ')
+          this.convertTooltipShow = Boolean(selectedText)
+        }
       },
       changeConvertTooltipPosition(e) {
         //console.log(e)
-        this.convertTooltipX = e.clientX ? e.clientX : e.changedTouches[0].clientX;
-        this.convertTooltipY = e.clientY ? e.clientY : e.changedTouches[0].clientY;
+        this.convertTooltipX = e.clientX ? e.clientX : (e.changedTouches ? e.changedTouches[0].clientX : 0);
+        this.convertTooltipY = e.clientY ? e.clientY : (e.changedTouches ? e.changedTouches[0].clientY : 0);
       },
       tooltipTouchend(e) {
         //
@@ -133,7 +146,7 @@
     },
     created() {
       this.$http.get('/api/convert_rule').then((response) => {
-        this.$store.commit('updateConvertRule',response.data);
+        this.$store.commit('updateConvertRule', response.data);
       })
     },
     computed: {
@@ -151,6 +164,7 @@
 </script>
 <style>
   @import "assets/style.css";
+
   #app {
     font-family: 'Avenir', Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
