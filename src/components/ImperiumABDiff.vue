@@ -7,7 +7,7 @@
           <v-card-title>
             <div class="headline">Compare Result</div>
           </v-card-title>
-          <v-card-text style="word-break: break-all;font-family: Menlo,Monaco,Consolas,'Courier New',monospace">
+          <v-card-text class="code-text">
             <div v-if="imperiumDiffData">
               <v-layout row wrap>
                 <v-flex xs12>Delete & Add</v-flex>

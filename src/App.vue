@@ -47,6 +47,14 @@
               <v-list-tile-title>Imperium AB Diff</v-list-tile-title>
             </v-list-tile-content>
           </router-link>
+          <router-link tag="v-list-tile" to="/container/search">
+            <v-list-tile-action>
+              <v-icon>search</v-icon>
+            </v-list-tile-action>
+            <v-list-tile-content>
+              <v-list-tile-title>Container Search</v-list-tile-title>
+            </v-list-tile-content>
+          </router-link>
         </v-list>
       </v-navigation-drawer>
       <v-toolbar color="indigo" dark fixed app>
@@ -142,6 +150,7 @@
   }
 </script>
 <style>
+  @import "assets/style.css";
   #app {
     font-family: 'Avenir', Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;

@@ -6,6 +6,7 @@ import ImperiumList from "./components/ImperiumList";
 import ImperiumShow from "./components/ImperiumShow";
 import ImperiumDiff from "./components/ImperiumDiff";
 import ImperiumABDiff from "./components/ImperiumABDiff";
+import ContainerSearch from "./components/ContainerSearch";
 
 Vue.use(Router)
 
@@ -40,6 +41,11 @@ export default new Router({
       path: '/imperium/:imperium_id',
       name: 'imperium_show',
       component: ImperiumShow
+    },
+    {
+      path: '/container/search',
+      name: 'container_search',
+      component: ContainerSearch
     }
   ]
 })
