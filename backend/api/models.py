@@ -181,3 +181,14 @@ class ConvertRuleSerializer(serializers.ModelSerializer):
     class Meta:
         model = ConvertRule
         fields = ('id', 'pattern', 'text')
+
+class AssetBundleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AssetBundle
+        fields = ('name', 'md5')
+
+class ContainerSerializer(serializers.ModelSerializer):
+    asset_bundles = AssetBundleSerializer(many=True,read_only=True)
+    class Meta:
+        model = Container
+        fields = ('id', 'name','asset_bundles')

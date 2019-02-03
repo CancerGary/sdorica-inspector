@@ -15,7 +15,7 @@ from rest_framework.response import Response
 
 from backend.api import imperium_reader
 from .models import GameVersion, GameVersionSerializer, Imperium, ImperiumSerializer, ImperiumDiffSerializer, \
-    ImperiumType, ImperiumABDiffSerializer, ConvertRule, ConvertRuleSerializer
+    ImperiumType, ImperiumABDiffSerializer, ConvertRule, ConvertRuleSerializer, Container, ContainerSerializer
 import hashlib
 
 from . import tasks
@@ -137,3 +137,21 @@ class ConvertRuleViewSet(viewsets.ModelViewSet):
 
     queryset = ConvertRule.objects.all()
     serializer_class = ConvertRuleSerializer
+
+class ContainerViewSet(viewsets.GenericViewSet):
+    """
+    API endpoint that allows containers to be viewed or edited.
+    """
+    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
+    permission_classes = (permissions.IsAuthenticated,)
+
+    queryset = Container.objects.all()
+
+    @action(detail=False, methods=['GET'])
+    def search(self,request):
+        if not request.query_params.get('query'):
+            return Response('Query is too short')
+        result = self.get_queryset()
+        for i in request.query_params.get('query').split(' '):
+            result = result.filter(name__contains=i)
+        return Response(ContainerSerializer(result,many=True).data)
