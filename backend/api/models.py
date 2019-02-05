@@ -5,12 +5,14 @@ import traceback
 from enum import Enum
 
 import requests
+import unitypack
 from django.conf import settings
 from django.db import models
 from django.utils.six import BytesIO
 from rest_framework import serializers
 from django.core.files.storage import default_storage
-from . import imperium_reader
+from . import imperium_reader, ab_utils
+
 
 class ImperiumType(Enum):
     unknown = 0
@@ -21,16 +23,20 @@ class ImperiumType(Enum):
     charAssets = 5
     settings = 6
 
-imperium_type_id_to_name={itype.value:itype.name for itype in ImperiumType}
+
+imperium_type_id_to_name = {itype.value: itype.name for itype in ImperiumType}
+
 
 class GameVersion(models.Model):
     name = models.CharField(max_length=100)
     create_time = models.DateTimeField(auto_now_add=True)
 
+
 class Imperium(models.Model):
-    game_version = models.ForeignKey(GameVersion,related_name='imperiums',on_delete=models.CASCADE,null=True) # maybe change delete mode here ?
+    game_version = models.ForeignKey(GameVersion, related_name='imperiums', on_delete=models.CASCADE,
+                                     null=True)  # maybe change delete mode here ?
     create_time = models.DateTimeField(auto_now_add=True)
-    type_id = models.IntegerField(default=0,choices=[(itype.value,itype.name) for itype in ImperiumType])
+    type_id = models.IntegerField(default=0, choices=[(itype.value, itype.name) for itype in ImperiumType])
     name = models.CharField(max_length=100)
     md5 = models.CharField(max_length=32)
     uuid = models.UUIDField(null=True)
@@ -48,61 +54,80 @@ class Imperium(models.Model):
             if not self.download_data_by_uuid():
                 return {'Puggi': "Unknown type, can't fetch"}
         else:
-            return {'Puggi':'File is missing.'}
+            return {'Puggi': 'File is missing.'}
         return imperium_reader.handle_file(open(self.get_filename(), 'rb'))
 
     def save_data(self, stream):
         self.md5 = hashlib.md5(stream.read()).hexdigest()
-        default_storage.save(self.get_filename(),content=stream)
+        default_storage.save(self.get_filename(), content=stream)
 
     def download_data_by_uuid(self):
-        if self.type_id != 0 :
+        if self.type_id != 0:
             url = 'https://sdorica.rayark.download/{type}/client_gamedata/{uuid}/default/gamedata'.format(
                 type=imperium_type_id_to_name.get(self.type_id), uuid=self.uuid)
             # TODO: check url exists
-            self.save_data(BytesIO(requests.get(url,timeout=3).content))
+            self.save_data(BytesIO(requests.get(url, timeout=3).content))
             self.save()
             return True
         else:
             return False
+
+
 class AssetBundle(models.Model):
-    md5 = models.CharField(max_length=32)
+    md5 = models.CharField(max_length=32, db_index=True)
     name = models.CharField(max_length=100)
-    url = models.CharField(max_length=200,null=True)
+    url = models.CharField(max_length=200, null=True)
     imperiums = models.ManyToManyField(Imperium)
 
+    def load_unitypack(self):
+        return unitypack.load(open(os.path.join(settings.INSPECTOR_DATA_ROOT, 'assetbundle', self.md5), 'rb'))
+
+    def get_containers_path_id_dict(self):
+        try:
+            bundle = self.load_unitypack()
+            return {k: v['asset'].object.path_id for k, v in ab_utils.get_containers_from_ab(bundle).items()}
+        except RuntimeError:
+            return {}
+
+
 class Container(models.Model):
-    name = models.CharField(max_length=256,db_index=True)
+    name = models.CharField(max_length=256, db_index=True)
     asset_bundles = models.ManyToManyField(AssetBundle)
+
 
 class Asset(models.Model):
     name = models.CharField(max_length=100)
-    asset_bundle = models.ForeignKey(AssetBundle,on_delete=models.CASCADE)
+    asset_bundle = models.ForeignKey(AssetBundle, on_delete=models.CASCADE)
+
 
 class AssetObject(models.Model):
-    name = models.CharField(max_length=100,null=True)
+    name = models.CharField(max_length=100, null=True)
     path_id = models.IntegerField()
     type_id = models.IntegerField()
     type_name = models.CharField(max_length=40)
     # maybe save Object._obj data
-    asset = models.ForeignKey(Asset,on_delete=models.CASCADE)
+    asset = models.ForeignKey(Asset, on_delete=models.CASCADE)
+
 
 class ConvertRule(models.Model):
     pattern = models.CharField(max_length=100)
     text = models.TextField(null=True)
 
+
 class GameVersionSerializer(serializers.HyperlinkedModelSerializer):
-    imperiums = serializers.HyperlinkedRelatedField(many=True,read_only=True,view_name='imperium-detail')
+    imperiums = serializers.HyperlinkedRelatedField(many=True, read_only=True, view_name='imperium-detail')
+
     class Meta:
         model = GameVersion
-        fields = ('url', 'name', 'create_time', 'id','imperiums')
+        fields = ('url', 'name', 'create_time', 'id', 'imperiums')
+
 
 class ImperiumSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
     name = serializers.CharField(max_length=100)
-    type_id = serializers.ChoiceField(choices=[(itype.value,itype.name) for itype in ImperiumType])
+    type_id = serializers.ChoiceField(choices=[(itype.value, itype.name) for itype in ImperiumType])
     game_version = serializers.PrimaryKeyRelatedField(queryset=GameVersion.objects.all())
-    upload_file = serializers.FileField(write_only=True,required=False)
+    upload_file = serializers.FileField(write_only=True, required=False)
     create_time = serializers.DateTimeField(read_only=True)
     uuid = serializers.UUIDField(required=False)
     md5 = serializers.CharField(read_only=True)
@@ -112,8 +137,8 @@ class ImperiumSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         i = Imperium.objects.create(name=validated_data['name'], type_id=validated_data['type_id'],
-                                game_version=validated_data['game_version'],
-                                md5='0'*32,uuid=validated_data.get('uuid'))
+                                    game_version=validated_data['game_version'],
+                                    md5='0' * 32, uuid=validated_data.get('uuid'))
         if validated_data.get('upload_file'):
             i.save_data(validated_data.get('upload_file').open())
         i.save()
@@ -127,15 +152,14 @@ class ImperiumSerializer(serializers.Serializer):
         instance.save()
         return instance
 
-
     def validate_upload_file(self, value):
         try:
             # print(value)
-            if value: # InMemoryUploadedFile
+            if value:  # InMemoryUploadedFile
                 imperium_reader.handle_file(value.open())
                 i = Imperium.objects.filter(md5=hashlib.md5(value.open().read()).hexdigest()).first()
                 if i:
-                    raise serializers.ValidationError("Imperium exists. ( id={} , name={} )".format(i.id,i.name))
+                    raise serializers.ValidationError("Imperium exists. ( id={} , name={} )".format(i.id, i.name))
         except imperium_reader.ImperiumHandleError:
             raise serializers.ValidationError("Not a readable imperium file")
         return value
@@ -147,16 +171,17 @@ class ImperiumSerializer(serializers.Serializer):
                 i = Imperium.objects.filter(uuid=value).first()
                 if i and (not i == self.instance):
                     raise serializers.ValidationError("Imperium exists. ( id={} , name={} )".format(i.id, i.name))
-                if self.initial_data.get('type_id') != '0' :  # not unknown
-                    url = 'https://sdorica.rayark.download/{type}/client_gamedata/{uuid}/default/gamedata'\
-                        .format(type=imperium_type_id_to_name.get(int(self.initial_data.get('type_id'))),uuid=value)
+                if self.initial_data.get('type_id') != '0':  # not unknown
+                    url = 'https://sdorica.rayark.download/{type}/client_gamedata/{uuid}/default/gamedata' \
+                        .format(type=imperium_type_id_to_name.get(int(self.initial_data.get('type_id'))), uuid=value)
                     # print(url,requests.head(url,timeout=3).status_code)
-                    if requests.head(url,timeout=3).status_code!=200:
+                    if requests.head(url, timeout=3).status_code != 200:
                         raise RuntimeError
         except RuntimeError:
             traceback.print_exc()
             raise serializers.ValidationError("Can't fetch the file by the UUID")
         return value
+
 
 class ImperiumDiffSerializer(serializers.Serializer):
     old = serializers.PrimaryKeyRelatedField(queryset=Imperium.objects.all())
@@ -167,34 +192,41 @@ class ImperiumDiffSerializer(serializers.Serializer):
             raise serializers.ValidationError("must be same type")
         return data
 
+
 class ImperiumABDiffSerializer(ImperiumDiffSerializer):
-    def validate(self,data):
+    def validate(self, data):
         super(ImperiumABDiffSerializer, self).validate(data)
-        for side in ['old','new']:
-            if data[side].type_id not in [ImperiumType.android.value,ImperiumType.androidExp.value]:
+        for side in ['old', 'new']:
+            if data[side].type_id not in [ImperiumType.android.value, ImperiumType.androidExp.value]:
                 raise serializers.ValidationError("{} must be asset bundle list.".format(side))
             if not data[side].finished:
                 raise serializers.ValidationError("{} haven't been handled yet.".format(side))
         return data
+
 
 class ConvertRuleSerializer(serializers.ModelSerializer):
     class Meta:
         model = ConvertRule
         fields = ('id', 'pattern', 'text')
 
+
 class AssetBundleSerializer(serializers.ModelSerializer):
-    imperiums = serializers.SlugRelatedField(many=True,read_only=True,slug_field='name')
+    imperiums = serializers.SlugRelatedField(many=True, read_only=True, slug_field='name')
+
     class Meta:
         model = AssetBundle
-        fields = ('name','md5','url','imperiums')
+        fields = ('name', 'md5', 'url', 'imperiums')
+
 
 class AssetBundleSimpleSerializer(serializers.ModelSerializer):
     class Meta:
         model = AssetBundle
         fields = ('name', 'md5')
 
+
 class ContainerSerializer(serializers.ModelSerializer):
-    asset_bundles = AssetBundleSimpleSerializer(many=True,read_only=True)
+    asset_bundles = AssetBundleSimpleSerializer(many=True, read_only=True)
+
     class Meta:
         model = Container
-        fields = ('id', 'name','asset_bundles')
+        fields = ('id', 'name', 'asset_bundles')

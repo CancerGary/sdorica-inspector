@@ -4,33 +4,13 @@ import hashlib
 from celery import group, chord
 from django.db import transaction
 
+from .ab_utils import get_containers_from_ab
 from .models import Imperium, AssetBundle, Container
 import unitypack
-from unitypack.assetbundle import AssetBundle as upAssetBundle
 from .celery import app
 from django.conf import settings
 import requests
 import traceback
-
-
-def get_containers_from_ab(bundle: upAssetBundle) -> list:
-    result = []
-    for asset in bundle.assets:
-        # print("%s: %s:: %i objects" % (bundle, asset, len(asset.objects)))
-        try:
-            # asset.objects may raise exception
-            if len(asset.objects) == 0: continue
-        except:
-            continue
-        # for id, object in asset.objects.items():
-        #     print(id, object.read())
-        # print(asset.objects.keys())
-        if asset.objects.get(1):
-            c_desc = asset.objects.get(1).read().get('m_Container')
-            if c_desc:
-                # get container name only
-                result += [i[0] for i in c_desc]
-    return result
 
 
 @app.task
@@ -77,7 +57,7 @@ def build_index_and_done(finished_ab_info, imperium_id):
             ab_objects.append(ab)
             # create containers
             try:
-                c = get_containers_from_ab(unitypack.load(open(target_md5, 'rb')))
+                c = get_containers_from_ab(unitypack.load(open(target_md5, 'rb'))).keys()
             except:
                 continue
             # use set to sure each name add only once
@@ -109,7 +89,7 @@ def ab_list_task(imperium_id):
     data = imperium.load_data()
     if isinstance(data.get('A'), dict):
         target_dir = os.path.join(settings.INSPECTOR_DATA_ROOT, 'assetbundle')
-        os.makedirs(target_dir,exist_ok=True)
+        os.makedirs(target_dir, exist_ok=True)
         subtasks_info = []
         ab_objects = []
         for md5, uid, url in data['A'].values():

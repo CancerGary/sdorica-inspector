@@ -1,6 +1,8 @@
 import os
+from collections import OrderedDict
 
 from celery.result import AsyncResult
+from django.http import Http404
 from django.shortcuts import redirect, render, get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from django.conf import settings
@@ -13,7 +15,7 @@ from rest_framework import viewsets, mixins, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from backend.api import imperium_reader
+from backend.api import imperium_reader, ab_utils
 from .models import GameVersion, GameVersionSerializer, Imperium, ImperiumSerializer, ImperiumDiffSerializer, \
     ImperiumType, ImperiumABDiffSerializer, ConvertRule, ConvertRuleSerializer, Container, ContainerSerializer, \
     AssetBundleSerializer, AssetBundle
@@ -65,7 +67,7 @@ class ImperiumViewSet(viewsets.ModelViewSet):
     queryset = Imperium.objects.all()
     serializer_class = ImperiumSerializer
     filter_backends = (DjangoFilterBackend,)
-    filter_fields = ('game_version', 'type_id','finished')
+    filter_fields = ('game_version', 'type_id', 'finished')
 
     authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticated,)
@@ -124,10 +126,11 @@ class ImperiumViewSet(viewsets.ModelViewSet):
                 cl = {i['name'] for i in d_left[k].container_set.values('name')}
                 cr = {i['name'] for i in d_right[k].container_set.values('name')}
                 if (cl != cr):
-                    change[k] = {'delete': cl - cr, 'add': cr - cl,'md5' :(d_left[k].md5,d_right[k].md5)}
+                    change[k] = {'delete': cl - cr, 'add': cr - cl, 'md5': (d_left[k].md5, d_right[k].md5)}
                 elif d_left[k].md5 != d_right[k].md5:
-                    nochange[k] = (d_left[k].md5 , d_right[k].md5)
-            return Response({'delete': delete, 'add': add, 'change': change,'nochange':nochange})
+                    nochange[k] = (d_left[k].md5, d_right[k].md5)
+            return Response({'delete': delete, 'add': add, 'change': change, 'nochange': nochange})
+
 
 class ConvertRuleViewSet(viewsets.ModelViewSet):
     """
@@ -139,6 +142,7 @@ class ConvertRuleViewSet(viewsets.ModelViewSet):
     queryset = ConvertRule.objects.all()
     serializer_class = ConvertRuleSerializer
 
+
 class ContainerViewSet(viewsets.GenericViewSet):
     """
     API endpoint that allows containers to be viewed or edited.
@@ -149,13 +153,14 @@ class ContainerViewSet(viewsets.GenericViewSet):
     queryset = Container.objects.all()
 
     @action(detail=False, methods=['GET'])
-    def search(self,request):
+    def search(self, request):
         if not request.query_params.get('query'):
             return Response('Query is too short')
         result = self.get_queryset()
         for i in request.query_params.get('query').split(' '):
             result = result.filter(name__contains=i)
-        return Response(ContainerSerializer(result,many=True).data)
+        return Response(ContainerSerializer(result, many=True).data)
+
 
 class AssetBundleViewSet(viewsets.GenericViewSet):
     """
@@ -165,9 +170,30 @@ class AssetBundleViewSet(viewsets.GenericViewSet):
     permission_classes = (permissions.IsAuthenticated,)
 
     queryset = AssetBundle.objects.all()
+    serializer_class = AssetBundleSerializer
+    lookup_field = 'md5'
 
-    def retrieve(self,request, pk=None):
+    def retrieve(self, request, md5=None):
         try:
-            return Response(AssetBundleSerializer(self.queryset.get(md5=pk)).data)
+            return Response(AssetBundleSerializer(self.queryset.get(md5=md5)).data)
         except AssetBundle.DoesNotExist:
-            return Response(AssetBundleSerializer(get_object_or_404(self.queryset, pk=pk)).data)
+            return Response(AssetBundleSerializer(get_object_or_404(self.queryset, pk=md5)).data)
+
+    @action(detail=True)
+    def containers(self, request, md5=None):
+        return Response(self.get_object().get_containers_path_id_dict())
+
+    @action(detail=True, url_path='containers/(?P<path_id>-?[0-9]+)/?')
+    def containers_retrieve(self, request, md5=None, path_id=None, *args, **kwargs):
+        path_id = int(path_id)
+        data = None
+        bundle = self.get_object().load_unitypack()
+        for asset in bundle.assets:
+            if asset.objects.get(path_id):
+                data = asset.objects[path_id].read()
+                break
+        if data is None:
+            raise Http404
+        else:
+            # TODO: maybe bugs
+            return Response(ab_utils.strip_pointers(data) if type(data) is OrderedDict else ab_utils.strip_pointers(data._obj))
