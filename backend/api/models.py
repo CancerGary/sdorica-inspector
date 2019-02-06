@@ -82,10 +82,10 @@ class AssetBundle(models.Model):
     def load_unitypack(self):
         return unitypack.load(open(os.path.join(settings.INSPECTOR_DATA_ROOT, 'assetbundle', self.md5), 'rb'))
 
-    def get_containers_path_id_dict(self):
+    def get_containers(self):
         try:
             bundle = self.load_unitypack()
-            return {k: v['asset'].object.path_id for k, v in ab_utils.get_containers_from_ab(bundle).items()}
+            return ab_utils.get_containers_from_ab(bundle)
         except RuntimeError:
             return {}
 

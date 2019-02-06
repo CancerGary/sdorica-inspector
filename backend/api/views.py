@@ -181,7 +181,8 @@ class AssetBundleViewSet(viewsets.GenericViewSet):
 
     @action(detail=True)
     def containers(self, request, md5=None):
-        return Response(self.get_object().get_containers_path_id_dict())
+        # path_id maybe overflow
+        return Response({v['asset'].object.path_id:{'name':k,'type':v['asset'].object.type} for k,v in self.get_object().get_containers().items()})
 
     @action(detail=True, url_path='containers/(?P<path_id>-?[0-9]+)/?')
     def containers_retrieve(self, request, md5=None, path_id=None, *args, **kwargs):

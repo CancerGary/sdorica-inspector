@@ -7,6 +7,7 @@ import ImperiumShow from "./components/ImperiumShow";
 import ImperiumDiff from "./components/ImperiumDiff";
 import ImperiumABDiff from "./components/ImperiumABDiff";
 import ContainerSearch from "./components/ContainerSearch";
+import AssetBundleViewer from "./components/AssetBundleViewer";
 
 Vue.use(Router)
 
@@ -46,6 +47,15 @@ export default new Router({
       path: '/container/search',
       name: 'container_search',
       component: ContainerSearch
+    },
+    {
+      path: '/asset_bundle/:ab_md5?/:container_path_id?',
+      name: 'asset_bundle_viewer',
+      component: AssetBundleViewer
+    },
+    {
+      path:'*',
+      redirect:'/'
     }
   ]
 })

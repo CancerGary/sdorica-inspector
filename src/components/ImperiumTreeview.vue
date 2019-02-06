@@ -61,7 +61,7 @@
                 continue;
               }
               id += 1;
-              if (root[key].constructor === Object || root[key].constructor === Array) {
+              if (root[key] &&(root[key].constructor === Object || root[key].constructor === Array)) {
                 result.push({id: id, name: key + ' [' + root[key].constructor.name + ']', children: handle(root[key])});
               } else {
                 if (alterKey) result.push({id: id, name: key + ' [' + alterKey[key] + '] : ' + root[key]});

@@ -41,7 +41,7 @@
           </router-link>
           <router-link tag="v-list-tile" to="/imperium/ab_diff">
             <v-list-tile-action>
-              <v-icon>note_add</v-icon>
+              <v-icon>mdi-vector-difference</v-icon>
             </v-list-tile-action>
             <v-list-tile-content>
               <v-list-tile-title>Imperium AB Diff</v-list-tile-title>
@@ -53,6 +53,14 @@
             </v-list-tile-action>
             <v-list-tile-content>
               <v-list-tile-title>Container Search</v-list-tile-title>
+            </v-list-tile-content>
+          </router-link>
+          <router-link tag="v-list-tile" to="/asset_bundle">
+            <v-list-tile-action>
+              <v-icon>mdi-glasses</v-icon>
+            </v-list-tile-action>
+            <v-list-tile-content>
+              <v-list-tile-title>AssetBundle Viewer</v-list-tile-title>
             </v-list-tile-content>
           </router-link>
         </v-list>
