@@ -9,7 +9,6 @@
     }),
     props: {
       imperiumData: {
-        type: Object,
         default() {
           return {}
         }
