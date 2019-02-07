@@ -197,4 +197,5 @@ class AssetBundleViewSet(viewsets.GenericViewSet):
             raise Http404
         else:
             # TODO: maybe bugs
-            return Response(ab_utils.strip_pointers(data) if type(data) is OrderedDict else ab_utils.strip_pointers(data._obj))
+            d = ab_utils.strip_pointers(data) if type(data) is OrderedDict else ab_utils.strip_pointers(data._obj)
+            return Response(d)

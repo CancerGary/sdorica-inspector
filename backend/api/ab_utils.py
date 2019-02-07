@@ -1,3 +1,4 @@
+import base64
 from collections import OrderedDict
 
 from unitypack.assetbundle import AssetBundle as upAssetBundle
@@ -30,6 +31,8 @@ def strip_pointers(object):
         return [strip_pointers(i) for i in object]
     elif type(object) is ObjectPointer:
         return object.path_id
+    elif type(object) is bytes:
+        return base64.b64encode(object)
     else:
         try:
             return strip_pointers(object._obj)
