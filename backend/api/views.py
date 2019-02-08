@@ -1,8 +1,10 @@
 import os
 from collections import OrderedDict
+from io import BytesIO
 
+from PIL import Image
 from celery.result import AsyncResult
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.shortcuts import redirect, render, get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from django.conf import settings
@@ -24,10 +26,31 @@ import hashlib
 from . import tasks
 from .celery import app as celery_app
 
+from . import ETC2ImagePlugin
+
 # Serve Vue Application
 index_view = login_required(never_cache(TemplateView.as_view(template_name='index.html')))
 
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+
+cache_dir = os.makedirs(os.path.join(settings.INSPECTOR_DATA_ROOT, 'object_cache'), exist_ok=True)
+
+
+def handle_image_data(object_data):
+    cache_file_path = os.path.join(os.path.join(settings.INSPECTOR_DATA_ROOT, 'object_cache'),
+                                   hashlib.md5(object_data.image_data).hexdigest())
+    if os.path.exists(cache_file_path):
+        return open(cache_file_path, 'rb').read()
+    else:
+        f = BytesIO()
+        # TODO: need to be optimized using PyPy (10x faster)
+        Image.frombytes("RGB" if object_data.format.pixel_format in ("RGB", "RGB;16") else "RGBA",
+                        (object_data.width, object_data.height),
+                        object_data.image_data, 'etc2',
+                        (object_data.format, object_data.format.pixel_format,)) \
+            .transpose(Image.FLIP_TOP_BOTTOM).save(f, 'png')
+        open(cache_file_path, 'wb').write(f.getvalue())
+        return f.getvalue()
 
 
 # disable csrf check
@@ -182,7 +205,8 @@ class AssetBundleViewSet(viewsets.GenericViewSet):
     @action(detail=True)
     def containers(self, request, md5=None):
         # path_id maybe overflow
-        return Response({v['asset'].object.path_id:{'name':k,'type':v['asset'].object.type} for k,v in self.get_object().get_containers().items()})
+        return Response({v['asset'].object.path_id: {'name': k, 'type': v['asset'].object.type} for k, v in
+                         self.get_object().get_containers().items()})
 
     @action(detail=True, url_path='containers/(?P<path_id>-?[0-9]+)/?')
     def containers_retrieve(self, request, md5=None, path_id=None, *args, **kwargs):
@@ -199,3 +223,36 @@ class AssetBundleViewSet(viewsets.GenericViewSet):
             # TODO: maybe bugs
             d = ab_utils.strip_pointers(data) if type(data) is OrderedDict else ab_utils.strip_pointers(data._obj)
             return Response(d)
+
+    @action(detail=True, url_path='containers/(?P<path_id>-?[0-9]+)/data')
+    def containers_data(self, request, md5=None, path_id=None, *args, **kwargs):
+        '''
+        `/data` url is designed for object types already in Unity3D. For customized types (such as `DialogAsset` ),
+        using JavaScript at frontend is better.
+        '''
+        path_id = int(path_id)
+        data = None
+        info = None
+        bundle = self.get_object().load_unitypack()
+        for asset in bundle.assets:
+            if asset.objects.get(path_id):
+                info = asset.objects[path_id]
+                data = asset.objects[path_id].read()
+                break
+        if data is None:
+            raise Http404
+        else:
+            if info.type == 'Texture2D':
+                return HttpResponse(handle_image_data(data), content_type="image/png")
+            elif info.type == 'Sprite':
+                rect = data.rd['textureRect']
+                # load texture first, then crop the area
+                img = Image.open(BytesIO(handle_image_data(data.rd['texture'].object.read()))) \
+                    .transpose(Image.FLIP_TOP_BOTTOM) \
+                    .crop(box=(rect['x'], rect['y'], rect['x'] + rect['width'], rect['y'] + rect['height'])) \
+                    .transpose(Image.FLIP_TOP_BOTTOM)
+                f = BytesIO()
+                img.save(f, 'png')
+                return HttpResponse(f.getvalue(), content_type="image/png")
+            else:
+                return Http404
