@@ -16,6 +16,7 @@ from django.views.decorators.cache import never_cache
 from rest_framework import viewsets, mixins, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from unitypack.engine.texture import TextureFormat
 
 from backend.api import imperium_reader, ab_utils
 from .models import GameVersion, GameVersionSerializer, Imperium, ImperiumSerializer, ImperiumDiffSerializer, \
@@ -44,7 +45,7 @@ def handle_image_data(object_data):
     else:
         f = BytesIO()
         # TODO: need to be optimized using PyPy (10x faster)
-        Image.frombytes("RGB" if object_data.format.pixel_format in ("RGB", "RGB;16") else "RGBA",
+        Image.frombytes("RGB" if object_data.format.pixel_format in ("RGB", "RGB;16") else  ("RGB" if (object_data.format==TextureFormat.ETC2_RGB) else "RGBA"),
                         (object_data.width, object_data.height),
                         object_data.image_data, 'etc2',
                         (object_data.format, object_data.format.pixel_format,)) \

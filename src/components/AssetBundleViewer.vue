@@ -40,7 +40,7 @@
         </v-toolbar>
         <v-card-text>
           <div style="word-break: break-all" v-if="currentContainerKey">{{containers[currentContainerKey].name}}
-            <{{containers[currentContainerKey].type}}>
+            <{{containers[currentContainerKey].type}}> | {{currentContainerKey}}
           </div>
           <imperium-treeview :imperiumData="interpretedData" v-show="!showMedia"></imperium-treeview>
           <div v-if="showMedia" v-html="interpretedMedia"></div>
