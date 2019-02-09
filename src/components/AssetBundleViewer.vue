@@ -32,7 +32,7 @@
           <v-toolbar-title>Viewer</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-tooltip left>
-            <v-btn icon slot="activator" @click="interpret = !interpret">
+            <v-btn icon slot="activator" @click="interpretData">
               <v-icon>{{interpret?'pause':'play_arrow'}}</v-icon>
             </v-btn>
             <span>Interpret</span>
@@ -42,7 +42,8 @@
           <div style="word-break: break-all" v-if="currentContainerKey">{{containers[currentContainerKey].name}}
             <{{containers[currentContainerKey].type}}>
           </div>
-          <imperium-treeview :imperiumData="interpretedData"></imperium-treeview>
+          <imperium-treeview :imperiumData="interpretedData" v-show="!showMedia"></imperium-treeview>
+          <div v-if="showMedia" v-html="interpretedMedia"></div>
         </v-card-text>
       </v-card>
     </v-flex>
@@ -63,7 +64,8 @@
         treeviewData: {},
         currentContainerData: {},
         currentABMd5: null,
-        currentABInfo: {}
+        currentABInfo: {},
+        showMedia: false,
       }
     },
     created() {
@@ -105,17 +107,48 @@
           this.currentContainerKey = key;
         })
       },
-    },
+      checkSupportType(type) {
+        return ['DialogAsset'].indexOf(type) > -1;
+      },
+      interpretData() {
+        if (this.interpret) {
+          // stop interpreting
+          this.showMedia = false;
+          this.interpret = false;
+        } else {
+          this.interpret = true;
+          // check interpreting
+          var type = this.containers[this.currentContainerKey].type;
+          // internal type check
+          if (type === 'Sprite') {
+            this.showMedia = true;
+          } else if (this.checkSupportType(type)) { // external type check
+
+          } else {
+            // not support
+            this.interpret = false;
+            this.showMedia = false;
+            this.$store.commit('toastMsg', 'Currently not support this type');
+          }
+        }
+      }
+    }
+    ,
     computed: {
       interpretedData() {
         if (this.interpret) {
-          if (this.containers[this.currentContainerKey].type === 'DialogAsset') {
-            return eval('(data)=>{var result=[]; for (var e in data._serializedStateValues) {var raw=JSON.parse(data._serializedStateValues[e].replace(":.0",":0.0"));raw.$interpreted=[];for (var i in raw.$content) raw.$interpreted.push(`${raw.$content[i].SpeakerName}: ${raw.$content[i].Text}`);result.push(raw)};return result;}')(this.currentContainerData);
-          }
-          this.interpret = false;
-          this.$store.commit('toastMsg', 'Currently not support this type');
+          var type = this.containers[this.currentContainerKey].type;
+          if (this.checkSupportType(type)) {
+            // customized code dict
+            var code = {DialogAsset: '(data)=>{var result=[]; for (var e in data._serializedStateValues) {var raw=JSON.parse(data._serializedStateValues[e].replace(":.0",":0.0"));raw.$interpreted=[];for (var i in raw.$content) raw.$interpreted.push(`${raw.$content[i].SpeakerName}: ${raw.$content[i].Text}`);result.push(raw)};return result;}'}[type];
+            return eval(code)(this.currentContainerData);
+          } else return this.currentContainerData;
         }
         return this.currentContainerData;
+      },
+      interpretedMedia() {
+        if (!this.showMedia) return "<div>If you see this, maybe there's a bug occurred.</div>";
+        return `<img src="/api/asset_bundle/${this.currentABMd5}/containers/${this.currentContainerKey}/data/">`;
       }
     },
     watch: {
