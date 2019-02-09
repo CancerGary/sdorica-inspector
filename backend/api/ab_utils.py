@@ -1,6 +1,7 @@
 import base64
 from collections import OrderedDict
 
+import fsb5
 from unitypack.assetbundle import AssetBundle as upAssetBundle
 from unitypack.object import ObjectPointer
 
@@ -38,3 +39,9 @@ def strip_pointers(object):
             return strip_pointers(object._obj)
         except AttributeError:
             return object
+
+def handle_fsb(data):
+    fsb = fsb5.load(data)
+    for sample in fsb.samples:
+        # assume 1 sample
+        return fsb.rebuild_sample(sample).tobytes()

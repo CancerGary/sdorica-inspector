@@ -34,7 +34,7 @@ index_view = login_required(never_cache(TemplateView.as_view(template_name='inde
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 
 cache_dir = os.makedirs(os.path.join(settings.INSPECTOR_DATA_ROOT, 'object_cache'), exist_ok=True)
-
+os.makedirs(os.path.join(settings.STATIC_ROOT,'audio'),exist_ok=True)
 
 def handle_image_data(object_data):
     cache_file_path = os.path.join(os.path.join(settings.INSPECTOR_DATA_ROOT, 'object_cache'),
@@ -254,5 +254,10 @@ class AssetBundleViewSet(viewsets.GenericViewSet):
                 f = BytesIO()
                 img.save(f, 'png')
                 return HttpResponse(f.getvalue(), content_type="image/png")
+            elif info.type == 'AudioClip':
+                filename = "%s,%s"%(md5,path_id)
+                filepath = os.path.join(settings.STATIC_ROOT,'audio',filename)
+                if not os.path.exists(filepath):open(filepath,'wb').write(ab_utils.handle_fsb(data.data))
+                return redirect('/static/audio/'+filename)
             else:
                 return Http404

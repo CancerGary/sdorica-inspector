@@ -120,7 +120,7 @@
           // check interpreting
           var type = this.containers[this.currentContainerKey].type;
           // internal type check
-          if (type === 'Sprite') {
+          if (['Sprite','AudioClip'].indexOf(type) > -1) {
             this.showMedia = true;
           } else if (this.checkSupportType(type)) { // external type check
 
@@ -148,7 +148,10 @@
       },
       interpretedMedia() {
         if (!this.showMedia) return "<div>If you see this, maybe there's a bug occurred.</div>";
-        return `<img src="/api/asset_bundle/${this.currentABMd5}/containers/${this.currentContainerKey}/data/">`;
+        var type = this.containers[this.currentContainerKey].type;
+        var source = `/api/asset_bundle/${this.currentABMd5}/containers/${this.currentContainerKey}/data/`;
+        if (type==='Sprite') return `<img src="${source}">`;
+        else if (type==='AudioClip') return `<audio controls style="width: 100%"> <source src="${source}" type="audio/ogg"></audio>`;
       }
     },
     watch: {
