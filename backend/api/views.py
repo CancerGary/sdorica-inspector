@@ -258,7 +258,9 @@ class AssetBundleViewSet(viewsets.GenericViewSet):
             elif info.type == 'AudioClip':
                 filename = "%s,%s"%(md5,path_id)
                 filepath = os.path.join(settings.STATIC_ROOT,'audio',filename)
-                if not os.path.exists(filepath):open(filepath,'wb').write(ab_utils.handle_fsb(data.data))
+                if not os.path.exists(filepath):
+                    cache = ab_utils.handle_fsb(data.data)
+                    open(filepath,'wb').write(cache)
                 return redirect('/static/audio/'+filename)
             else:
                 return Http404

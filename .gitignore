@@ -23,3 +23,6 @@ yarn-error.log*
 
 # Inspector data
 /data
+
+# libraries
+*.dll
