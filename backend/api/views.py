@@ -1,4 +1,5 @@
 import os
+import pickle
 from collections import OrderedDict
 from io import BytesIO
 
@@ -28,6 +29,7 @@ from . import tasks
 from .celery import app as celery_app
 
 from . import ETC2ImagePlugin
+import subprocess
 
 # Serve Vue Application
 index_view = login_required(never_cache(TemplateView.as_view(template_name='index.html')))
@@ -35,23 +37,37 @@ index_view = login_required(never_cache(TemplateView.as_view(template_name='inde
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 
 cache_dir = os.makedirs(os.path.join(settings.INSPECTOR_DATA_ROOT, 'object_cache'), exist_ok=True)
-os.makedirs(os.path.join(settings.STATIC_ROOT,'audio'),exist_ok=True)
+os.makedirs(os.path.join(settings.STATIC_ROOT, 'audio'), exist_ok=True)
+
 
 def handle_image_data(object_data):
-    cache_file_path = os.path.join(os.path.join(settings.INSPECTOR_DATA_ROOT, 'object_cache'),
-                                   hashlib.md5(object_data.image_data).hexdigest())
+    data_md5 = hashlib.md5(object_data.image_data).hexdigest()
+    cache_file_path = os.path.join(settings.INSPECTOR_DATA_ROOT, 'object_cache', data_md5)
     if os.path.exists(cache_file_path):
         return open(cache_file_path, 'rb').read()
     else:
-        f = BytesIO()
-        # TODO: need to be optimized using PyPy (10x faster)
-        Image.frombytes("RGB" if object_data.format.pixel_format in ("RGB", "RGB;16") else  ("RGB" if (object_data.format==TextureFormat.ETC2_RGB) else "RGBA"),
-                        (object_data.width, object_data.height),
-                        object_data.image_data, 'etc2',
-                        (object_data.format, object_data.format.pixel_format,)) \
-            .transpose(Image.FLIP_TOP_BOTTOM).save(f, 'png')
-        open(cache_file_path, 'wb').write(f.getvalue())
-        return f.getvalue()
+        args = ["RGB" if object_data.format.pixel_format in ("RGB", "RGB;16") else (
+            "RGB" if (object_data.format == TextureFormat.ETC2_RGB) else "RGBA"),
+                (object_data.width, object_data.height),
+                object_data.image_data, 'etc2',
+                (object_data.format.value, object_data.format.pixel_format,)]
+        if settings.INSPECTOR_PYPY_PATH:
+            open(cache_file_path + '.pypy.data', 'wb').write(args[2])
+            args[2] = ''
+            pickle.dump(args, open(cache_file_path + '.pypy.pkl', 'wb'))
+            p = subprocess.Popen([settings.INSPECTOR_PYPY_PATH,
+                                  os.path.join(os.path.dirname(os.path.abspath(__file__)), 'sub_pypy.py'),
+                                  cache_file_path])
+            p.communicate()
+            if p.returncode == 0:
+                os.remove(cache_file_path + '.pypy.data')
+                os.remove(cache_file_path + '.pypy.pkl')
+                return open(cache_file_path, 'rb').read()
+        else:
+            f = BytesIO()
+            Image.frombytes(*args).transpose(Image.FLIP_TOP_BOTTOM).save(f, 'png')
+            open(cache_file_path, 'wb').write(f.getvalue())
+            return f.getvalue()
 
 
 # disable csrf check
@@ -256,11 +272,11 @@ class AssetBundleViewSet(viewsets.GenericViewSet):
                 img.save(f, 'png')
                 return HttpResponse(f.getvalue(), content_type="image/png")
             elif info.type == 'AudioClip':
-                filename = "%s,%s"%(md5,path_id)
-                filepath = os.path.join(settings.STATIC_ROOT,'audio',filename)
+                filename = "%s,%s" % (md5, path_id)
+                filepath = os.path.join(settings.STATIC_ROOT, 'audio', filename)
                 if not os.path.exists(filepath):
                     cache = ab_utils.handle_fsb(data.data)
-                    open(filepath,'wb').write(cache)
-                return redirect('/static/audio/'+filename)
+                    open(filepath, 'wb').write(cache)
+                return redirect('/static/audio/' + filename)
             else:
                 return Http404

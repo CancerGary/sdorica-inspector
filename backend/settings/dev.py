@@ -145,6 +145,8 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 INSPECTOR_DATA_ROOT = os.path.join(BASE_DIR, 'data')
 
+INSPECTOR_PYPY_PATH = os.environ.get('INSPECTOR_PYPY_PATH')
+
 CORS_ORIGIN_WHITELIST = (
     'localhost:8080'
 )
