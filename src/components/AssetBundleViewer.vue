@@ -150,7 +150,7 @@
         if (!this.showMedia) return "<div>If you see this, maybe there's a bug occurred.</div>";
         var type = this.containers[this.currentContainerKey].type;
         var source = `/api/asset_bundle/${this.currentABMd5}/containers/${this.currentContainerKey}/data/`;
-        if (type==='Sprite') return `<img src="${source}" style="width: 100%">`;
+        if (type==='Sprite') return `<img src="${source}" style="max-width: 100%">`;
         else if (type==='AudioClip') return `<audio controls style="width: 100%"> <source src="${source}" type="audio/ogg"></audio>`;
       }
     },
