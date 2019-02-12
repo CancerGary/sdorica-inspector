@@ -158,3 +158,6 @@ REST_FRAMEWORK = {
 }
 
 LOGIN_URL = '/login'
+
+# for audio file, may be replaced in future
+WHITENOISE_AUTOREFRESH = True

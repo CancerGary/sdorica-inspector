@@ -67,7 +67,7 @@
       </v-navigation-drawer>
       <v-toolbar color="indigo" dark fixed app>
         <v-toolbar-side-icon @click.stop="drawer = !drawer"></v-toolbar-side-icon>
-        <v-toolbar-title>Application</v-toolbar-title>
+        <v-toolbar-title>{{ $route.meta.title }}</v-toolbar-title>
         <v-spacer></v-spacer>
         <v-toolbar-side-icon @click.stop="convertConfigDrawer = !convertConfigDrawer"></v-toolbar-side-icon>
       </v-toolbar>

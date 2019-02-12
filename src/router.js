@@ -16,42 +16,50 @@ export default new Router({
     {
       path: '/',
       name: 'home',
-      component: Home
+      component: Home,
+      meta: {title:'Home'}
     },
     {
       path: '/game_version',
       name: 'game_version',
-      component: GameVersionList
+      component: GameVersionList,
+      meta: {title:'Game Version'}
     },
     {
       path: '/imperium',
       name: 'imperium',
-      component: ImperiumList
+      component: ImperiumList,
+      meta: {title:'Imperium'}
     },
     {
       path: '/imperium/diff',
       name: 'imperium_diff',
-      component: ImperiumDiff
+      component: ImperiumDiff,
+      meta: {title:'Imperium Diff'}
     },
     {
       path: '/imperium/ab_diff',
       name: 'imperium_ab_diff',
-      component: ImperiumABDiff
+      component: ImperiumABDiff,
+      meta: {title:'Imperium AB Diff'}
     },
     {
       path: '/imperium/:imperium_id',
       name: 'imperium_show',
-      component: ImperiumShow
+      component: ImperiumShow,
+      meta: {title:'Imperium Show'}
     },
     {
       path: '/container/search',
       name: 'container_search',
-      component: ContainerSearch
+      component: ContainerSearch,
+      meta: {title:'Container Search'}
     },
     {
       path: '/asset_bundle/:ab_md5?/:container_path_id?',
       name: 'asset_bundle_viewer',
-      component: AssetBundleViewer
+      component: AssetBundleViewer,
+      meta: {title:'AssetBundle Viewer'}
     },
     {
       path:'*',
