@@ -19,7 +19,10 @@
                         :key="bundleName"
                     >
                       <div slot="header">
-                        <div>{{bundleName}} [{{data.data.length}}] | {{data.md5}}</div>
+                        <div>{{bundleName}} [{{data.data.length}}] |
+                          <router-link :to="{name:'asset_bundle_viewer',params:{ab_md5:data.md5}}">{{data.md5}}
+                          </router-link>
+                        </div>
                       </div>
                       <v-card>
                         <v-card-text>
@@ -37,7 +40,10 @@
                         :key="bundleName"
                     >
                       <div slot="header">
-                        <div>{{bundleName}} [{{data.data.length}}] | {{data.md5}}</div>
+                        <div>{{bundleName}} [{{data.data.length}}] |
+                          <router-link :to="{name:'asset_bundle_viewer',params:{ab_md5:data.md5}}">{{data.md5}}
+                          </router-link>
+                        </div>
                       </div>
                       <v-card>
                         <v-card-text>
@@ -51,19 +57,27 @@
               <v-layout row wrap>
                 <v-flex xs12>Size change only</v-flex>
                 <v-flex xs12>
-                  <div v-for="(data,bundleName) in imperiumDiffData.nochange">{{bundleName}} | {{data[0]}} |
-                    {{data[1]}}
+                  <div v-for="(data,bundleName) in imperiumDiffData.nochange">{{bundleName}} |
+                    <router-link :to="{name:'asset_bundle_viewer',params:{ab_md5:data[0]}}">{{data[0]}}</router-link>
+                    |
+                    <router-link :to="{name:'asset_bundle_viewer',params:{ab_md5:data[1]}}">{{data[1]}}</router-link>
                   </div>
                 </v-flex>
               </v-layout>
               <v-layout row wrap v-for="(data,bundleName) in imperiumDiffData.change">
                 <v-flex xs12>{{bundleName}}</v-flex>
                 <v-flex xs12 sm6 class="red--text">
-                  <div>[-] {{data.md5[0]}}</div>
+                  <div>[-]
+                    <router-link :to="{name:'asset_bundle_viewer',params:{ab_md5:data.md5[0]}}">{{data.md5[0]}}
+                    </router-link>
+                  </div>
                   <div v-for="containerName in data.delete">{{containerName}}</div>
                 </v-flex>
                 <v-flex xs12 sm6 class="green--text">
-                  <div>[+] {{data.md5[1]}}</div>
+                  <div>[+]
+                    <router-link :to="{name:'asset_bundle_viewer',params:{ab_md5:data.md5[1]}}">{{data.md5[1]}}
+                    </router-link>
+                  </div>
                   <div v-for="containerName in data.add">{{containerName}}</div>
                 </v-flex>
               </v-layout>
@@ -111,5 +125,7 @@
 </script>
 
 <style scoped>
-
+  a {
+    color: inherit;
+  }
 </style>

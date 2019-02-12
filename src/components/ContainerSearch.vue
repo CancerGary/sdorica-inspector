@@ -27,11 +27,11 @@
                 ></v-text-field>
               </v-flex>
               <v-flex xs12 sm2 class="d-flex">
-                <v-btn color="info"
-                       @click="searchContainer">
+                <router-link tag="v-btn" class="primary"
+                       :to="{name:'container_search',query:{q:query}}">
                   <v-icon>search</v-icon>
                   Search
-                </v-btn>
+                </router-link>
               </v-flex>
             </v-layout>
           </v-card-text>
@@ -48,7 +48,7 @@
             <div v-for="result in searchResult">
               <div> {{result.name}}</div>
               <div class="ml-4 grey--text">
-              <div v-for="ab in result.asset_bundles">{{ab.md5}} | {{ab.name}}</div>
+                <div v-for="ab in result.asset_bundles">{{ab.md5}} | <router-link :to="{name:'asset_bundle_viewer',params:{ab_md5:ab.md5}}" class="grey--text">{{ab.name}}</router-link></div> <!--TODO: jump to specified container-->
               </div>
             </div>
             <div v-if="searchResult.length===0">
@@ -77,13 +77,27 @@
           this.imperiumList.push({text: `[${item.type_id}] ${item.name}`, value: item.id});
         });
       })
+      if (this.$route.query.q) {
+        this.query = this.$route.query.q;
+        this.searchContainer()
+      }
     },
     methods:{
       searchContainer(){
         if (!this.query) this.$store.commit('toastMsg', 'Input query first');
-        else this.$http.get('/api/container/search/',{params:{query:this.query}}).then(response => {
-          this.searchResult=response.data;
-        })
+        else {
+          this.$http.get('/api/container/search/',{params:{query:this.query}}).then(response => {
+            this.searchResult=response.data;
+          })
+        }
+      }
+    },
+    watch:{
+      '$route'() {
+        if (this.$route.query.q) {
+          this.query = this.$route.query.q;
+          this.searchContainer()
+        }
       }
     }
   }

@@ -24,7 +24,7 @@
               ></v-select>
             </v-flex>
             <v-flex xs12 sm2 order-sm2 class="d-flex">
-                  <v-btn color="info" @click="imperiumInfoNew.type_id===imperiumInfoOld.type_id?$emit('compare',oldSelect,newSelect):$store.commit('toastMsg', 'Type not same')">
+                  <v-btn color="primary" @click="imperiumInfoNew.type_id===imperiumInfoOld.type_id?$emit('compare',oldSelect,newSelect):$store.commit('toastMsg', 'Type not same')">
                     <v-icon>compare_arrows</v-icon>
                     Start
                   </v-btn>
