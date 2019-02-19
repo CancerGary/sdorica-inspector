@@ -119,6 +119,7 @@
     },
     mounted() {
       this.copyButton = new ClipboardJS('.copy-button', {
+        // eslint-disable-next-line
         text: (trigger) => {
           return this.currentABData.url
         }
@@ -173,9 +174,11 @@
     },
     watch: {
       // sync show props and showState v-model
+      // eslint-disable-next-line
       showState(newV, oldV) {
         this.$emit('update:show', newV);
       },
+      // eslint-disable-next-line
       show(newV, oldV) {
         this.showState = newV;
       }

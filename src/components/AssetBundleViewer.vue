@@ -20,7 +20,8 @@
           <!--:to="{name:'asset_bundle_viewer',params:{ab_md5:$route.params.ab_md5,container_path_id:k}}"-->
           <v-list-tile @click="fetchContainerData(k)"
                        v-for="(v,k) in containers"
-                       :class="{active:currentContainerKey===k}">
+                       :class="{active:currentContainerKey===k}"
+                       :key="k">
             <v-list-tile-title>{{v.name.split('/')[v.name.split('/').length-1]}}</v-list-tile-title>
           </v-list-tile>
         </v-list>
@@ -40,7 +41,7 @@
         </v-toolbar>
         <v-card-text>
           <div style="word-break: break-all" v-if="currentContainerKey">{{containers[currentContainerKey].name}}
-            <{{containers[currentContainerKey].type}}> | {{currentContainerKey}}
+            &#40;{{containers[currentContainerKey].type}}&#41; | {{currentContainerKey}}
           </div>
           <imperium-treeview :imperiumData="interpretedData" v-show="!showMedia"></imperium-treeview>
           <div v-if="showMedia" v-html="interpretedMedia"></div>
@@ -160,6 +161,7 @@
       }
     },
     watch: {
+      // eslint-disable-next-line
       '$route'(to, from) {
         this.load();
         //this.$forceUpdate();

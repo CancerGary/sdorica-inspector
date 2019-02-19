@@ -132,11 +132,13 @@
           this.$http.get(`/api/asset_bundle/${selectedText}/`).then((response) => {
             this.convertResult = response.data.imperiums.join(', ');
             this.currentABData = response.data;
+            // eslint-disable-next-line
           }).catch(error => {
             this.convertResult = 'No result.';
           })
         } else {
           var convertResult = [];
+          // eslint-disable-next-line
           this.$store.state.convertRule.forEach((value, index) => {
             if (selectedText.search(value.pattern) > -1) convertResult.push(`${value.pattern}: ${value.text} `);
           })

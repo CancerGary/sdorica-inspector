@@ -26,7 +26,7 @@
                       </div>
                       <v-card>
                         <v-card-text>
-                          <div v-for="c in data.data">{{c}}</div>
+                          <div v-for="c in data.data" :key="c">{{c}}</div>
                         </v-card-text>
                       </v-card>
                     </v-expansion-panel-content>
@@ -47,7 +47,7 @@
                       </div>
                       <v-card>
                         <v-card-text>
-                          <div v-for="c in data.data">{{c}}</div>
+                          <div v-for="c in data.data" :key="c">{{c}}</div>
                         </v-card-text>
                       </v-card>
                     </v-expansion-panel-content>
@@ -57,28 +57,34 @@
               <v-layout row wrap>
                 <v-flex xs12>Size change only</v-flex>
                 <v-flex xs12>
-                  <div v-for="(data,bundleName) in imperiumDiffData.nochange">{{bundleName}} |
+                  <div v-for="(data,bundleName) in imperiumDiffData.nochange" :key="bundleName">{{bundleName}} |
                     <router-link :to="{name:'asset_bundle_viewer',params:{ab_md5:data[0]}}">{{data[0]}}</router-link>
                     |
                     <router-link :to="{name:'asset_bundle_viewer',params:{ab_md5:data[1]}}">{{data[1]}}</router-link>
                   </div>
                 </v-flex>
               </v-layout>
-              <v-layout row wrap v-for="(data,bundleName) in imperiumDiffData.change">
+              <v-layout row wrap v-for="(data,bundleName) in imperiumDiffData.change" :key="bundleName">
                 <v-flex xs12>{{bundleName}}</v-flex>
                 <v-flex xs12 sm6 class="red--text">
                   <div>[-]
                     <router-link :to="{name:'asset_bundle_viewer',params:{ab_md5:data.md5[0]}}">{{data.md5[0]}}
                     </router-link>
                   </div>
-                  <router-link class="d-block" v-for="containerName in data.delete" :to="{name:'asset_bundle_viewer',params:{ab_md5:data.md5[1]},query:{container_name:containerName}}">{{containerName}}</router-link>
+                  <router-link class="d-block" v-for="containerName in data.delete"
+                               :to="{name:'asset_bundle_viewer',params:{ab_md5:data.md5[1]},query:{container_name:containerName}}"
+                               :key="containerName">{{containerName}}
+                  </router-link>
                 </v-flex>
                 <v-flex xs12 sm6 class="green--text">
                   <div>[+]
                     <router-link :to="{name:'asset_bundle_viewer',params:{ab_md5:data.md5[1]}}">{{data.md5[1]}}
                     </router-link>
                   </div>
-                  <router-link class="d-block" v-for="containerName in data.add" :to="{name:'asset_bundle_viewer',params:{ab_md5:data.md5[1]},query:{container_name:containerName}}">{{containerName}}</router-link>
+                  <router-link class="d-block" v-for="containerName in data.add"
+                               :to="{name:'asset_bundle_viewer',params:{ab_md5:data.md5[1]},query:{container_name:containerName}}"
+                               :key="containerName">{{containerName}}
+                  </router-link>
                 </v-flex>
               </v-layout>
             </div>
