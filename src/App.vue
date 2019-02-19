@@ -73,7 +73,10 @@
       </v-toolbar>
       <v-content>
         <v-container fluid grid-list-lg>
-          <router-view></router-view>
+          <keep-alive>
+          <router-view v-if="$route.meta.keepAlive"></router-view>
+            </keep-alive>
+          <router-view v-if="!$route.meta.keepAlive"></router-view>
         </v-container>
       </v-content>
       <helper-side-drawer v-bind:show.sync="convertConfigDrawer" :current-a-b-data="currentABData"></helper-side-drawer>

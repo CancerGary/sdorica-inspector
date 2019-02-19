@@ -71,14 +71,14 @@
                     <router-link :to="{name:'asset_bundle_viewer',params:{ab_md5:data.md5[0]}}">{{data.md5[0]}}
                     </router-link>
                   </div>
-                  <div v-for="containerName in data.delete">{{containerName}}</div>
+                  <router-link class="d-block" v-for="containerName in data.delete" :to="{name:'asset_bundle_viewer',params:{ab_md5:data.md5[1]},query:{container_name:containerName}}">{{containerName}}</router-link>
                 </v-flex>
                 <v-flex xs12 sm6 class="green--text">
                   <div>[+]
                     <router-link :to="{name:'asset_bundle_viewer',params:{ab_md5:data.md5[1]}}">{{data.md5[1]}}
                     </router-link>
                   </div>
-                  <div v-for="containerName in data.add">{{containerName}}</div>
+                  <router-link class="d-block" v-for="containerName in data.add" :to="{name:'asset_bundle_viewer',params:{ab_md5:data.md5[1]},query:{container_name:containerName}}">{{containerName}}</router-link>
                 </v-flex>
               </v-layout>
             </div>

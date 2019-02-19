@@ -101,6 +101,7 @@
     watch: {
       '$route'() {
         if (this.$route.query.q) {
+          // TODO: keep-alive optimize
           this.query = this.$route.query.q;
           this.searchContainer()
         }

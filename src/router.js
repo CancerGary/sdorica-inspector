@@ -41,7 +41,7 @@ export default new Router({
       path: '/imperium/ab_diff',
       name: 'imperium_ab_diff',
       component: ImperiumABDiff,
-      meta: {title:'Imperium AB Diff'}
+      meta: {title:'Imperium AB Diff',keepAlive:true}
     },
     {
       path: '/imperium/:imperium_id',
@@ -53,7 +53,7 @@ export default new Router({
       path: '/container/search',
       name: 'container_search',
       component: ContainerSearch,
-      meta: {title:'Container Search'}
+      meta: {title:'Container Search',keepAlive:true}
     },
     {
       path: '/asset_bundle/:ab_md5?/:container_path_id?',
