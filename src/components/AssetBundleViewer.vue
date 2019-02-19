@@ -17,12 +17,12 @@
 
         <!--text-align: left;direction: rtl;-->
         <v-list dense style="height: 400px;overflow-y:auto">
-          <router-link tag='v-list-tile'
-                       :to="{name:'asset_bundle_viewer',params:{ab_md5:$route.params.ab_md5,container_path_id:k}}"
+          <!--:to="{name:'asset_bundle_viewer',params:{ab_md5:$route.params.ab_md5,container_path_id:k}}"-->
+          <v-list-tile @click="fetchContainerData(k)"
                        v-for="(v,k) in containers"
                        :class="{active:currentContainerKey===k}">
             <v-list-tile-title>{{v.name.split('/')[v.name.split('/').length-1]}}</v-list-tile-title>
-          </router-link>
+          </v-list-tile>
         </v-list>
       </v-card>
     </v-flex>
@@ -95,6 +95,11 @@
         this.currentContainerData = {};
         this.$http.get(`/api/asset_bundle/${this.$route.params.ab_md5}/containers/`).then((response) => {
           this.containers = response.data;
+          if (this.$route.query.container_name) {
+            for (var key in this.containers)
+              if (this.containers[key].name === this.$route.query.container_name)
+                this.fetchContainerData(key);
+          }
           // v-if
           this.currentABMd5 = this.$route.params.ab_md5;
         })
@@ -120,7 +125,7 @@
           // check interpreting
           var type = this.containers[this.currentContainerKey].type;
           // internal type check
-          if (['Sprite','AudioClip'].indexOf(type) > -1) {
+          if (['Sprite', 'AudioClip'].indexOf(type) > -1) {
             this.showMedia = true;
           } else if (this.checkSupportType(type)) { // external type check
 
@@ -150,8 +155,8 @@
         if (!this.showMedia) return "<div>If you see this, maybe there's a bug occurred.</div>";
         var type = this.containers[this.currentContainerKey].type;
         var source = `/api/asset_bundle/${this.currentABMd5}/containers/${this.currentContainerKey}/data/`;
-        if (type==='Sprite') return `<img src="${source}" style="max-width: 100%">`;
-        else if (type==='AudioClip') return `<audio controls style="width: 100%"> <source src="${source}" type="audio/ogg"></audio>`;
+        if (type === 'Sprite') return `<img src="${source}" style="max-width: 100%">`;
+        else if (type === 'AudioClip') return `<audio controls style="width: 100%"> <source src="${source}" type="audio/ogg"></audio>`;
       }
     },
     watch: {
