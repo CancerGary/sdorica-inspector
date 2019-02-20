@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.shortcuts import redirect, render
 from requests_oauthlib import OAuth2Session
 
-from backend.api.models import Profile
+from backend.api.models import Profile, DiscordInvite
 
 OAUTH2_CLIENT_ID = os.environ.get('DISCORD_OAUTH2_CLIENT_ID')
 OAUTH2_CLIENT_SECRET = os.environ.get('DISCORD_OAUTH2_CLIENT_SECRET')
@@ -69,7 +69,12 @@ def discord_callback_view(request):
         user.profile.discord_id = discord_user['id']
         user.profile.save()
 
-    login(request, user)
+    try:
+        # check if the user is in the invite list
+        DiscordInvite.objects.get(discord_id=discord_user['id'])
+        login(request, user)
+    except DiscordInvite.DoesNotExist:
+        pass
     return redirect('/')
 
 

@@ -118,13 +118,19 @@ class ConvertRule(models.Model):
 
 
 class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE,related_name='profile')
-    discord_id = models.CharField(max_length=30,null=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    discord_id = models.CharField(max_length=30, null=True)
+
 
 @receiver(post_save, sender=User)
 def update_user_profile(sender, instance, created, **kwargs):
     if created:
         Profile.objects.create(user=instance).save()
+
+
+class DiscordInvite(models.Model):
+    discord_id = models.CharField(max_length=30, db_index=True)
+
 
 class GameVersionSerializer(serializers.HyperlinkedModelSerializer):
     imperiums = serializers.HyperlinkedRelatedField(many=True, read_only=True, view_name='imperium-detail')
