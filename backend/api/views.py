@@ -77,18 +77,6 @@ class CsrfExemptSessionAuthentication(SessionAuthentication):
         return
 
 
-# login page
-def login_view(request):
-    alert_msg = ""
-    if request.method == 'POST' and request.POST.get('username') and request.POST.get('password'):
-        user = authenticate(request, username=request.POST.get('username'), password=request.POST.get('password'))
-        if user is not None:
-            login(request, user)
-            return redirect('/')
-        alert_msg = 'Invalid username or password. Maybe you can contact Puggi for help.'
-    return render(request, template_name='login.html', context={'alert': alert_msg})
-
-
 class GameVersionViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows game versions to be viewed or edited.

@@ -9,15 +9,17 @@ from django.urls import path, include
 from rest_framework import routers
 from rest_framework.schemas import get_schema_view
 
-from .api.views import index_view, GameVersionViewSet, ImperiumViewSet, login_view, ConvertRuleViewSet, \
+from .api.views import index_view, GameVersionViewSet, ImperiumViewSet, ConvertRuleViewSet, \
     ContainerViewSet, AssetBundleViewSet
+
+from .api.auth_views import login_view, discord_callback_view, discord_redirect_view
 
 router = routers.DefaultRouter()
 router.register('game_version', GameVersionViewSet)
-router.register('imperium',ImperiumViewSet)
-router.register('convert_rule',ConvertRuleViewSet)
-router.register('container',ContainerViewSet)
-router.register('asset_bundle',AssetBundleViewSet)
+router.register('imperium', ImperiumViewSet)
+router.register('convert_rule', ConvertRuleViewSet)
+router.register('container', ContainerViewSet)
+router.register('asset_bundle', AssetBundleViewSet)
 
 schema_view = get_schema_view(title='Sdorica Inspector API')
 
@@ -36,7 +38,9 @@ urlpatterns = [
 
     path('api-auth/', include('rest_framework.urls')),
 
-    path('login', login_view)
+    path('login', login_view),
+
+    path('discord_oauth/redirect', discord_redirect_view),
+
+    path('discord_oauth/callback',discord_callback_view)
 ]
-
-

@@ -7,7 +7,10 @@ from enum import Enum
 import requests
 import unitypack
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.utils.six import BytesIO
 from rest_framework import serializers
 from django.core.files.storage import default_storage
@@ -113,6 +116,15 @@ class ConvertRule(models.Model):
     pattern = models.CharField(max_length=100)
     text = models.TextField(null=True)
 
+
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE,related_name='profile')
+    discord_id = models.CharField(max_length=30,null=True)
+
+@receiver(post_save, sender=User)
+def update_user_profile(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance).save()
 
 class GameVersionSerializer(serializers.HyperlinkedModelSerializer):
     imperiums = serializers.HyperlinkedRelatedField(many=True, read_only=True, view_name='imperium-detail')

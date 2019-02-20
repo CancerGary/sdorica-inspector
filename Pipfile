@@ -23,6 +23,7 @@ redis = "*"
 flower = "*"
 watchdog = "*"
 pymysql = "*"
+requests-oauthlib = "*"
 
 [dev-packages]
 
