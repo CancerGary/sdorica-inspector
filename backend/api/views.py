@@ -82,7 +82,7 @@ class GameVersionViewSet(viewsets.ModelViewSet):
     API endpoint that allows game versions to be viewed or edited.
     """
     authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.DjangoModelPermissions,)
 
     queryset = GameVersion.objects.all()
     serializer_class = GameVersionSerializer
@@ -98,7 +98,7 @@ class ImperiumViewSet(viewsets.ModelViewSet):
     filter_fields = ('game_version', 'type_id', 'finished')
 
     authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.DjangoModelPermissions,)
 
     @action(detail=True)
     def unpack(self, request, *args, **kwargs):
@@ -165,7 +165,7 @@ class ConvertRuleViewSet(viewsets.ModelViewSet):
     API endpoint that allows convert rules to be viewed or edited.
     """
     authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.DjangoModelPermissions,)
 
     queryset = ConvertRule.objects.all()
     serializer_class = ConvertRuleSerializer
@@ -176,7 +176,7 @@ class ContainerViewSet(viewsets.GenericViewSet):
     API endpoint that allows containers to be viewed or edited.
     """
     authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.DjangoModelPermissions,)
 
     queryset = Container.objects.all()
 
@@ -195,7 +195,7 @@ class AssetBundleViewSet(viewsets.GenericViewSet):
     API endpoint that allows containers to be viewed or edited.
     """
     authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.DjangoModelPermissions,)
 
     queryset = AssetBundle.objects.all()
     serializer_class = AssetBundleSerializer

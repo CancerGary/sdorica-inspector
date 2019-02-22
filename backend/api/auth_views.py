@@ -28,7 +28,11 @@ def login_view(request):
         if user is not None:
             try:
                 # check if user have discord_id
-                _ = user.profile.discord_id
+                if user.profile.discord_id:
+                    alert_msg = 'Please login by Discord.'
+                else:
+                    login(request, user)
+                    return redirect('/')
             except Profile.DoesNotExist:
                 # old users don't have user.profile
                 login(request, user)
@@ -98,7 +102,3 @@ def make_session(token=None, state=None, scope=None, request=None):
         },
         auto_refresh_url=TOKEN_URL,
         token_updater=token_updater_factory(request))
-
-
-if __name__ == '__main__':
-    app.run()
