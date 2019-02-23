@@ -278,3 +278,4 @@ class ViewerJSViewSet(viewsets.ModelViewSet):
 
     queryset = ViewerJS.objects.all()
     serializer_class = ViewerJSSerializer
+    lookup_field = 'unity_type'

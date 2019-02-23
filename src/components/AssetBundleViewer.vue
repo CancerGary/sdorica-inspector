@@ -28,35 +28,72 @@
       </v-card>
     </v-flex>
     <v-flex xs12 sm8 lg9>
-      <v-card>
-        <v-toolbar card dense>
-          <v-toolbar-title>Viewer</v-toolbar-title>
-          <v-spacer></v-spacer>
-          <v-tooltip left>
-            <v-btn icon slot="activator" @click="interpretData">
-              <v-icon>{{interpret?'pause':'play_arrow'}}</v-icon>
-            </v-btn>
-            <span>Interpret</span>
-          </v-tooltip>
-        </v-toolbar>
-        <v-card-text>
-          <div style="word-break: break-all" v-if="currentContainerKey">{{containers[currentContainerKey].name}}
-            &#40;{{containers[currentContainerKey].type}}&#41; | {{currentContainerKey}}
-          </div>
-          <imperium-treeview :imperiumData="interpretedData" v-show="!showMedia"></imperium-treeview>
-          <div v-if="showMedia" v-html="interpretedMedia"></div>
-        </v-card-text>
-      </v-card>
+      <v-layout column>
+        <v-flex xs12 v-show="interpreterEditor">
+          <v-card>
+            <v-toolbar card dense>
+              <v-toolbar-title>Interpreter JavaScript</v-toolbar-title>
+              <v-spacer></v-spacer>
+              <v-tooltip bottom>
+                <v-btn icon slot="activator" @click="setCodeEditing">
+                  <v-icon>restore</v-icon>
+                </v-btn>
+                <span>Reset</span>
+              </v-tooltip>
+              <v-tooltip bottom>
+                <v-btn icon slot="activator" @click="submitViewerJS">
+                  <v-icon>save</v-icon>
+                </v-btn>
+                <span>Save</span>
+              </v-tooltip>
+            </v-toolbar>
+            <v-card-text>
+              <prism-editor v-model="codeEditing" language="js" :lineNumbers="true"></prism-editor>
+            </v-card-text>
+          </v-card>
+        </v-flex>
+        <v-flex xs12>
+          <v-card>
+            <v-toolbar card dense>
+              <v-toolbar-title>Viewer</v-toolbar-title>
+              <v-spacer></v-spacer>
+              <v-tooltip bottom>
+                <v-btn icon slot="activator" @click="interpreterEditor = !interpreterEditor">
+                  <v-icon>code</v-icon>
+                </v-btn>
+                <span>Edit Interpreter</span>
+              </v-tooltip>
+              <v-tooltip bottom>
+                <v-btn icon slot="activator" @click="interpretData">
+                  <v-icon>{{interpret?'pause':'play_arrow'}}</v-icon>
+                </v-btn>
+                <span>Interpret</span>
+              </v-tooltip>
+            </v-toolbar>
+            <v-card-text>
+              <div style="word-break: break-all" v-if="currentContainerKey">{{containers[currentContainerKey].name}}
+                &#40;{{containers[currentContainerKey].type}}&#41; | {{currentContainerKey}}
+              </div>
+              <imperium-treeview :imperiumData="interpretedData" v-show="!showMedia"></imperium-treeview>
+              <div v-if="showMedia" v-html="interpretedMedia"></div>
+            </v-card-text>
+          </v-card>
+        </v-flex>
+      </v-layout>
     </v-flex>
   </v-layout>
 </template>
 
 <script>
   import ImperiumTreeview from "./ImperiumTreeview";
+  import "prismjs";
+  import "prismjs/themes/prism.css";
+  import PrismEditor from "vue-prism-editor"
+  import "vue-prism-editor/dist/VuePrismEditor.css";
 
   export default {
     name: "AssetBundleViewer",
-    components: {ImperiumTreeview},
+    components: {ImperiumTreeview, PrismEditor},
     data() {
       return {
         containers: {},
@@ -67,9 +104,13 @@
         currentABMd5: null,
         currentABInfo: {},
         showMedia: false,
+        interpreterEditor: false,
+        codeEditing: 'alert("hello")',
+        viewerJS: {}
       }
     },
     created() {
+      this.fetchViewerJS();
       this.load();
     },
     methods: {
@@ -89,6 +130,13 @@
       fetchABInfo() {
         this.$http.get(`/api/asset_bundle/${this.$route.params.ab_md5}/`).then((response) => {
           this.currentABInfo = response.data;
+        })
+      },
+      fetchViewerJS() {
+        this.$http.get(`/api/viewer_js/`).then((response) => {
+          response.data.forEach((value) => {
+            this.viewerJS[value.unity_type] = {javascript: value.javascript, id: value.id}
+          });
         })
       },
       fetchContainerList() {
@@ -111,10 +159,17 @@
           this.currentContainerData = response.data;
           // v-if
           this.currentContainerKey = key;
+          this.setCodeEditing();
         })
       },
+      setCodeEditing() {
+        var _ = this.viewerJS[this.containers[this.currentContainerKey].type];
+        // console.log(_);
+        this.codeEditing = _ ? _.javascript : "(data) => {\nconsole.log('handleing');\nconsole.log(data);\n" +
+          "return {result:data.m_Name}\n}";
+      },
       checkSupportType(type) {
-        return ['DialogAsset'].indexOf(type) > -1;
+        return this.interpreterEditor || this.viewerJS.hasOwnProperty(type);
       },
       interpretData() {
         if (this.interpret) {
@@ -122,14 +177,14 @@
           this.showMedia = false;
           this.interpret = false;
         } else {
-          this.interpret = true;
           // check interpreting
           var type = this.containers[this.currentContainerKey].type;
           // internal type check
           if (['Sprite', 'AudioClip'].indexOf(type) > -1) {
+            this.interpret = true;
             this.showMedia = true;
           } else if (this.checkSupportType(type)) { // external type check
-
+            this.interpret = true;
           } else {
             // not support
             this.interpret = false;
@@ -137,6 +192,21 @@
             this.$store.commit('toastMsg', 'Currently not support this type');
           }
         }
+      },
+      submitViewerJS() {
+        var type = this.containers[this.currentContainerKey].type;
+        var _ = this.viewerJS[type];
+        var p = undefined;
+        if (_) p = this.$http.put(`/api/viewer_js/${type}/`, {
+          javascript: this.codeEditing,
+          unity_type: type
+        });
+        else p = this.$http.post('/api/viewer_js/', {javascript: this.codeEditing, unity_type: type});
+        p.then(
+          () => {
+            this.$store.commit('toastMsg', 'Success'), this.fetchViewerJS()
+          }
+        ).catch((error) => (this.$store.commit('toastMsg', error.response.data)))
       }
     }
     ,
@@ -146,7 +216,7 @@
           var type = this.containers[this.currentContainerKey].type;
           if (this.checkSupportType(type)) {
             // customized code dict
-            var code = {DialogAsset: '(data)=>{var result=[]; for (var e in data._serializedStateValues) {var raw=JSON.parse(data._serializedStateValues[e].replace(":.0",":0.0"));raw.$interpreted=[];for (var i in raw.$content) raw.$interpreted.push(`${raw.$content[i].SpeakerName}: ${raw.$content[i].Text}`);result.push(raw)};return result;}'}[type];
+            var code = this.interpreterEditor ? this.codeEditing : this.viewerJS[type].javascript;
             return eval(code)(this.currentContainerData);
           } else return this.currentContainerData;
         }
@@ -174,4 +244,14 @@
   .active {
     background-color: rgba(0, 0, 0, .08);
   }
+
+  >>> .prism-editor-wrapper code {
+    background: inherit;
+    box-shadow: 0 0 0 0 white;
+    font-size: 100%;
+  }
+  >>> .prism-editor-wrapper code:after, code:before, kbd:after, kbd:before {
+    content: "";
+    letter-spacing: 0;
+}
 </style>
