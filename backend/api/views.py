@@ -22,7 +22,7 @@ from unitypack.engine.texture import TextureFormat
 from backend.api import imperium_reader, ab_utils
 from .models import GameVersion, GameVersionSerializer, Imperium, ImperiumSerializer, ImperiumDiffSerializer, \
     ImperiumType, ImperiumABDiffSerializer, ConvertRule, ConvertRuleSerializer, Container, ContainerSerializer, \
-    AssetBundleSerializer, AssetBundle
+    AssetBundleSerializer, AssetBundle, ViewerJS, ViewerJSSerializer
 import hashlib
 
 from . import tasks
@@ -268,3 +268,13 @@ class AssetBundleViewSet(viewsets.GenericViewSet):
                 return redirect('/static/audio/' + filename)
             else:
                 return Http404
+
+class ViewerJSViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows viewer javascript to be viewed or edited.
+    """
+    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
+    permission_classes = (permissions.DjangoModelPermissions,)
+
+    queryset = ViewerJS.objects.all()
+    serializer_class = ViewerJSSerializer
