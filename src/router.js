@@ -17,7 +17,7 @@ export default new Router({
       path: '/',
       name: 'home',
       component: Home,
-      meta: {title:'Home'}
+      meta: {title:'Dashboard'}
     },
     {
       path: '/game_version',

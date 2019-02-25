@@ -1,10 +1,14 @@
+import errno
 import os
 import pickle
+import socket
 from collections import OrderedDict
 from io import BytesIO
 
+import redis
 from PIL import Image
 from celery.result import AsyncResult
+from django.contrib.auth.models import User
 from django.http import Http404, HttpResponse
 from django.shortcuts import redirect, render, get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -269,6 +273,7 @@ class AssetBundleViewSet(viewsets.GenericViewSet):
             else:
                 return Http404
 
+
 class ViewerJSViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows viewer javascript to be viewed or edited.
@@ -279,3 +284,35 @@ class ViewerJSViewSet(viewsets.ModelViewSet):
     queryset = ViewerJS.objects.all()
     serializer_class = ViewerJSSerializer
     lookup_field = 'unity_type'
+
+
+def get_dir_size(dir):
+    size = 0
+    for root, dirs, files in os.walk(dir):
+        size += sum([os.path.getsize(os.path.join(root, name)) for name in files])
+    return size
+
+
+def get_git_master_hash(git_base):
+    master_path = os.path.join(git_base, 'refs/heads/master')
+    if os.path.exists(master_path):
+        return open(master_path).read().strip()
+    return None
+
+
+class StatusViewSet(viewsets.ViewSet):
+    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
+
+    def list(self, request):
+        redis_online = True
+        try:
+            result = redis.Redis(socket_connect_timeout=1).time()
+        except redis.exceptions.TimeoutError:
+            redis_online = False
+        return Response({'asset_bundles': AssetBundle.objects.all().count(),
+                         'imperiums': Imperium.objects.all().count(),
+                         'containers': Container.objects.all().count(),
+                         'data_size': get_dir_size(settings.INSPECTOR_DATA_ROOT),
+                         'redis': redis_online,
+                         'users': User.objects.all().count(),
+                         'master_hash': get_git_master_hash(os.path.join(settings.BASE_DIR, '.git'))})

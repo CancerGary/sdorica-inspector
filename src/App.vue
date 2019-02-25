@@ -9,10 +9,10 @@
         <v-list dense>
           <router-link tag="v-list-tile" to="/">
             <v-list-tile-action>
-              <v-icon>home</v-icon>
+              <v-icon>mdi-view-dashboard</v-icon>
             </v-list-tile-action>
             <v-list-tile-content>
-              <v-list-tile-title>Home</v-list-tile-title>
+              <v-list-tile-title>Dashboard</v-list-tile-title>
             </v-list-tile-content>
           </router-link>
           <router-link tag="v-list-tile" to="/game_version">

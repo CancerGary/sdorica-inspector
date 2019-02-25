@@ -252,7 +252,7 @@
     font-size: 100%;
   }
 
-  >>> .prism-editor-wrapper code:after, .prism-editor-wrapper code:before, .prism-editor-wrapper kbd:after, .prism-editor-wrapper kbd:before {
+  >>> .prism-editor-wrapper code:after, >>> .prism-editor-wrapper code:before{
     content: "";
     letter-spacing: 0;
   }
