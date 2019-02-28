@@ -12,17 +12,27 @@
       <v-card>
         <v-toolbar card dense>
           <v-toolbar-title>Containers</v-toolbar-title>
-          <!--TODO: search bar-->
+          <v-spacer></v-spacer>
+          <v-btn icon @click="showContainersFilters = !showContainersFilters ">
+            <v-icon>mdi-filter</v-icon>
+          </v-btn>
         </v-toolbar>
-
+        <v-text-field
+            v-show="showContainersFilters"
+            single-line
+            regular hide-details class="pa-0"
+            v-model="containersFiltersInput"
+            placeholder="Filters"
+        ></v-text-field>
         <!--text-align: left;direction: rtl;-->
         <v-list dense style="height: 400px;overflow-y:auto">
           <!--:to="{name:'asset_bundle_viewer',params:{ab_md5:$route.params.ab_md5,container_path_id:k}}"-->
           <v-list-tile @click="fetchContainerData(k)"
                        v-for="(v,k) in containers"
                        :class="{active:currentContainerKey===k}"
-                       :key="k">
-            <v-list-tile-title>{{v.name.split('/')[v.name.split('/').length-1]}}</v-list-tile-title>
+                       :key="k"
+                       v-show="showContainersFilters?(containerFilters?containerFilters.every(fk=>v.shortName.includes(fk)): true):true">
+            <v-list-tile-title>{{v.shortName}}</v-list-tile-title>
           </v-list-tile>
         </v-list>
       </v-card>
@@ -98,6 +108,8 @@
     data() {
       return {
         containers: {},
+        containersFiltersInput: "",
+        showContainersFilters: false,
         currentContainerKey: null,
         interpret: false,
         treeviewData: {},
@@ -144,11 +156,14 @@
         this.currentContainerKey = null;
         this.currentContainerData = {};
         this.$http.get(`/api/asset_bundle/${this.$route.params.ab_md5}/containers/`).then((response) => {
+          for (var k in response.data) response.data[k] = {shortName: response.data[k].name.split('/').pop(), ...response.data[k]};
           this.containers = response.data;
           if (this.$route.query.container_name) {
             for (var key in this.containers)
-              if (this.containers[key].name === this.$route.query.container_name)
+              if (this.containers[key].name === this.$route.query.container_name) {
                 this.fetchContainerData(key);
+                break;
+              }
           }
           // v-if
           this.currentABMd5 = this.$route.params.ab_md5;
@@ -229,6 +244,9 @@
         var source = `/api/asset_bundle/${this.currentABMd5}/containers/${this.currentContainerKey}/data/`;
         if (type === 'Sprite') return `<img src="${source}" style="max-width: 100%">`;
         else if (type === 'AudioClip') return `<audio controls style="width: 100%"> <source src="${source}" type="audio/ogg"></audio>`;
+      },
+      containerFilters() {
+        if (this.containersFiltersInput) return this.containersFiltersInput.trim().split(' ');
       }
     },
     watch: {
@@ -252,7 +270,7 @@
     font-size: 100%;
   }
 
-  >>> .prism-editor-wrapper code:after, >>> .prism-editor-wrapper code:before{
+  >>> .prism-editor-wrapper code:after, >>> .prism-editor-wrapper code:before {
     content: "";
     letter-spacing: 0;
   }
