@@ -46,7 +46,7 @@ def build_index_and_done(finished_ab_info, imperium_id):
     imperium = Imperium.objects.get(id=imperium_id)
     # add new assetbundles
     data = imperium.load_data()
-    rev_dict = {w[0]: k for k, w in data['A'].items()}
+    rev_dict = {w['H']: k for k, w in data['A'].items()}
 
     ab_objects = []
 
@@ -92,7 +92,8 @@ def ab_list_task(imperium_id):
         os.makedirs(target_dir, exist_ok=True)
         subtasks_info = []
         ab_objects = []
-        for md5, uid, url in data['A'].values():
+        for each_dict in data['A'].values():
+            md5, uid, url = each_dict['H'],each_dict['I'],each_dict['L']
             target_md5 = os.path.join(target_dir, md5)
             if os.path.exists(target_md5) and hashlib.md5(open(target_md5, 'rb').read()).hexdigest() == md5:
                 try:

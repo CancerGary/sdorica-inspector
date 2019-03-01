@@ -36,17 +36,17 @@
               if (key === 'C') {
                 var result_ = [];
                 // loop by table
-                for (var i in root[key]) {
-                  var cObject = root[key][i];
-                  var keyIndex = cObject.keys.indexOf('Key');
+                for (var title in root[key]) {
+                  var cObject = root[key][title];
+                  var keyIndex = cObject.K.indexOf('Key');
                   id += 1;
                   var baseId = id;
                   var result__ = [];
-                  cObject.rows.forEach(function (item, index) {
+                  cObject.D.forEach(function (item, index) {
                     id += 1;
-                    var newKeys=[];
-                    cObject.keys.forEach((item,index)=>{
-                      newKeys.push(`${item}:${cObject.type[index]}`)
+                    var newKeys = [];
+                    cObject.K.forEach((item, index) => {
+                      newKeys.push(`${item}:${cObject.T[index]}`)
                     });
                     result__.push({
                       id: id,
@@ -54,13 +54,13 @@
                       children: handle(item, newKeys)
                     })
                   })
-                  result_.push({id: baseId, name: cObject.title, children: result__})
+                  result_.push({id: baseId, name: title, children: result__})
                 }
                 result.push({id: id, name: key + ' [C]', children: result_});
                 continue;
               }
               id += 1;
-              if (root[key] &&(root[key].constructor === Object || root[key].constructor === Array)) {
+              if (root[key] && (root[key].constructor === Object || root[key].constructor === Array)) {
                 result.push({id: id, name: key + ' [' + root[key].constructor.name + ']', children: handle(root[key])});
               } else {
                 if (alterKey) result.push({id: id, name: key + ' [' + alterKey[key] + '] : ' + root[key]});
