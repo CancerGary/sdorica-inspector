@@ -5,11 +5,15 @@
       <v-flex xs12>
         <v-card>
           <v-card-title>
-            <div class="headline">Compare Tree View</div>
+            <div class="headline">Compare Tree View</div><v-switch
+          v-model="sortCKeys"
+          label="sort C keys"
+          color="indigo"
+        ></v-switch>
           </v-card-title>
           <v-card-text>
             <div>
-              <ImperiumTreeview :imperium-data="imperiumDiffData"></ImperiumTreeview>
+              <ImperiumTreeview :imperium-data="imperiumDiffData" :sort-c-keys="sortCKeys"></ImperiumTreeview>
               <p v-if="!loading && Object.keys(imperiumDiffData).length === 0">No Comparison yet.</p>
               <p v-if="loading">Loading...</p>
             </div>
@@ -31,7 +35,8 @@
       return {
         imperiumList: [],
         imperiumDiffData: {},
-        loading: false
+        loading: false,
+        sortCKeys: false
       }
     },
     created() {

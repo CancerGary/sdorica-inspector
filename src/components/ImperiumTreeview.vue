@@ -12,10 +12,17 @@
         default() {
           return {}
         }
+      },
+      sortCKeys: {
+        type: Boolean,
+        default: false
       }
     },
     watch: {
       imperiumData: function () {
+        this.uploadTreeview()
+      },
+      sortCKeys: function () {
         this.uploadTreeview()
       }
     },
@@ -24,7 +31,7 @@
 
         var id = 0;
 
-        function handle(root, alterKey) {
+        function handle(root, alterKey, sortCKeys) {
           var result = [];
 
           // fallback
@@ -42,6 +49,7 @@
                   id += 1;
                   var baseId = id;
                   var result__ = [];
+                  if (sortCKeys && keyIndex > -1) cObject.D.sort((a, b) => a[keyIndex].localeCompare(b[keyIndex]));
                   cObject.D.forEach(function (item, index) {
                     id += 1;
                     var newKeys = [];
@@ -74,7 +82,7 @@
           return result;
         }
 
-        var d = handle(this.imperiumData);
+        var d = handle(this.imperiumData, null, this.sortCKeys);
         //console.log(d);
         this.items = d;
       }
