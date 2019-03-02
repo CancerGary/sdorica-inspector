@@ -5,8 +5,12 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.shortcuts import redirect, render
 from requests_oauthlib import OAuth2Session
+from rest_framework import viewsets
+from rest_framework.authentication import BasicAuthentication
+from rest_framework.response import Response
 
 from backend.api.models import Profile, DiscordInvite
+from backend.api.views import CsrfExemptSessionAuthentication
 
 OAUTH2_CLIENT_ID = os.environ.get('DISCORD_OAUTH2_CLIENT_ID')
 OAUTH2_CLIENT_SECRET = os.environ.get('DISCORD_OAUTH2_CLIENT_SECRET')
@@ -102,3 +106,18 @@ def make_session(token=None, state=None, scope=None, request=None):
         },
         auto_refresh_url=TOKEN_URL,
         token_updater=token_updater_factory(request))
+
+class UserInfoViewSet(viewsets.ViewSet):
+    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
+
+    def list(self, request):
+        avatar = None
+        username = request.user.username
+        if request.session.get('oauth2_state'):
+            discord = make_session(token=request.session['oauth2_token'], request=request)
+            user = discord.get(API_BASE_URL + '/users/@me').json()
+            avatar = "https://cdn.discordapp.com/avatars/%s/%s.png"%(user['id'],user['avatar'])
+            username = user['username']
+        return Response({'avatar':avatar,
+                         'groups':[i['name'] for i in request.user.groups.values('name')],
+                         'username':username})

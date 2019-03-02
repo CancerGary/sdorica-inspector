@@ -12,7 +12,7 @@ from rest_framework.schemas import get_schema_view
 from .api.views import index_view, GameVersionViewSet, ImperiumViewSet, ConvertRuleViewSet, \
     ContainerViewSet, AssetBundleViewSet, ViewerJSViewSet, StatusViewSet
 
-from .api.auth_views import login_view, discord_callback_view, discord_redirect_view
+from .api.auth_views import login_view, discord_callback_view, discord_redirect_view, UserInfoViewSet
 
 router = routers.DefaultRouter()
 router.register('game_version', GameVersionViewSet)
@@ -22,6 +22,7 @@ router.register('container', ContainerViewSet)
 router.register('asset_bundle', AssetBundleViewSet)
 router.register('viewer_js', ViewerJSViewSet)
 router.register('status', StatusViewSet, basename='status')
+router.register('user',UserInfoViewSet,basename='user')
 
 schema_view = get_schema_view(title='Sdorica Inspector API')
 
