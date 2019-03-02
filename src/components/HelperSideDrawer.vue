@@ -1,12 +1,5 @@
 <template>
-  <v-navigation-drawer
-      fixed app right disable-resize-watcher temporary
-      v-model="showState"
-  >
-    <v-toolbar flat class="transparent">
-      <v-toolbar-title>Helper</v-toolbar-title>
-    </v-toolbar>
-    <v-divider></v-divider>
+  <div>
     <v-list dense>
       <v-list-tile @click="openRuleEditDialog()">
         <v-list-tile-action>
@@ -87,7 +80,7 @@
         </v-card-text>
       </v-card>
     </v-dialog>
-  </v-navigation-drawer>
+  </div>
 </template>
 
 <script>
@@ -113,7 +106,6 @@
           text: ""
         },
         ruleIndex: -1,
-        showState: false,
         copyButton: null
       }
     },
@@ -172,17 +164,6 @@
     computed: {
       ...mapState(['convertRule']),
     },
-    watch: {
-      // sync show props and showState v-model
-      // eslint-disable-next-line
-      showState(newV, oldV) {
-        this.$emit('update:show', newV);
-      },
-      // eslint-disable-next-line
-      show(newV, oldV) {
-        this.showState = newV;
-      }
-    }
   }
 </script>
 

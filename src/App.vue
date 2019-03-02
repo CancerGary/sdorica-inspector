@@ -87,7 +87,14 @@
         <v-toolbar-side-icon @click.stop="drawer = !drawer"></v-toolbar-side-icon>
         <v-toolbar-title>{{ $route.meta.title }}</v-toolbar-title>
         <v-spacer></v-spacer>
-        <v-toolbar-side-icon @click.stop="convertConfigDrawer = !convertConfigDrawer"></v-toolbar-side-icon>
+        <v-menu bottom left>
+          <template slot="activator">
+            <v-btn icon>
+              <v-icon>more_vert</v-icon>
+            </v-btn>
+          </template>
+          <helper-side-drawer :current-a-b-data="currentABData"></helper-side-drawer>
+        </v-menu>
       </v-toolbar>
       <v-content>
         <v-container fluid grid-list-lg>
@@ -97,7 +104,7 @@
           <router-view v-if="!$route.meta.keepAlive"></router-view>
         </v-container>
       </v-content>
-      <helper-side-drawer v-bind:show.sync="convertConfigDrawer" :current-a-b-data="currentABData"></helper-side-drawer>
+
       <v-footer color="indigo" app inset>
         <span class="white--text">&copy; CancerGary</span>
       </v-footer>
