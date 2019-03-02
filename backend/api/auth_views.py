@@ -114,10 +114,13 @@ class UserInfoViewSet(viewsets.ViewSet):
         avatar = None
         username = request.user.username
         if request.session.get('oauth2_state'):
-            discord = make_session(token=request.session['oauth2_token'], request=request)
-            user = discord.get(API_BASE_URL + '/users/@me').json()
-            avatar = "https://cdn.discordapp.com/avatars/%s/%s.png"%(user['id'],user['avatar'])
-            username = user['username']
+            try:
+                discord = make_session(token=request.session['oauth2_token'], request=request)
+                user = discord.get(API_BASE_URL + '/users/@me').json()
+                avatar = "https://cdn.discordapp.com/avatars/%s/%s.png"%(user['id'],user['avatar'])
+                username = user['username']
+            except:
+                pass
         return Response({'avatar':avatar,
                          'groups':[i['name'] for i in request.user.groups.values('name')],
                          'username':username})

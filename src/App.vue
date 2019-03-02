@@ -6,6 +6,24 @@
           v-model="drawer"
           app
       >
+        <v-toolbar flat class="transparent">
+          <v-list class="pa-0">
+            <v-list-tile avatar>
+              <v-list-tile-avatar>
+                <img v-if="user.avatar" :src="user.avatar">
+                <v-avatar v-else color="indigo">
+                  <v-icon dark>account_circle</v-icon>
+                </v-avatar>
+              </v-list-tile-avatar>
+
+              <v-list-tile-content>
+                <v-list-tile-title>{{user.username}}<span class="pl-1 grey--text" v-if="user.groups.length>0">{{user.groups[0]}}</span>
+                </v-list-tile-title>
+              </v-list-tile-content>
+            </v-list-tile>
+          </v-list>
+        </v-toolbar>
+        <v-divider></v-divider>
         <v-list dense>
           <router-link tag="v-list-tile" to="/">
             <v-list-tile-action>
@@ -74,8 +92,8 @@
       <v-content>
         <v-container fluid grid-list-lg>
           <keep-alive>
-          <router-view v-if="$route.meta.keepAlive"></router-view>
-            </keep-alive>
+            <router-view v-if="$route.meta.keepAlive"></router-view>
+          </keep-alive>
           <router-view v-if="!$route.meta.keepAlive"></router-view>
         </v-container>
       </v-content>
@@ -119,7 +137,12 @@
       convertTooltipY: 0,
       convertTooltipShow: false,
       lastTouchmoveEvent: null,
-      currentABData: null
+      currentABData: null,
+      user: {
+        username: "[loading]",
+        avatar: null,
+        groups: []
+      }
     }),
     methods: {
       convertSelectedText() {
@@ -158,8 +181,11 @@
       }
     },
     created() {
-      this.$http.get('/api/convert_rule').then((response) => {
+      this.$http.get('/api/convert_rule/').then((response) => {
         this.$store.commit('updateConvertRule', response.data);
+      });
+      this.$http.get('/api/user/').then((response) => {
+        this.user = response.data
       })
     },
     computed: {
