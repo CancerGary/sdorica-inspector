@@ -11,19 +11,19 @@
     <v-flex xs12 sm4 lg3>
       <v-card>
         <v-toolbar card dense>
-          <v-toolbar-title>Containers</v-toolbar-title>
-          <v-spacer></v-spacer>
+          <v-text-field
+              v-if="showContainersFilters"
+              single-line
+              regular hide-details class="pa-0"
+              v-model="containersFiltersInput"
+              placeholder="Filters"
+          ></v-text-field>
+          <v-toolbar-title v-show="!showContainersFilters">Containers</v-toolbar-title>
+          <v-spacer v-show="!showContainersFilters"></v-spacer>
           <v-btn icon @click="showContainersFilters = !showContainersFilters ">
             <v-icon>mdi-filter</v-icon>
           </v-btn>
         </v-toolbar>
-        <v-text-field
-            v-show="showContainersFilters"
-            single-line
-            regular hide-details class="pa-0"
-            v-model="containersFiltersInput"
-            placeholder="Filters"
-        ></v-text-field>
         <!--text-align: left;direction: rtl;-->
         <v-list dense style="height: 400px;overflow-y:auto">
           <!--:to="{name:'asset_bundle_viewer',params:{ab_md5:$route.params.ab_md5,container_path_id:k}}"-->
