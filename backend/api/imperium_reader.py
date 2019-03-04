@@ -84,7 +84,8 @@ def c_to_text(c: dict, title_subfix="", show_type=False):
             key_row = generate_indexed_string(["%s[%s]" % (x, y) for x, y in zip(content['K'], content['T'])])
         else:
             key_row = generate_indexed_string(["%s" % (x) for x in content['K']])
-        result += "%s%s\n%s%s\n%s\n" % (title, title_subfix,
+        # two new lines to make the result doesn't compare between header and row
+        result += "%s%s\n%s%s\n\n%s\n\n" % (title, title_subfix,
                                         key_row,
                                         title_subfix,
                                         "\n".join(map(lambda m: generate_indexed_string(m), content['D'])))
@@ -97,4 +98,4 @@ def c_diff_text(old_i, new_i):
     return "\n".join(
         difflib.unified_diff(c_to_text(old).splitlines(), c_to_text(new, title_subfix='$').splitlines(), lineterm="",
                              fromfile='left',
-                             tofile='right', n=1))
+                             tofile='right', n=0))
