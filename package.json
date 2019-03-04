@@ -11,6 +11,9 @@
   "dependencies": {
     "axios": "^0.18.0",
     "clipboard": "^2.0.4",
+    "diff": "^4.0.1",
+    "diff2html": "^2.7.0",
+    "highlight.js": "^9.15.6",
     "js-cookie": "^2.2.0",
     "moment": "^2.23.0",
     "prismjs": "^1.15.0",
