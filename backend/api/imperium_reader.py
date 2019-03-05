@@ -97,7 +97,7 @@ def c_diff_text(old_i, new_i, show_type, show_index):
     new: dict = new_i.get('C')
     # remove no change table to make the result more concise
     for k in list(old.keys()):
-        if old[k] == new[k]:
+        if old.get(k) == new.get(k):
             old.pop(k)
             new.pop(k)
     return "\n".join(

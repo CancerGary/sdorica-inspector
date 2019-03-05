@@ -1,6 +1,5 @@
 <template>
   <div>
-    <ImperiumTwoSelector :imperium-list="imperiumList" @compare="loadDiffData"></ImperiumTwoSelector>
     <v-layout row wrap>
       <v-flex xs12>
         <v-card>
@@ -8,18 +7,32 @@
             <div class="headline">Compare Option</div>
           </v-card-title>
           <v-card-text>
-            <v-layout>
-              <v-flex sm6>
+            <v-layout row wrap>
+              <v-flex>
+                <div class="v-subheader pa-0">Display type</div>
+                <v-radio-group v-model="textDiff">
+                  <v-radio :value="false" label="Treeview" color="indigo"></v-radio>
+                  <v-radio :value="true" label="Text" color="indigo"></v-radio>
+                </v-radio-group>
+              </v-flex>
+              <v-flex v-if="textDiff">
+                <div class="v-subheader pa-0">Text Diff Options</div>
                 <v-switch
-                    v-model="sortCKeys"
-                    label="sort C keys"
+                    v-model="showIndex"
+                    label="Show index"
+                    color="indigo"
+                ></v-switch>
+                <v-switch
+                    v-model="showType"
+                    label="Show type"
                     color="indigo"
                 ></v-switch>
               </v-flex>
-              <v-flex sm6>
+              <v-flex v-else>
+                <div class="v-subheader pa-0">Treeview Diff Option</div>
                 <v-switch
-                    v-model="textDiff"
-                    label="Text Diff"
+                    v-model="sortCKeys"
+                    label="Sort C keys"
                     color="indigo"
                 ></v-switch>
               </v-flex>
@@ -27,10 +40,13 @@
           </v-card-text>
         </v-card>
       </v-flex>
+    </v-layout>
+    <ImperiumTwoSelector :imperium-list="imperiumList" @compare="loadDiffData"></ImperiumTwoSelector>
+    <v-layout row wrap>
       <v-flex xs12>
         <v-card>
           <v-card-title>
-            <div class="headline">Compare Tree View</div>
+            <div class="headline">Compare Result</div>
           </v-card-title>
           <v-card-text>
             <div v-if="!textDiff">
@@ -61,7 +77,9 @@
         loading: false,
         sortCKeys: false,
         textDiff: false,
-        imperiumDiffTextData: undefined
+        imperiumDiffTextData: undefined,
+        showIndex: true,
+        showType: false,
       }
     },
     created() {
@@ -79,7 +97,14 @@
           this.imperiumDiffData = response.data;
           this.loading = false;
         })
-        this.$http.get('/api/imperium/diff_text/', {params: {old: old_id, new: new_id}}).then(response => {
+        this.$http.get('/api/imperium/diff_text/', {
+          params: {
+            old: old_id,
+            new: new_id,
+            show_index: this.showIndex,
+            show_type: this.showType
+          }
+        }).then(response => {
           //console.log(response.data);
           this.imperiumDiffTextData = response.data;
           this.loading = false;
