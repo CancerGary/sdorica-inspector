@@ -90,6 +90,9 @@
     },
     created() {
       this.$http.get('/api/imperium/').then(response => { // 4 -> localization id
+        response.data.sort((a, b) => {
+          return b.id - a.id
+        });
         response.data.forEach(item => {
           this.imperiumList.push({text: `[${item.type_id}] ${item.name}`, value: item.id});
         });
