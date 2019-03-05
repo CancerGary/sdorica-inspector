@@ -207,6 +207,8 @@ class ImperiumSerializer(serializers.Serializer):
 class ImperiumDiffSerializer(serializers.Serializer):
     old = serializers.PrimaryKeyRelatedField(queryset=Imperium.objects.all())
     new = serializers.PrimaryKeyRelatedField(queryset=Imperium.objects.all())
+    show_type = serializers.BooleanField(required=False,default=False)
+    show_index = serializers.BooleanField(required=False,default=True)
 
     def validate(self, data):
         if data['old'].type_id != data['new'].type_id:

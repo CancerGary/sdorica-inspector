@@ -15,7 +15,7 @@ def handle_file(f):
     try:
         j = msgpack.load(f, encoding='utf8')
         if j.get('C'):
-            j['C'] = {k: sort_table_keys(v) for k, v in j['C'].items()}
+            j['C'] = {k: sort_table_keys(j['C'][k]) for k in sorted(j['C'])}
         return j
     except Exception as e:
         raise ImperiumHandleError(str(e))
@@ -72,30 +72,37 @@ def c_diff(old_i, new_i):
         return {'C': result}
 
 
-def generate_indexed_string(row: list):
-    return ", ".join(map(lambda i: "%s$%d" % (i[1], i[0]), enumerate(row)))
+def generate_row_string(row: list, show_index=True):
+    return ", ".join(map(lambda i: "%s$%d" % (i[1], i[0]), enumerate(row)) if show_index else map(str, row))
 
 
-def c_to_text(c: dict, title_subfix="", show_type=False):
+def c_to_text(c: dict, title_subfix="", show_type=False, show_index=True):
     result = ""
     for title in sorted(c.keys()):
         content = sort_table_keys(c[title])
         if show_type:
-            key_row = generate_indexed_string(["%s[%s]" % (x, y) for x, y in zip(content['K'], content['T'])])
+            key_row = generate_row_string(["%s[%s]" % (x, y) for x, y in zip(content['K'], content['T'])], show_index)
         else:
-            key_row = generate_indexed_string(["%s" % (x) for x in content['K']])
+            key_row = generate_row_string(["%s" % (x) for x in content['K']], show_index)
         # two new lines to make the result doesn't compare between header and row
         result += "%s%s\n%s%s\n\n%s\n\n" % (title, title_subfix,
-                                        key_row,
-                                        title_subfix,
-                                        "\n".join(map(lambda m: generate_indexed_string(m), content['D'])))
+                                            key_row,
+                                            title_subfix,
+                                            "\n".join(map(lambda m: generate_row_string(m, show_index), content['D'])))
     return result
 
 
-def c_diff_text(old_i, new_i):
+def c_diff_text(old_i, new_i, show_type, show_index):
     old: dict = old_i.get('C')
     new: dict = new_i.get('C')
+    # remove no change table to make the result more concise
+    for k in list(old.keys()):
+        if old[k] == new[k]:
+            old.pop(k)
+            new.pop(k)
     return "\n".join(
-        difflib.unified_diff(c_to_text(old).splitlines(), c_to_text(new, title_subfix='$').splitlines(), lineterm="",
+        difflib.unified_diff(c_to_text(old, show_type=show_type, show_index=show_index).splitlines(),
+                             c_to_text(new, show_type=show_type, show_index=show_index, title_subfix='$').splitlines(),
+                             lineterm="",
                              fromfile='left',
                              tofile='right', n=0))

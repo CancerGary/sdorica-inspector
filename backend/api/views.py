@@ -137,9 +137,11 @@ class ImperiumViewSet(viewsets.ModelViewSet):
     def diff_text(self, request):
         serializer = ImperiumDiffSerializer(data=request.query_params)
         if serializer.is_valid(raise_exception=True):
-            # print(serializer.validated_data)
+            # print(serializer.data)
             return Response(imperium_reader.c_diff_text(serializer.validated_data['old'].load_data(),
-                                                        serializer.validated_data['new'].load_data()))
+                                                        serializer.validated_data['new'].load_data(),
+                                                        show_type=serializer.validated_data.get('show_type'),
+                                                        show_index=serializer.validated_data.get('show_index')))
 
     @action(detail=False, methods=['GET'])
     def ab_diff(self, request):
