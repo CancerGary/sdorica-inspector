@@ -4,9 +4,6 @@
 
 <script>
   export default {
-    data: () => ({
-      items: []
-    }),
     props: {
       imperiumData: {
         default() {
@@ -18,22 +15,12 @@
         default: false
       }
     },
-    watch: {
-      imperiumData: function () {
-        this.uploadTreeview()
-      },
-      sortCKeys: function () {
-        this.uploadTreeview()
-      }
-    },
-    methods: {
-      uploadTreeview() {
-
+    computed: {
+      items() {
         var id = 0;
 
         function handle(root, alterKey, sortCKeys) {
           var result = [];
-
           // fallback
           if (root.constructor === Object || root.constructor === Array) {
             for (var key in root) {
@@ -82,9 +69,7 @@
           return result;
         }
 
-        var d = handle(this.imperiumData, null, this.sortCKeys);
-        //console.log(d);
-        this.items = d;
+        return handle(this.imperiumData, null, this.sortCKeys);
       }
     }
   }
