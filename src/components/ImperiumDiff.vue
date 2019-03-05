@@ -27,6 +27,11 @@
                     label="Show type"
                     color="indigo"
                 ></v-switch>
+                <v-switch
+                    v-model="cellLines"
+                    label="One cell one line (better for long text)"
+                    color="indigo"
+                ></v-switch>
               </v-flex>
               <v-flex v-else>
                 <div class="v-subheader pa-0">Treeview Diff Option</div>
@@ -80,6 +85,7 @@
         imperiumDiffTextData: undefined,
         showIndex: true,
         showType: false,
+        cellLines: false
       }
     },
     created() {
@@ -102,7 +108,8 @@
             old: old_id,
             new: new_id,
             show_index: this.showIndex,
-            show_type: this.showType
+            show_type: this.showType,
+            cell_lines: this.cellLines
           }
         }).then(response => {
           //console.log(response.data);

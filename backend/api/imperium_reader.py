@@ -72,27 +72,27 @@ def c_diff(old_i, new_i):
         return {'C': result}
 
 
-def generate_row_string(row: list, show_index=True):
-    return ", ".join(map(lambda i: "%s$%d" % (i[1], i[0]), enumerate(row)) if show_index else map(str, row))
+def c_to_text(c: dict, title_subfix="", show_type=False, show_index=True, str_func=repr, cell_cep=', '):
+    def generate_row_string(row: list):
+        return cell_cep.join(
+            map(lambda i: "%s$%d" % (str_func(i[1]), i[0]), enumerate(row)) if show_index else map(str_func, row))
 
-
-def c_to_text(c: dict, title_subfix="", show_type=False, show_index=True):
     result = ""
     for title in sorted(c.keys()):
         content = sort_table_keys(c[title])
         if show_type:
-            key_row = generate_row_string(["%s[%s]" % (x, y) for x, y in zip(content['K'], content['T'])], show_index)
+            key_row = generate_row_string(["%s[%s]" % (x, y) for x, y in zip(content['K'], content['T'])])
         else:
-            key_row = generate_row_string(["%s" % (x) for x in content['K']], show_index)
+            key_row = generate_row_string(["%s" % (x) for x in content['K']])
         # two new lines to make the result doesn't compare between header and row
         result += "%s%s\n%s%s\n\n%s\n\n" % (title, title_subfix,
                                             key_row,
                                             title_subfix,
-                                            "\n".join(map(lambda m: generate_row_string(m, show_index), content['D'])))
+                                            "\n".join(map(lambda m: generate_row_string(m), content['D'])))
     return result
 
 
-def c_diff_text(old_i, new_i, show_type, show_index):
+def c_diff_text(old_i, new_i, show_type, show_index, str_func=repr, cell_cep=', '):
     old: dict = old_i.get('C')
     new: dict = new_i.get('C')
     # remove no change table to make the result more concise
@@ -101,8 +101,10 @@ def c_diff_text(old_i, new_i, show_type, show_index):
             old.pop(k)
             new.pop(k)
     return "\n".join(
-        difflib.unified_diff(c_to_text(old, show_type=show_type, show_index=show_index).splitlines(),
-                             c_to_text(new, show_type=show_type, show_index=show_index, title_subfix='$').splitlines(),
+        difflib.unified_diff(c_to_text(old, show_type=show_type, show_index=show_index, str_func=str_func,
+                                       cell_cep=cell_cep).splitlines(),
+                             c_to_text(new, show_type=show_type, show_index=show_index, str_func=str_func,
+                                       cell_cep=cell_cep, title_subfix='$').splitlines(),
                              lineterm="",
                              fromfile='left',
                              tofile='right', n=0))

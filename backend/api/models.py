@@ -131,9 +131,11 @@ def update_user_profile(sender, instance, created, **kwargs):
 class DiscordInvite(models.Model):
     discord_id = models.CharField(max_length=30, db_index=True)
 
+
 class ViewerJS(models.Model):
     javascript = models.TextField()
-    unity_type = models.CharField(max_length=40,unique=True)
+    unity_type = models.CharField(max_length=40, unique=True)
+
 
 class GameVersionSerializer(serializers.HyperlinkedModelSerializer):
     imperiums = serializers.HyperlinkedRelatedField(many=True, read_only=True, view_name='imperium-detail')
@@ -207,8 +209,9 @@ class ImperiumSerializer(serializers.Serializer):
 class ImperiumDiffSerializer(serializers.Serializer):
     old = serializers.PrimaryKeyRelatedField(queryset=Imperium.objects.all())
     new = serializers.PrimaryKeyRelatedField(queryset=Imperium.objects.all())
-    show_type = serializers.BooleanField(required=False,default=False)
-    show_index = serializers.BooleanField(required=False,default=True)
+    show_type = serializers.BooleanField(required=False, default=False)
+    show_index = serializers.BooleanField(required=False, default=True)
+    cell_lines = serializers.BooleanField(required=False, default=False)
 
     def validate(self, data):
         if data['old'].type_id != data['new'].type_id:
@@ -232,10 +235,12 @@ class ConvertRuleSerializer(serializers.ModelSerializer):
         model = ConvertRule
         fields = ('id', 'pattern', 'text')
 
+
 class ViewerJSSerializer(serializers.ModelSerializer):
     class Meta:
         model = ViewerJS
         fields = ('id', 'javascript', 'unity_type')
+
 
 class AssetBundleSerializer(serializers.ModelSerializer):
     imperiums = serializers.SlugRelatedField(many=True, read_only=True, slug_field='name')
