@@ -25,6 +25,8 @@ watchdog = "*"
 pymysql = "*"
 requests-oauthlib = "*"
 msgpack = "*"
+coverage = "*"
+djangorestframework-stubs = "*"
 
 [dev-packages]
 
