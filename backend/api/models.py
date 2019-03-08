@@ -201,7 +201,7 @@ class ImperiumSerializer(serializers.Serializer):
                     if requests.head(url, timeout=3).status_code != 200:
                         raise RuntimeError
         except RuntimeError:
-            traceback.print_exc()
+            # traceback.print_exc()
             raise serializers.ValidationError("Can't fetch the file by the UUID")
         return value
 
