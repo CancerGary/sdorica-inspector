@@ -27,6 +27,7 @@ requests-oauthlib = "*"
 msgpack = "*"
 coverage = "*"
 djangorestframework-stubs = "*"
+codecov = "*"
 
 [dev-packages]
 

@@ -26,3 +26,6 @@ yarn-error.log*
 
 # libraries
 *.dll
+
+# coverage report
+coverage.xml

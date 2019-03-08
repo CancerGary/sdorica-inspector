@@ -62,7 +62,8 @@ jobs:
           name: run tests
           command: |
             pipenv run python manage.py migrate
-            pipenv run python manage.py test
+            pipenv run coverage run manage.py test
+            pipenv run codecov --token=$CODECOV_TOKEN
 
       - store_artifacts:
           path: test-reports
