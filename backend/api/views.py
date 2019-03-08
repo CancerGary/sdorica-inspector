@@ -318,7 +318,7 @@ class StatusViewSet(viewsets.ViewSet):
         redis_online = True
         try:
             result = redis.Redis(socket_connect_timeout=1).time()
-        except redis.exceptions.TimeoutError:
+        except redis.exceptions.RedisError:
             redis_online = False
         return Response({'asset_bundles': AssetBundle.objects.all().count(),
                          'imperiums': Imperium.objects.all().count(),
