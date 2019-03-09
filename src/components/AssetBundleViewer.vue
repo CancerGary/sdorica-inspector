@@ -27,13 +27,19 @@
         <!--text-align: left;direction: rtl;-->
         <v-list dense style="height: 400px;overflow-y:auto">
           <!--:to="{name:'asset_bundle_viewer',params:{ab_md5:$route.params.ab_md5,container_path_id:k}}"-->
-          <v-list-tile @click="fetchContainerData(k)"
-                       v-for="(v,k) in containers"
-                       :class="{active:currentContainerKey===k}"
-                       :key="k"
-                       v-show="showContainersFilters?(containerFilters?containerFilters.every(fk=>v.shortName.includes(fk)): true):true">
-            <v-list-tile-title>{{v.shortName}}</v-list-tile-title>
-          </v-list-tile>
+          <div v-if="forceContainersList || Object.keys(containersList).length<500 ">
+            <v-list-tile @click="fetchContainerData(k)"
+                         v-for="(v,k) in containersList"
+                         :class="{active:currentContainerKey===k}"
+                         :key="k">
+              <!--v-show="showContainersFilters?(containerFilters?containerFilters.every(fk=>v.shortName.includes(fk)): true):true">-->
+              <v-list-tile-title>{{v.shortName}}</v-list-tile-title>
+            </v-list-tile>
+          </div>
+          <div v-else>
+            Too long to show (>500), please use container search or filters or <a @click="forceContainersList=true">force
+            show</a>
+          </div>
         </v-list>
       </v-card>
     </v-flex>
@@ -109,6 +115,7 @@
       return {
         containers: {},
         containersFiltersInput: "",
+        forceContainersList: false,
         showContainersFilters: false,
         currentContainerKey: null,
         interpret: false,
@@ -246,7 +253,13 @@
         else if (type === 'AudioClip') return `<audio controls style="width: 100%"> <source src="${source}" type="audio/ogg"></audio>`;
       },
       containerFilters() {
-        if (this.containersFiltersInput) return this.containersFiltersInput.trim().split(' ');
+        if (this.containersFiltersInput) return this.containersFiltersInput.trim().split(' '); else return [];
+      },
+      containersList() {
+        var result = {};
+        for (var k in this.containers) if (this.containerFilters.every(fk => this.containers[k].shortName.includes(fk)))
+          result[k] = this.containers[k];
+        return result;
       }
     },
     watch: {
