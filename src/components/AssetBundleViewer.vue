@@ -27,13 +27,19 @@
         <!--text-align: left;direction: rtl;-->
         <v-list dense style="height: 400px;overflow-y:auto">
           <!--:to="{name:'asset_bundle_viewer',params:{ab_md5:$route.params.ab_md5,container_path_id:k}}"-->
-          <v-list-tile @click="fetchContainerData(k)"
-                       v-for="(v,k) in containers"
-                       :class="{active:currentContainerKey===k}"
-                       :key="k"
-                       v-show="showContainersFilters?(containerFilters?containerFilters.every(fk=>v.shortName.includes(fk)): true):true">
-            <v-list-tile-title>{{v.shortName}}</v-list-tile-title>
-          </v-list-tile>
+          <div v-if="forceContainersList || Object.keys(containersList).length<500 ">
+            <v-list-tile @click="fetchContainerData(k)"
+                         v-for="(v,k) in containersList"
+                         :class="{active:currentContainerKey===k}"
+                         :key="k">
+              <!--v-show="showContainersFilters?(containerFilters?containerFilters.every(fk=>v.shortName.includes(fk)): true):true">-->
+              <v-list-tile-title>{{v.shortName}}</v-list-tile-title>
+            </v-list-tile>
+          </div>
+          <div v-else>
+            Too long to show (>500), please use container search or filters or <a @click="forceContainersList=true">force
+            show</a>
+          </div>
         </v-list>
       </v-card>
     </v-flex>
@@ -51,15 +57,15 @@
                 <span>Reset</span>
               </v-tooltip>
               <v-tooltip bottom>
-                <v-btn icon slot="activator" @click="submitViewerJS">
+                <v-btn icon slot="activator" @click="submitViewerJS(containers[currentContainerKey].type)">
                   <v-icon>save</v-icon>
                 </v-btn>
                 <span>Save</span>
               </v-tooltip>
             </v-toolbar>
             <v-card-text>
-              <prism-editor v-model="codeEditing" language="js" :lineNumbers="true"
-                            @change="interpret = false"></prism-editor>
+              <codemirror v-model="codeEditing" :options="{lineNumbers:true,theme: 'monokai',styleActiveLine: true}"
+                          @input="showInterpretedData = false"></codemirror>
             </v-card-text>
           </v-card>
         </v-flex>
@@ -75,8 +81,8 @@
                 <span>Edit Interpreter</span>
               </v-tooltip>
               <v-tooltip bottom>
-                <v-btn icon slot="activator" @click="interpretData">
-                  <v-icon>{{interpret?'pause':'play_arrow'}}</v-icon>
+                <v-btn icon slot="activator" @click="onInterpret">
+                  <v-icon>{{showInterpretedData?'pause':'play_arrow'}}</v-icon>
                 </v-btn>
                 <span>Interpret</span>
               </v-tooltip>
@@ -97,21 +103,23 @@
 
 <script>
   import ImperiumTreeview from "./ImperiumTreeview";
-  import "prismjs";
-  import "prismjs/themes/prism.css";
-  import PrismEditor from "vue-prism-editor"
-  import "vue-prism-editor/dist/VuePrismEditor.css";
+  import {codemirror} from 'vue-codemirror'
+  import 'codemirror/mode/javascript/javascript.js'
+  import 'codemirror/lib/codemirror.css'
+  import 'codemirror/theme/monokai.css'
+
 
   export default {
     name: "AssetBundleViewer",
-    components: {ImperiumTreeview, PrismEditor},
+    components: {ImperiumTreeview, codemirror},
     data() {
       return {
         containers: {},
         containersFiltersInput: "",
+        forceContainersList: false,
         showContainersFilters: false,
         currentContainerKey: null,
-        interpret: false,
+        showInterpretedData: false,
         treeviewData: {},
         currentContainerData: {},
         currentABMd5: null,
@@ -119,10 +127,11 @@
         showMedia: false,
         interpreterEditor: false,
         codeEditing: 'alert("hello")',
-        viewerJS: {}
+        viewerJS: {},
+        evalData:{} // for plugin storage
       }
     },
-    created() {
+    mounted() {
       this.fetchViewerJS();
       this.load();
     },
@@ -149,7 +158,11 @@
         this.$http.get(`/api/viewer_js/`).then((response) => {
           response.data.forEach((value) => {
             this.viewerJS[value.unity_type] = {javascript: value.javascript, id: value.id}
+            // execute $ViewerInit
           });
+          if (this.viewerJS.hasOwnProperty('$ViewerInit')) {
+            eval(this.viewerJS['$ViewerInit'].javascript)(this);
+          }
         })
       },
       fetchContainerList() {
@@ -187,30 +200,29 @@
       checkSupportType(type) {
         return this.interpreterEditor || this.viewerJS.hasOwnProperty(type);
       },
-      interpretData() {
-        if (this.interpret) {
+      onInterpret() {
+        if (this.showInterpretedData) {
           // stop interpreting
           this.showMedia = false;
-          this.interpret = false;
+          this.showInterpretedData = false;
         } else {
           // check interpreting
           var type = this.containers[this.currentContainerKey].type;
           // internal type check
           if (['Sprite', 'AudioClip'].indexOf(type) > -1) {
-            this.interpret = true;
+            this.showInterpretedData = true;
             this.showMedia = true;
           } else if (this.checkSupportType(type)) { // external type check
-            this.interpret = true;
+            this.showInterpretedData = true;
           } else {
             // not support
-            this.interpret = false;
+            this.showInterpretedData = false;
             this.showMedia = false;
             this.$store.commit('toastMsg', 'Currently not support this type');
           }
         }
       },
-      submitViewerJS() {
-        var type = this.containers[this.currentContainerKey].type;
+      submitViewerJS(type) {
         var _ = this.viewerJS[type];
         var p = undefined;
         if (_) p = this.$http.put(`/api/viewer_js/${type}/`, {
@@ -228,12 +240,14 @@
     ,
     computed: {
       interpretedData() {
-        if (this.interpret) {
+        if (this.showInterpretedData) {
           var type = this.containers[this.currentContainerKey].type;
           if (this.checkSupportType(type)) {
             // customized code dict
             var code = this.interpreterEditor ? this.codeEditing : this.viewerJS[type].javascript;
-            return eval(code)(this.currentContainerData);
+            var data = Object.assign({}, this.currentContainerData);
+            if (this.viewerJS.hasOwnProperty('$DataInit')) data = eval(this.viewerJS['$DataInit'].javascript)(data);
+            return eval(code)(data);
           } else return this.currentContainerData;
         }
         return this.currentContainerData;
@@ -246,7 +260,13 @@
         else if (type === 'AudioClip') return `<audio controls style="width: 100%"> <source src="${source}" type="audio/ogg"></audio>`;
       },
       containerFilters() {
-        if (this.containersFiltersInput) return this.containersFiltersInput.trim().split(' ');
+        if (this.containersFiltersInput) return this.containersFiltersInput.trim().split(' '); else return [];
+      },
+      containersList() {
+        var result = {};
+        for (var k in this.containers) if (this.containerFilters.every(fk => this.containers[k].shortName.includes(fk)))
+          result[k] = this.containers[k];
+        return result;
       }
     },
     watch: {
@@ -262,16 +282,5 @@
 <style scoped>
   .active {
     background-color: rgba(0, 0, 0, .08);
-  }
-
-  >>> .prism-editor-wrapper code {
-    background: inherit;
-    box-shadow: 0 0 0 0 white;
-    font-size: 100%;
-  }
-
-  >>> .prism-editor-wrapper code:after, >>> .prism-editor-wrapper code:before {
-    content: "";
-    letter-spacing: 0;
   }
 </style>
