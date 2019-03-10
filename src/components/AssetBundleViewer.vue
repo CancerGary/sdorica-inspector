@@ -57,7 +57,7 @@
                 <span>Reset</span>
               </v-tooltip>
               <v-tooltip bottom>
-                <v-btn icon slot="activator" @click="submitViewerJS">
+                <v-btn icon slot="activator" @click="submitViewerJS(containers[currentContainerKey].type)">
                   <v-icon>save</v-icon>
                 </v-btn>
                 <span>Save</span>
@@ -65,7 +65,7 @@
             </v-toolbar>
             <v-card-text>
               <codemirror v-model="codeEditing" :options="{lineNumbers:true,theme: 'monokai',styleActiveLine: true}"
-                          @input="interpret = false"></codemirror>
+                          @input="showInterpretedData = false"></codemirror>
             </v-card-text>
           </v-card>
         </v-flex>
@@ -81,8 +81,8 @@
                 <span>Edit Interpreter</span>
               </v-tooltip>
               <v-tooltip bottom>
-                <v-btn icon slot="activator" @click="interpretData">
-                  <v-icon>{{interpret?'pause':'play_arrow'}}</v-icon>
+                <v-btn icon slot="activator" @click="onInterpret">
+                  <v-icon>{{showInterpretedData?'pause':'play_arrow'}}</v-icon>
                 </v-btn>
                 <span>Interpret</span>
               </v-tooltip>
@@ -119,7 +119,7 @@
         forceContainersList: false,
         showContainersFilters: false,
         currentContainerKey: null,
-        interpret: false,
+        showInterpretedData: false,
         treeviewData: {},
         currentContainerData: {},
         currentABMd5: null,
@@ -127,10 +127,11 @@
         showMedia: false,
         interpreterEditor: false,
         codeEditing: 'alert("hello")',
-        viewerJS: {}
+        viewerJS: {},
+        evalData:{} // for plugin storage
       }
     },
-    created() {
+    mounted() {
       this.fetchViewerJS();
       this.load();
     },
@@ -157,7 +158,11 @@
         this.$http.get(`/api/viewer_js/`).then((response) => {
           response.data.forEach((value) => {
             this.viewerJS[value.unity_type] = {javascript: value.javascript, id: value.id}
+            // execute $ViewerInit
           });
+          if (this.viewerJS.hasOwnProperty('$ViewerInit')) {
+            eval(this.viewerJS['$ViewerInit'].javascript)(this);
+          }
         })
       },
       fetchContainerList() {
@@ -195,30 +200,29 @@
       checkSupportType(type) {
         return this.interpreterEditor || this.viewerJS.hasOwnProperty(type);
       },
-      interpretData() {
-        if (this.interpret) {
+      onInterpret() {
+        if (this.showInterpretedData) {
           // stop interpreting
           this.showMedia = false;
-          this.interpret = false;
+          this.showInterpretedData = false;
         } else {
           // check interpreting
           var type = this.containers[this.currentContainerKey].type;
           // internal type check
           if (['Sprite', 'AudioClip'].indexOf(type) > -1) {
-            this.interpret = true;
+            this.showInterpretedData = true;
             this.showMedia = true;
           } else if (this.checkSupportType(type)) { // external type check
-            this.interpret = true;
+            this.showInterpretedData = true;
           } else {
             // not support
-            this.interpret = false;
+            this.showInterpretedData = false;
             this.showMedia = false;
             this.$store.commit('toastMsg', 'Currently not support this type');
           }
         }
       },
-      submitViewerJS() {
-        var type = this.containers[this.currentContainerKey].type;
+      submitViewerJS(type) {
         var _ = this.viewerJS[type];
         var p = undefined;
         if (_) p = this.$http.put(`/api/viewer_js/${type}/`, {
@@ -236,12 +240,14 @@
     ,
     computed: {
       interpretedData() {
-        if (this.interpret) {
+        if (this.showInterpretedData) {
           var type = this.containers[this.currentContainerKey].type;
           if (this.checkSupportType(type)) {
             // customized code dict
             var code = this.interpreterEditor ? this.codeEditing : this.viewerJS[type].javascript;
-            return eval(code)(this.currentContainerData);
+            var data = Object.assign({}, this.currentContainerData);
+            if (this.viewerJS.hasOwnProperty('$DataInit')) data = eval(this.viewerJS['$DataInit'].javascript)(data);
+            return eval(code)(data);
           } else return this.currentContainerData;
         }
         return this.currentContainerData;
