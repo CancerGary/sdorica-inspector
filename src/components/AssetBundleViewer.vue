@@ -64,8 +64,8 @@
               </v-tooltip>
             </v-toolbar>
             <v-card-text>
-              <prism-editor v-model="codeEditing" language="js" :lineNumbers="true"
-                            @change="interpret = false"></prism-editor>
+              <codemirror v-model="codeEditing" :options="{lineNumbers:true,theme: 'monokai',styleActiveLine: true}"
+                          @input="interpret = false"></codemirror>
             </v-card-text>
           </v-card>
         </v-flex>
@@ -103,14 +103,15 @@
 
 <script>
   import ImperiumTreeview from "./ImperiumTreeview";
-  import "prismjs";
-  import "prismjs/themes/prism.css";
-  import PrismEditor from "vue-prism-editor"
-  import "vue-prism-editor/dist/VuePrismEditor.css";
+  import {codemirror} from 'vue-codemirror'
+  import 'codemirror/mode/javascript/javascript.js'
+  import 'codemirror/lib/codemirror.css'
+  import 'codemirror/theme/monokai.css'
+
 
   export default {
     name: "AssetBundleViewer",
-    components: {ImperiumTreeview, PrismEditor},
+    components: {ImperiumTreeview, codemirror},
     data() {
       return {
         containers: {},
@@ -275,16 +276,5 @@
 <style scoped>
   .active {
     background-color: rgba(0, 0, 0, .08);
-  }
-
-  >>> .prism-editor-wrapper code {
-    background: inherit;
-    box-shadow: 0 0 0 0 white;
-    font-size: 100%;
-  }
-
-  >>> .prism-editor-wrapper code:after, >>> .prism-editor-wrapper code:before {
-    content: "";
-    letter-spacing: 0;
   }
 </style>

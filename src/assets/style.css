@@ -2,3 +2,15 @@
     word-break: break-all;
     font-family: Menlo, Monaco, Consolas, 'Courier New', monospace
 }
+
+#app .v-toolbar--fixed {
+    z-index: 6;
+}
+
+#app .v-navigation-drawer {
+    z-index: 7;
+}
+
+#app .v-footer--inset {
+    z-index: 6;
+}
