@@ -3,14 +3,24 @@
     font-family: Menlo, Monaco, Consolas, 'Courier New', monospace
 }
 
+/* code mirror max 6 */
+/* +5 */
 #app .v-toolbar--fixed {
-    z-index: 6;
-}
-
-#app .v-navigation-drawer {
     z-index: 7;
 }
 
+#app .v-navigation-drawer {
+    z-index: 8;
+}
+
+#app .v-navigation-drawer--is-mobile, .v-navigation-drawer--temporary {
+    z-index: 11;
+}
+
 #app .v-footer--inset {
-    z-index: 6;
+    z-index: 7;
+}
+
+#app .v-overlay {
+    z-index: 10;
 }
