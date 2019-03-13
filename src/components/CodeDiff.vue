@@ -33,7 +33,8 @@
           inputFormat: 'diff',
           outputFormat: outputFormat,
           showFiles: false,
-          matching: 'words'
+          matching: 'lines',
+          // matchWordsThreshold:2
         })
         return html
       }

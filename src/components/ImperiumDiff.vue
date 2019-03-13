@@ -32,6 +32,10 @@
                     label="One cell one line (better for long text)"
                     color="indigo"
                 ></v-switch>
+                <v-radio-group v-model="outputFormat">
+                  <v-radio :value="'line-by-line'" label="Line by line" color="indigo"></v-radio>
+                  <v-radio :value="'side-by-side'" label="Side by side" color="indigo"></v-radio>
+                </v-radio-group>
               </v-flex>
               <v-flex v-else>
                 <div class="v-subheader pa-0">Treeview Diff Option</div>
@@ -59,7 +63,7 @@
               <p v-if="!loading && Object.keys(imperiumDiffData).length === 0">No Comparison yet.</p>
               <p v-if="loading">Loading...</p>
             </div>
-            <code-diff :diff-string="imperiumDiffTextData" v-if="textDiff"></code-diff>
+            <code-diff :diff-string="imperiumDiffTextData" v-if="textDiff" :output-format="outputFormat"></code-diff>
           </v-card-text>
         </v-card>
       </v-flex>
@@ -85,7 +89,8 @@
         imperiumDiffTextData: undefined,
         showIndex: true,
         showType: false,
-        cellLines: false
+        cellLines: false,
+        outputFormat: 'line-by-line'
       }
     },
     created() {
