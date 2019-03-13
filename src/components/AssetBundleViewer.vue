@@ -128,7 +128,7 @@
         interpreterEditor: false,
         codeEditing: 'alert("hello")',
         viewerJS: {},
-        evalData:{} // for plugin storage
+        evalData: {} // for plugin storage
       }
     },
     mounted() {
@@ -209,7 +209,7 @@
           // check interpreting
           var type = this.containers[this.currentContainerKey].type;
           // internal type check
-          if (['Sprite', 'AudioClip'].indexOf(type) > -1) {
+          if (['Sprite', 'AudioClip', 'Texture2D'].indexOf(type) > -1) {
             this.showInterpretedData = true;
             this.showMedia = true;
           } else if (this.checkSupportType(type)) { // external type check
@@ -258,6 +258,7 @@
         var source = `/api/asset_bundle/${this.currentABMd5}/containers/${this.currentContainerKey}/data/`;
         if (type === 'Sprite') return `<img src="${source}" style="max-width: 100%">`;
         else if (type === 'AudioClip') return `<audio controls style="width: 100%"> <source src="${source}" type="audio/ogg"></audio>`;
+        else if (type === 'Texture2D') return `<img src="${source}" style="max-width: 100%">`;
       },
       containerFilters() {
         if (this.containersFiltersInput) return this.containersFiltersInput.trim().split(' '); else return [];

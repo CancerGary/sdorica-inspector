@@ -142,7 +142,8 @@ class ImperiumViewSet(viewsets.ModelViewSet):
                                                         serializer.validated_data['new'].load_data(),
                                                         show_type=serializer.validated_data.get('show_type'),
                                                         show_index=serializer.validated_data.get('show_index'),
-                                                        cell_cep='\n' if serializer.validated_data.get('cell_lines') else ', '))
+                                                        cell_cep='\n' if serializer.validated_data.get(
+                                                            'cell_lines') else ', '))
 
     @action(detail=False, methods=['GET'])
     def ab_diff(self, request):
@@ -242,6 +243,8 @@ class AssetBundleViewSet(viewsets.GenericViewSet):
         else:
             # TODO: maybe bugs
             d = ab_utils.strip_pointers(data) if type(data) is OrderedDict else ab_utils.strip_pointers(data._obj)
+            # remove too long base64 data
+            if d.get('image data'): d.pop('image data')
             return Response(d)
 
     @action(detail=True, url_path='containers/(?P<path_id>-?[0-9]+)/data')
