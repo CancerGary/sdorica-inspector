@@ -4,6 +4,9 @@ from collections import OrderedDict
 import fsb5
 from unitypack.assetbundle import AssetBundle as upAssetBundle
 from unitypack.object import ObjectPointer
+import zlib
+
+RECORD_UNITY_TYPES = ['Texture2D', 'TextAsset']
 
 
 def get_containers_from_ab(bundle: upAssetBundle) -> dict:
@@ -18,16 +21,55 @@ def get_containers_from_ab(bundle: upAssetBundle) -> dict:
         # for id, object in asset.objects.items():
         #     print(id, object.read())
         # print(asset.objects.keys())
-        if asset.objects.get(1):
+        if asset.objects.get(1) and asset.objects.get(1).type == 'AssetBundle':
             c_desc = asset.objects.get(1).read().get('m_Container')
             if c_desc:
                 # get container name only
                 result.update({i[0]: i[1] for i in c_desc})
     return result
 
+
+def get_objects_from_ab(bundle: upAssetBundle) -> list:
+    '''
+    Get objects info form an asset bundle
+    There are some objects having same name, so the function return a list of tuples
+    :param bundle: an AssetBundle
+    :return: objects list contains (name, path_id, data_crc32, db_crc32, asset_index)
+    '''
+    result = list()
+    for asset in bundle.assets:
+        index = bundle.assets.index(asset)
+        try:
+            # asset.objects may raise exception
+            if len(asset.objects) == 0: continue
+        except:
+            continue
+        for path_id, object in asset.objects.items():
+            if object.type not in RECORD_UNITY_TYPES:
+                continue
+            data_crc32 = None
+            data = object.read()
+            # extend types here
+            if object.type == 'Texture2D':
+                if getattr(data, 'image_data'):
+                    data_crc32 = zlib.crc32(data.image_data)
+            elif object.type == 'TextAsset':
+                if getattr(data, 'bytes'):
+                    # WTF ??
+                    data_crc32 = zlib.crc32(data.bytes.encode() if isinstance(data.bytes, str) else data.bytes)
+            else:
+                continue
+
+            if data_crc32:
+                # db_crc32 <- crc32(name+data_crc32)
+                result.append((data.name, path_id, data_crc32,
+                               zlib.crc32((data.name + str(data_crc32)).encode()), index))
+    return result
+
+
 def strip_pointers(object):
-    if type(object) in [OrderedDict,dict]:
-        return {k:strip_pointers(v) for k,v in object.items()}
+    if type(object) in [OrderedDict, dict]:
+        return {k: strip_pointers(v) for k, v in object.items()}
     elif type(object) in [list]:
         return [strip_pointers(i) for i in object]
     elif type(object) is ObjectPointer:
@@ -39,6 +81,7 @@ def strip_pointers(object):
             return strip_pointers(object._obj)
         except AttributeError:
             return object
+
 
 def handle_fsb(data):
     fsb = fsb5.load(data)

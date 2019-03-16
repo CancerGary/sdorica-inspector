@@ -98,18 +98,18 @@ class Container(models.Model):
     asset_bundles = models.ManyToManyField(AssetBundle)
 
 
-class Asset(models.Model):
-    name = models.CharField(max_length=100)
-    asset_bundle = models.ForeignKey(AssetBundle, on_delete=models.CASCADE)
+class UnityObject(models.Model):
+    name = models.CharField(max_length=256, db_index=True)
+    data_crc32 = models.BigIntegerField(null=True)
+    db_crc32 = models.BigIntegerField(null=True, db_index=True)  # calc from data_crc32 and name
+    asset_bundles = models.ManyToManyField(AssetBundle, through='UnityObjectRelationship')
 
 
-class AssetObject(models.Model):
-    name = models.CharField(max_length=100, null=True)
-    path_id = models.IntegerField()
-    type_id = models.IntegerField()
-    type_name = models.CharField(max_length=40)
-    # maybe save Object._obj data
-    asset = models.ForeignKey(Asset, on_delete=models.CASCADE)
+class UnityObjectRelationship(models.Model):
+    assetbundle = models.ForeignKey(AssetBundle, on_delete=models.CASCADE)
+    unityobject = models.ForeignKey(UnityObject, on_delete=models.CASCADE)
+    path_id = models.BigIntegerField()
+    asset_index = models.IntegerField(null=True)  # for multi assets
 
 
 class ConvertRule(models.Model):

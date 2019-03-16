@@ -3,9 +3,12 @@ import hashlib
 
 from celery import group, chord
 from django.db import transaction
+from django.db.models import Q
+import logging
+logger = logging.getLogger(__name__)
 
-from .ab_utils import get_containers_from_ab
-from .models import Imperium, AssetBundle, Container
+from .ab_utils import get_containers_from_ab, get_objects_from_ab
+from .models import Imperium, AssetBundle, Container, UnityObject, UnityObjectRelationship
 import unitypack
 from .celery import app
 from django.conf import settings
@@ -53,12 +56,14 @@ def build_index_and_done(finished_ab_info, imperium_id):
     for md5, url, target_md5 in finished_ab_info:
         with transaction.atomic():
             ab = AssetBundle(md5=md5, name=rev_dict[md5], url=url)
-            ab.save()
-            ab_objects.append(ab)
+            ab.save() # save to gain the PK
+
             # create containers
+            # fetch first
             try:
                 c = get_containers_from_ab(unitypack.load(open(target_md5, 'rb'))).keys()
-            except:
+            except Exception as e:
+                logger.exception('get_containers_from_ab error')
                 continue
             # use set to sure each name add only once
             container_name_set = set(c)
@@ -75,6 +80,36 @@ def build_index_and_done(finished_ab_info, imperium_id):
                 Container.objects.bulk_create([Container(name=n) for n in part_exclude])
                 # query once to add the relations
                 ab.container_set.add(*list(Container.objects.filter(name__in=part)))  # filter here
+
+            # create unity objects
+            # fetch first
+            try:
+                objects_list = get_objects_from_ab(unitypack.load(open(target_md5, 'rb')))
+            except Exception as e:
+                logger.exception('get_objects_from_ab error')
+                continue
+
+            db_crc32_set = {i[3] for i in objects_list}
+
+            db_crc32_exclude = db_crc32_set - {i['db_crc32'] for i in
+                                               UnityObject.objects.filter(db_crc32__in=db_crc32_set).values('db_crc32')}
+            # create objects which don't exist
+            bulk_result = UnityObject.objects.bulk_create(
+                [UnityObject(name=name, data_crc32=data_crc32,db_crc32=db_crc32) for name, path_id, data_crc32, db_crc32, asset_index in
+                 objects_list
+                 if db_crc32 in db_crc32_exclude])
+            # add relations
+            relationships = []
+            db_crc32_to_db_object = {uo.db_crc32: uo for uo in UnityObject.objects.filter(db_crc32__in=db_crc32_set)}
+            for name, path_id, data_crc32, db_crc32, asset_index in objects_list:
+                relationships.append(
+                    UnityObjectRelationship(assetbundle=ab, unityobject=db_crc32_to_db_object[db_crc32],
+                                            path_id=path_id, asset_index=asset_index))
+
+            UnityObjectRelationship.objects.bulk_create(relationships)
+
+            # successfully analyzed
+            ab_objects.append(ab)
 
     # add relations by group too
     imperium.assetbundle_set.add(*ab_objects)
@@ -93,7 +128,7 @@ def ab_list_task(imperium_id):
         subtasks_info = []
         ab_objects = []
         for each_dict in data['A'].values():
-            md5, uid, url = each_dict['H'],each_dict['I'],each_dict['L']
+            md5, uid, url = each_dict['H'], each_dict['I'], each_dict['L']
             target_md5 = os.path.join(target_dir, md5)
             if os.path.exists(target_md5) and hashlib.md5(open(target_md5, 'rb').read()).hexdigest() == md5:
                 try:
