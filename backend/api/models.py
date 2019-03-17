@@ -110,7 +110,7 @@ class UnityObject(models.Model):
     data_hash = models.CharField(max_length=32)
     db_hash = models.CharField(max_length=32, db_index=True)  # calc from data_crc32 and name
     asset_bundles = models.ManyToManyField(AssetBundle, through='UnityObjectRelationship')
-    # TODO: add object type for viewer
+    type = models.CharField(max_length=30)
 
 
 class UnityObjectRelationship(models.Model):

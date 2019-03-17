@@ -50,6 +50,7 @@ def handle_image_data(object_data):
     if os.path.exists(cache_file_path):
         return open(cache_file_path, 'rb').read()
     else:
+        # print(object_data.format,object_data.format.pixel_format)
         args = ["RGB" if object_data.format.pixel_format in ("RGB", "RGB;16") else (
             "RGB" if (object_data.format == TextureFormat.ETC2_RGB) else "RGBA"),
                 (object_data.width, object_data.height),
@@ -231,23 +232,42 @@ class AssetBundleViewSet(viewsets.GenericViewSet):
 
     @action(detail=True)
     def containers(self, request, md5=None):
+        # path_id has two types: only a path_id number (for container)
+        # or two numbers (asset_index and path_id) joined by a `:` (for multi assets)
+
         # path_id maybe overflow in JavaScript
         result = {v['asset'].object.path_id: {'name': k, 'type': v['asset'].object.type} for k, v in
                   self.get_object().get_containers().items()}
-        # TODO: read from database
-        result.update({i[1]:{'name':i[0],'type':i[5]} for i in self.get_object().get_asset_objects()})
+        # result.update(
+        #     {i[1]: {'name': i[0], 'type': i[5], 'asset_index': i[4]} for i in self.get_object().get_asset_objects()})
+        result.update(
+            {':'.join(map(str, (i.asset_index, i.path_id))): {'name': i.unityobject.name, 'type': i.unityobject.type}
+             for i
+             in self.get_object().unityobjectrelationship_set.all()})
         return Response(result)
 
-    # TODO: add asset_index for multi assets
-    @action(detail=True, url_path='containers/(?P<path_id>-?[0-9]+)/?')
-    def containers_retrieve(self, request, md5=None, path_id=None, *args, **kwargs):
-        path_id = int(path_id)
+    def split_path_id(self, path_id):
+        if isinstance(path_id, str) and ':' in path_id:
+            return int(path_id.split(':')[-2]), int(path_id.split(':')[-1])
+        else:
+            return None, int(path_id)
+
+    @action(detail=True, url_path='containers/(?P<path_id>([0-9]+:)?-?[0-9]+)/?')
+    def containers_retrieve(self, request, path_id, md5=None, *args, **kwargs):
+        asset_index, path_id = self.split_path_id(path_id)
         data = None
         bundle = self.get_object().load_unitypack()
-        for asset in bundle.assets:
-            if asset.objects.get(path_id):
-                data = asset.objects[path_id].read()
-                break
+        if asset_index:
+            i = int(asset_index)
+            if i < len(bundle.assets):
+                data = bundle.assets[i].objects[path_id].read()
+        else:
+            # for legacy container search
+            for asset in bundle.assets:
+                if asset.objects.get(path_id):
+                    data = asset.objects[path_id].read()
+                    break
+
         if data is None:
             raise Http404
         else:
@@ -257,21 +277,26 @@ class AssetBundleViewSet(viewsets.GenericViewSet):
             if d.get('image data'): d.pop('image data')
             return Response(d)
 
-    @action(detail=True, url_path='containers/(?P<path_id>-?[0-9]+)/data')
+    @action(detail=True, url_path='containers/(?P<path_id>([0-9]+:)?-?[0-9]+)/data')
     def containers_data(self, request, md5=None, path_id=None, *args, **kwargs):
         '''
         `/data` url is designed for object types already in Unity3D. For customized types (such as `DialogAsset` ),
         using JavaScript at frontend is better.
         '''
-        path_id = int(path_id)
+        asset_index, path_id = self.split_path_id(path_id)
         data = None
         info = None
         bundle = self.get_object().load_unitypack()
-        for asset in bundle.assets:
-            if asset.objects.get(path_id):
-                info = asset.objects[path_id]
-                data = asset.objects[path_id].read()
-                break
+        if asset_index:
+            if asset_index < len(bundle.assets):
+                info = bundle.assets[asset_index].objects[path_id]
+                data = bundle.assets[asset_index].objects[path_id].read()
+        else:
+            for asset in bundle.assets:
+                if asset.objects.get(path_id):
+                    info = asset.objects[path_id]
+                    data = asset.objects[path_id].read()
+                    break
         if data is None:
             raise Http404
         else:

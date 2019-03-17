@@ -94,7 +94,7 @@ def _build_index_from_ab(ab, target_md5):
     db_hash_used_set = set()  # even in a single file, there may be two objects have same db_hash!
     for name, path_id, data_hash, db_hash, asset_index, object_type in objects_list:
         if db_hash in db_hash_exclude and db_hash not in db_hash_used_set:
-            unityobjects.append(UnityObject(name=name, data_hash=data_hash, db_hash=db_hash))
+            unityobjects.append(UnityObject(name=name, data_hash=data_hash, db_hash=db_hash, type=object_type))
             db_hash_used_set.add(db_hash)
     bulk_result = UnityObject.objects.bulk_create(unityobjects)
 
