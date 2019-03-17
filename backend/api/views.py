@@ -45,6 +45,12 @@ os.makedirs(os.path.join(settings.STATIC_ROOT, 'audio'), exist_ok=True)
 
 
 def handle_image_data(object_data):
+    try:
+        f = BytesIO()
+        object_data.image.transpose(Image.FLIP_TOP_BOTTOM).save(f, 'png')
+        return f.getvalue()
+    except NotImplementedError:
+        pass
     data_md5 = hashlib.md5(object_data.image_data).hexdigest()
     cache_file_path = os.path.join(settings.INSPECTOR_DATA_ROOT, 'object_cache', data_md5)
     if os.path.exists(cache_file_path):
