@@ -35,7 +35,7 @@ def get_objects_from_ab(bundle: upAssetBundle) -> list:
     Get objects info form an asset bundle
     There are some objects having same name, so the function return a list of tuples
     :param bundle: an AssetBundle
-    :return: objects list contains (name, path_id, data_hash, db_hash, asset_index)
+    :return: objects list contains (name, path_id, data_hash, db_hash, asset_index, object_type)
     '''
     result = list()
     for asset in bundle.assets:
@@ -64,7 +64,7 @@ def get_objects_from_ab(bundle: upAssetBundle) -> list:
             if data_hash:
                 # db_hash <- crc32(name+data_hash)
                 result.append((data.name, path_id, data_hash,
-                               md5((data.name + str(data_hash)).encode()), index))
+                               md5((data.name + str(data_hash)).encode()), index, object.type))
     return result
 
 

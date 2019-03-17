@@ -147,6 +147,7 @@ class ImperiumViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['GET'])
     def ab_diff(self, request):
+        list_vl = lambda q: list(q.values_list('name', flat=True).order_by('name'))
         serializer = ImperiumABDiffSerializer(data=request.query_params)
         if serializer.is_valid(raise_exception=True):
             # print(serializer.validated_data)
@@ -158,21 +159,26 @@ class ImperiumViewSet(viewsets.ModelViewSet):
             dlk = d_left.keys()
             drk = d_right.keys()
             delete = {k: {'md5': d_left[k].md5,
-                          'data': sorted([i['name'] for i in d_left[k].container_set.values('name')])}
+                          'data': list_vl(d_left[k].container_set) + list_vl(d_left[k].unityobject_set)}
                       for k in dlk - drk}
             add = {k: {'md5': d_right[k].md5,
-                       'data': sorted([i['name'] for i in d_right[k].container_set.values('name')])}
+                       'data': list_vl(d_right[k].container_set) + list_vl(d_right[k].unityobject_set)}
                    for k in drk - dlk}
             # only size changed
             nochange = dict()
             change = dict()
             for k in dlk & drk:
+                if d_left[k].md5 == d_right[k].md5: continue  # skip the query
                 cl = {i['name'] for i in d_left[k].container_set.values('name')}
                 cr = {i['name'] for i in d_right[k].container_set.values('name')}
-                if (cl != cr):
-                    change[k] = {'delete': cl - cr, 'add': cr - cl, 'md5': (d_left[k].md5, d_right[k].md5)}
-                elif d_left[k].md5 != d_right[k].md5:
+                ol = {(i['name'], i['db_hash']) for i in d_left[k].unityobject_set.values('name', 'db_hash')}
+                or_ = {(i['name'], i['db_hash']) for i in d_right[k].unityobject_set.values('name', 'db_hash')}
+                if cl == cr and ol == or_:
                     nochange[k] = (d_left[k].md5, d_right[k].md5)
+                else:
+                    change[k] = {'delete': list(cl - cr) + [i[0] for i in ol - or_],
+                                 'add': list(cr - cl) + [i[0] for i in or_ - ol],
+                                 'md5': (d_left[k].md5, d_right[k].md5)}
             return Response({'delete': delete, 'add': add, 'change': change, 'nochange': nochange})
 
 
@@ -225,10 +231,14 @@ class AssetBundleViewSet(viewsets.GenericViewSet):
 
     @action(detail=True)
     def containers(self, request, md5=None):
-        # path_id maybe overflow
-        return Response({v['asset'].object.path_id: {'name': k, 'type': v['asset'].object.type} for k, v in
-                         self.get_object().get_containers().items()})
+        # path_id maybe overflow in JavaScript
+        result = {v['asset'].object.path_id: {'name': k, 'type': v['asset'].object.type} for k, v in
+                  self.get_object().get_containers().items()}
+        # TODO: read from database
+        result.update({i[1]:{'name':i[0],'type':i[5]} for i in self.get_object().get_asset_objects()})
+        return Response(result)
 
+    # TODO: add asset_index for multi assets
     @action(detail=True, url_path='containers/(?P<path_id>-?[0-9]+)/?')
     def containers_retrieve(self, request, md5=None, path_id=None, *args, **kwargs):
         path_id = int(path_id)

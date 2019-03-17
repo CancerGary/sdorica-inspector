@@ -72,7 +72,7 @@
                     </router-link>
                   </div>
                   <router-link class="d-block" v-for="containerName in data.delete"
-                               :to="{name:'asset_bundle_viewer',params:{ab_md5:data.md5[1]},query:{container_name:containerName}}"
+                               :to="{name:'asset_bundle_viewer',params:{ab_md5:data.md5[0]},query:{container_name:containerName}}"
                                :key="containerName">{{containerName}}
                   </router-link>
                 </v-flex>

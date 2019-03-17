@@ -92,6 +92,13 @@ class AssetBundle(models.Model):
         except RuntimeError:
             return {}
 
+    def get_asset_objects(self):
+        try:
+            bundle = self.load_unitypack()
+            return ab_utils.get_objects_from_ab(bundle)
+        except RuntimeError:
+            return {}
+
 
 class Container(models.Model):
     name = models.CharField(max_length=256, db_index=True)
@@ -103,6 +110,7 @@ class UnityObject(models.Model):
     data_hash = models.CharField(max_length=32)
     db_hash = models.CharField(max_length=32, db_index=True)  # calc from data_crc32 and name
     asset_bundles = models.ManyToManyField(AssetBundle, through='UnityObjectRelationship')
+    # TODO: add object type for viewer
 
 
 class UnityObjectRelationship(models.Model):

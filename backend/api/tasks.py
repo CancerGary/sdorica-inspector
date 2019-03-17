@@ -92,7 +92,7 @@ def _build_index_from_ab(ab, target_md5):
                                      UnityObject.objects.filter(db_hash__in=db_hash_set).values('db_hash')}
     unityobjects = []
     db_hash_used_set = set()  # even in a single file, there may be two objects have same db_hash!
-    for name, path_id, data_hash, db_hash, asset_index in objects_list:
+    for name, path_id, data_hash, db_hash, asset_index, object_type in objects_list:
         if db_hash in db_hash_exclude and db_hash not in db_hash_used_set:
             unityobjects.append(UnityObject(name=name, data_hash=data_hash, db_hash=db_hash))
             db_hash_used_set.add(db_hash)
@@ -101,7 +101,7 @@ def _build_index_from_ab(ab, target_md5):
     # add relations
     relationships = []
     db_hash_to_db_object = {uo.db_hash: uo for uo in UnityObject.objects.filter(db_hash__in=db_hash_set)}
-    for name, path_id, data_hash, db_hash, asset_index in objects_list:
+    for name, path_id, data_hash, db_hash, asset_index, object_type in objects_list:
         relationships.append(
             UnityObjectRelationship(assetbundle=ab, unityobject=db_hash_to_db_object[db_hash],
                                     path_id=path_id, asset_index=asset_index))
