@@ -26,7 +26,7 @@ from unitypack.engine.texture import TextureFormat
 from backend.api import imperium_reader, ab_utils
 from .models import GameVersion, GameVersionSerializer, Imperium, ImperiumSerializer, ImperiumDiffSerializer, \
     ImperiumType, ImperiumABDiffSerializer, ConvertRule, ConvertRuleSerializer, Container, ContainerSerializer, \
-    AssetBundleSerializer, AssetBundle, ViewerJS, ViewerJSSerializer
+    AssetBundleSerializer, AssetBundle, ViewerJS, ViewerJSSerializer, UnityObject, UnityObjectSerializer
 import hashlib
 
 from . import tasks
@@ -214,9 +214,11 @@ class ContainerViewSet(viewsets.GenericViewSet):
         if not request.query_params.get('query'):
             return Response('Query is too short')
         result = self.get_queryset()
+        result_uo = UnityObject.objects.all()
         for i in request.query_params.get('query').split(' '):
-            result = result.filter(name__contains=i)
-        return Response(ContainerSerializer(result, many=True).data)
+            result = result.filter(name__icontains=i)
+            result_uo = result_uo.filter(name__icontains=i)
+        return Response(ContainerSerializer(result, many=True).data + UnityObjectSerializer(result_uo, many=True).data)
 
 
 class AssetBundleViewSet(viewsets.GenericViewSet):

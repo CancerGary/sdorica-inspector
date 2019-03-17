@@ -270,3 +270,10 @@ class ContainerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Container
         fields = ('id', 'name', 'asset_bundles')
+
+class UnityObjectSerializer(serializers.ModelSerializer):
+    asset_bundles = AssetBundleSimpleSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Container
+        fields = ('id', 'name', 'asset_bundles')
