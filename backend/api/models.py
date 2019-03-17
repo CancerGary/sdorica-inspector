@@ -100,8 +100,8 @@ class Container(models.Model):
 
 class UnityObject(models.Model):
     name = models.CharField(max_length=256, db_index=True)
-    data_crc32 = models.BigIntegerField(null=True)
-    db_crc32 = models.BigIntegerField(null=True, db_index=True)  # calc from data_crc32 and name
+    data_hash = models.CharField(max_length=32)
+    db_hash = models.CharField(max_length=32, db_index=True)  # calc from data_crc32 and name
     asset_bundles = models.ManyToManyField(AssetBundle, through='UnityObjectRelationship')
 
 

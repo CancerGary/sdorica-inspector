@@ -2,6 +2,7 @@ import os
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
+from django.db import transaction
 
 from backend.api.models import Imperium, UnityObject, Container, AssetBundle
 from backend.api.tasks import _build_index_from_ab

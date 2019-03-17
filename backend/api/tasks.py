@@ -85,22 +85,25 @@ def _build_index_from_ab(ab, target_md5):
         logger.exception('get_objects_from_ab error')
         return
 
-    db_crc32_set = {i[3] for i in objects_list}
+    db_hash_set = {i[3] for i in objects_list}
 
-    db_crc32_exclude = db_crc32_set - {i['db_crc32'] for i in
-                                       UnityObject.objects.filter(db_crc32__in=db_crc32_set).values('db_crc32')}
     # create objects which don't exist
-    bulk_result = UnityObject.objects.bulk_create(
-        [UnityObject(name=name, data_crc32=data_crc32, db_crc32=db_crc32) for
-         name, path_id, data_crc32, db_crc32, asset_index in
-         objects_list
-         if db_crc32 in db_crc32_exclude])
+    db_hash_exclude = db_hash_set - {i['db_hash'] for i in
+                                     UnityObject.objects.filter(db_hash__in=db_hash_set).values('db_hash')}
+    unityobjects = []
+    db_hash_used_set = set()  # even in a single file, there may be two objects have same db_hash!
+    for name, path_id, data_hash, db_hash, asset_index in objects_list:
+        if db_hash in db_hash_exclude and db_hash not in db_hash_used_set:
+            unityobjects.append(UnityObject(name=name, data_hash=data_hash, db_hash=db_hash))
+            db_hash_used_set.add(db_hash)
+    bulk_result = UnityObject.objects.bulk_create(unityobjects)
+
     # add relations
     relationships = []
-    db_crc32_to_db_object = {uo.db_crc32: uo for uo in UnityObject.objects.filter(db_crc32__in=db_crc32_set)}
-    for name, path_id, data_crc32, db_crc32, asset_index in objects_list:
+    db_hash_to_db_object = {uo.db_hash: uo for uo in UnityObject.objects.filter(db_hash__in=db_hash_set)}
+    for name, path_id, data_hash, db_hash, asset_index in objects_list:
         relationships.append(
-            UnityObjectRelationship(assetbundle=ab, unityobject=db_crc32_to_db_object[db_crc32],
+            UnityObjectRelationship(assetbundle=ab, unityobject=db_hash_to_db_object[db_hash],
                                     path_id=path_id, asset_index=asset_index))
 
     UnityObjectRelationship.objects.bulk_create(relationships)
@@ -116,8 +119,8 @@ def _build_index_and_done(finished_ab_info, imperium_id):
 
     ab_objects = []
 
-    for md5, url, target_md5 in finished_ab_info:
-        with transaction.atomic():
+    with transaction.atomic():
+        for md5, url, target_md5 in finished_ab_info:
             ab = AssetBundle(md5=md5, name=rev_dict[md5], url=url)
             ab.save()  # save to gain the PK
             _build_index_from_ab(ab, target_md5)

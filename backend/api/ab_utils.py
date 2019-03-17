@@ -1,4 +1,5 @@
 import base64
+import hashlib
 from collections import OrderedDict
 
 import fsb5
@@ -8,7 +9,7 @@ import zlib
 
 RECORD_UNITY_TYPES = ['Texture2D', 'TextAsset']
 
-
+md5 = lambda x:hashlib.md5(x).hexdigest()
 def get_containers_from_ab(bundle: upAssetBundle) -> dict:
     result = dict()
     for asset in bundle.assets:
@@ -34,7 +35,7 @@ def get_objects_from_ab(bundle: upAssetBundle) -> list:
     Get objects info form an asset bundle
     There are some objects having same name, so the function return a list of tuples
     :param bundle: an AssetBundle
-    :return: objects list contains (name, path_id, data_crc32, db_crc32, asset_index)
+    :return: objects list contains (name, path_id, data_hash, db_hash, asset_index)
     '''
     result = list()
     for asset in bundle.assets:
@@ -47,23 +48,23 @@ def get_objects_from_ab(bundle: upAssetBundle) -> list:
         for path_id, object in asset.objects.items():
             if object.type not in RECORD_UNITY_TYPES:
                 continue
-            data_crc32 = None
+            data_hash = None
             data = object.read()
             # extend types here
             if object.type == 'Texture2D':
                 if getattr(data, 'image_data'):
-                    data_crc32 = zlib.crc32(data.image_data)
+                    data_hash = md5(data.image_data)
             elif object.type == 'TextAsset':
                 if getattr(data, 'bytes'):
                     # WTF ??
-                    data_crc32 = zlib.crc32(data.bytes.encode() if isinstance(data.bytes, str) else data.bytes)
+                    data_hash = md5(data.bytes.encode() if isinstance(data.bytes, str) else data.bytes)
             else:
                 continue
 
-            if data_crc32:
-                # db_crc32 <- crc32(name+data_crc32)
-                result.append((data.name, path_id, data_crc32,
-                               zlib.crc32((data.name + str(data_crc32)).encode()), index))
+            if data_hash:
+                # db_hash <- crc32(name+data_hash)
+                result.append((data.name, path_id, data_hash,
+                               md5((data.name + str(data_hash)).encode()), index))
     return result
 
 
