@@ -13,45 +13,33 @@
                 <v-flex xs12>Delete & Add</v-flex>
                 <v-flex xs12 sm6 class="red--text">
                   <div>[-]</div>
-                  <v-expansion-panel>
-                    <v-expansion-panel-content
-                        v-for="(data,bundleName) in imperiumDiffData.delete"
-                        :key="bundleName"
-                    >
-                      <div slot="header">
-                        <div>{{bundleName}} [{{data.data.length}}] |
-                          <router-link :to="{name:'asset_bundle_viewer',params:{ab_md5:data.md5}}">{{data.md5}}
-                          </router-link>
-                        </div>
-                      </div>
-                      <v-card>
-                        <v-card-text>
-                          <div v-for="c in data.data" :key="c">{{c}}</div>
-                        </v-card-text>
-                      </v-card>
-                    </v-expansion-panel-content>
-                  </v-expansion-panel>
+                  <div
+                      v-for="(data,bundleName) in imperiumDiffData.delete"
+                      :key="bundleName" class="mt-4">
+                    <div>{{bundleName}} <span class="blue--text">[{{data.data.length}}]</span> |
+                      <router-link :to="{name:'asset_bundle_viewer',params:{ab_md5:data.md5}}">{{data.md5}}
+                      </router-link>
+                    </div>
+                    <router-link class="d-block"
+                                 :to="{name:'asset_bundle_viewer',params:{ab_md5:data.md5},query:{container_name:c}}"
+                                 v-for="c in data.data" :key="c">{{c}}
+                    </router-link>
+                  </div>
                 </v-flex>
                 <v-flex xs12 sm6 class="green--text">
                   <div>[+]</div>
-                  <v-expansion-panel>
-                    <v-expansion-panel-content
-                        v-for="(data,bundleName) in imperiumDiffData.add"
-                        :key="bundleName"
-                    >
-                      <div slot="header">
-                        <div>{{bundleName}} [{{data.data.length}}] |
-                          <router-link :to="{name:'asset_bundle_viewer',params:{ab_md5:data.md5}}">{{data.md5}}
-                          </router-link>
-                        </div>
-                      </div>
-                      <v-card>
-                        <v-card-text>
-                          <div v-for="c in data.data" :key="c">{{c}}</div>
-                        </v-card-text>
-                      </v-card>
-                    </v-expansion-panel-content>
-                  </v-expansion-panel>
+                  <div
+                      v-for="(data,bundleName) in imperiumDiffData.add"
+                      :key="bundleName" class="mt-4">
+                    <div>{{bundleName}} <span class="blue--text">[{{data.data.length}}]</span> |
+                      <router-link :to="{name:'asset_bundle_viewer',params:{ab_md5:data.md5}}">{{data.md5}}
+                      </router-link>
+                    </div>
+                    <router-link class="d-block"
+                                 :to="{name:'asset_bundle_viewer',params:{ab_md5:data.md5},query:{container_name:c}}"
+                                 v-for="c in data.data" :key="c">{{c}}
+                    </router-link>
+                  </div>
                 </v-flex>
               </v-layout>
               <v-layout row wrap>
