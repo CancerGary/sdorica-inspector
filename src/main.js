@@ -3,7 +3,10 @@ import App from '@/App.vue'
 
 import router from '@/router'
 import $backend from '@/backend'
+
 Vue.prototype.$backend = $backend
+Vue.prototype.$imperiumType = ['unknown', 'gamedata', 'android', 'androidExp', 'localization', 'charAssets', 'settings']
+
 Vue.config.productionTip = false
 
 // Vue.use(VueRouter)
@@ -16,22 +19,23 @@ Vue.prototype.$http = axios;
 // Vue.prototype.$http = axios.create({withCredentials: true});
 
 import moment from "moment";
+
 Vue.prototype.$moment = moment;
 
 Vue.use(Vuetify)
 
 // for tooltip touch event
-Vue.directive("touchend",{
-  bind:function (el,binding) {
+Vue.directive("touchend", {
+  bind: function (el, binding) {
     if (typeof binding.value === "function") {
-      el.addEventListener('touchend',binding.value)
+      el.addEventListener('touchend', binding.value)
     }
   }
 });
-Vue.directive("touchmove",{
-  bind:function (el,binding) {
+Vue.directive("touchmove", {
+  bind: function (el, binding) {
     if (typeof binding.value === "function") {
-      el.addEventListener('touchmove',binding.value)
+      el.addEventListener('touchmove', binding.value)
     }
   }
 });

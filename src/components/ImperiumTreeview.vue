@@ -69,6 +69,7 @@
           return result;
         }
 
+        // console.log('treeview called');
         return handle(this.imperiumData, null, this.sortCKeys);
       }
     }

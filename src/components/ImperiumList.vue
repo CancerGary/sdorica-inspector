@@ -134,13 +134,16 @@
       error: null,
       imperiumTypeSelect: [],
       gameVersionSelect: [],
-      gameVersionName: {},
-      imperiumType: ['unknown', 'gamedata', 'android', 'androidExp', 'localization', 'charAssets', 'settings']
+      gameVersionName: {}
     }),
 
     computed: {
       formTitle() {
         return this.editedIndex === -1 ? 'New Item' : 'Edit Item'
+      },
+
+      imperiumType() {
+        return this.$imperiumType
       }
     },
 

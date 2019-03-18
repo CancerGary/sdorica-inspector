@@ -119,7 +119,7 @@
         forceContainersList: false,
         showContainersFilters: false,
         currentContainerKey: null,
-        showInterpretedData: false,
+        showInterpretedData: null,
         treeviewData: {},
         currentContainerData: {},
         currentABMd5: null,
@@ -128,7 +128,8 @@
         interpreterEditor: false,
         codeEditing: 'alert("hello")',
         viewerJS: {},
-        evalData: {} // for plugin storage
+        evalData: {}, // for plugin storage
+        interpretedData: {},
       }
     },
     mounted() {
@@ -188,13 +189,14 @@
           this.currentContainerData = response.data;
           // v-if
           this.currentContainerKey = key;
+          this.updateInterpretedData();
           this.setCodeEditing();
         })
       },
       setCodeEditing() {
         var _ = this.viewerJS[this.containers[this.currentContainerKey].type];
         // console.log(_);
-        this.codeEditing = _ ? _.javascript : "(data) => {\nconsole.log('handleing');\nconsole.log(data);\n" +
+        this.codeEditing = _ ? _.javascript : "(data) => {\nconsole.log('handling');\nconsole.log(data);\n" +
           "return {result:data.m_Name}\n}";
       },
       checkSupportType(type) {
@@ -221,6 +223,7 @@
             this.$store.commit('toastMsg', 'Currently not support this type');
           }
         }
+        this.updateInterpretedData();
       },
       submitViewerJS(type) {
         var _ = this.viewerJS[type];
@@ -235,23 +238,44 @@
             this.$store.commit('toastMsg', 'Success'), this.fetchViewerJS()
           }
         ).catch((error) => (this.$store.commit('toastMsg', error.response.data)))
-      }
-    }
-    ,
-    computed: {
-      interpretedData() {
-        if (this.showInterpretedData) {
-          var type = this.containers[this.currentContainerKey].type;
-          if (this.checkSupportType(type)) {
-            // customized code dict
-            var code = this.interpreterEditor ? this.codeEditing : this.viewerJS[type].javascript;
-            var data = Object.assign({}, this.currentContainerData);
-            if (this.viewerJS.hasOwnProperty('$DataInit')) data = eval(this.viewerJS['$DataInit'].javascript)(data);
-            return eval(code)(data);
-          } else return this.currentContainerData;
-        }
-        return this.currentContainerData;
       },
+      async getImperium(typeName,) { // for viewerJS
+        var typeId = this.$imperiumType.indexOf(typeName);
+        if (typeId < 0) return;
+        const {data: result} = await this.$http.get('/api/imperium/');
+        const imperiumId = result.reverse().find(x => x.type_id === typeId).id;
+        if (imperiumId) {
+          var storageKey = `imperium::${imperiumId}`;
+          if (localStorage.getItem(storageKey)) return JSON.parse(localStorage.getItem(storageKey));
+          var data = (await this.$http.get(`/api/imperium/${imperiumId}/unpack/`)).data;
+          localStorage.setItem(storageKey, JSON.stringify(data));
+          return data;
+        }
+      },
+      updateInterpretedData() {
+        var type = this.currentContainerKey ? this.containers[this.currentContainerKey].type : null;
+        if (this.showInterpretedData && this.checkSupportType(type)) {
+          // customized code dict
+          var code = this.interpreterEditor ? this.codeEditing : this.viewerJS[type].javascript;
+          var data = Object.assign({}, this.currentContainerData);
+          if (this.viewerJS.hasOwnProperty('$DataInit')) data = eval(this.viewerJS['$DataInit'].javascript)(data);
+          //console.log('init:', data);
+          var result = eval(code)(data);
+          if (result) {
+            // for async result
+            if (result.__proto__ === Promise.prototype) {
+              result.then((evalResult) => {
+                this.interpretedData = evalResult;
+              })
+            } else {
+              // console.log('result:', result);
+              this.interpretedData = result;
+            }
+          }
+        } else this.interpretedData = this.currentContainerData;
+      }
+    },
+    computed: {
       interpretedMedia() {
         if (!this.showMedia) return "<div>If you see this, maybe there's a bug occurred.</div>";
         var type = this.containers[this.currentContainerKey].type;
