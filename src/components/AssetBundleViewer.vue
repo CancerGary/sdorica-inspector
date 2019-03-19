@@ -57,7 +57,8 @@
                 <span>Reset</span>
               </v-tooltip>
               <v-tooltip bottom>
-                <v-btn icon slot="activator" @click="submitViewerJS(containers[currentContainerKey].type)">
+                <v-btn icon slot="activator"
+                       @click="jsHelper.submitViewerJS(containers[currentContainerKey].type,codeEditing)">
                   <v-icon>save</v-icon>
                 </v-btn>
                 <span>Save</span>
@@ -107,7 +108,7 @@
   import 'codemirror/mode/javascript/javascript.js'
   import 'codemirror/lib/codemirror.css'
   import 'codemirror/theme/monokai.css'
-
+  import ViewerJSHelper from './ViewerJSHelper'
 
   export default {
     name: "AssetBundleViewer",
@@ -120,20 +121,19 @@
         showContainersFilters: false,
         currentContainerKey: null,
         showInterpretedData: null,
-        treeviewData: {},
         currentContainerData: {},
         currentABMd5: null,
         currentABInfo: {},
         showMedia: false,
         interpreterEditor: false,
         codeEditing: 'alert("hello")',
-        viewerJS: {},
-        evalData: {}, // for plugin storage
         interpretedData: {},
+        jsHelper: new ViewerJSHelper()
       }
     },
     mounted() {
-      this.fetchViewerJS();
+      this.jsHelper = new ViewerJSHelper(this);
+      this.jsHelper.fetchViewerJS();
       this.load();
     },
     methods: {
@@ -153,17 +153,6 @@
       fetchABInfo() {
         this.$http.get(`/api/asset_bundle/${this.$route.params.ab_md5}/`).then((response) => {
           this.currentABInfo = response.data;
-        })
-      },
-      fetchViewerJS() {
-        this.$http.get(`/api/viewer_js/`).then((response) => {
-          response.data.forEach((value) => {
-            this.viewerJS[value.unity_type] = {javascript: value.javascript, id: value.id}
-            // execute $ViewerInit
-          });
-          if (this.viewerJS.hasOwnProperty('$ViewerInit')) {
-            eval(this.viewerJS['$ViewerInit'].javascript)(this);
-          }
         })
       },
       fetchContainerList() {
@@ -194,13 +183,13 @@
         })
       },
       setCodeEditing() {
-        var _ = this.viewerJS[this.containers[this.currentContainerKey].type];
+        var _ = this.jsHelper.getCode(this.containers[this.currentContainerKey].type);
         // console.log(_);
         this.codeEditing = _ ? _.javascript : "(data) => {\nconsole.log('handling');\nconsole.log(data);\n" +
           "return {result:data.m_Name}\n}";
       },
       checkSupportType(type) {
-        return this.interpreterEditor || this.viewerJS.hasOwnProperty(type);
+        return this.interpreterEditor || this.jsHelper.getCode(type);
       },
       onInterpret() {
         if (this.showInterpretedData) {
@@ -225,53 +214,14 @@
         }
         this.updateInterpretedData();
       },
-      submitViewerJS(type) {
-        var _ = this.viewerJS[type];
-        var p = undefined;
-        if (_) p = this.$http.put(`/api/viewer_js/${type}/`, {
-          javascript: this.codeEditing,
-          unity_type: type
-        });
-        else p = this.$http.post('/api/viewer_js/', {javascript: this.codeEditing, unity_type: type});
-        p.then(
-          () => {
-            this.$store.commit('toastMsg', 'Success'), this.fetchViewerJS()
-          }
-        ).catch((error) => (this.$store.commit('toastMsg', error.response.data)))
-      },
-      async getImperium(typeName,) { // for viewerJS
-        var typeId = this.$imperiumType.indexOf(typeName);
-        if (typeId < 0) return;
-        const {data: result} = await this.$http.get('/api/imperium/');
-        const imperiumId = result.reverse().find(x => x.type_id === typeId).id;
-        if (imperiumId) {
-          var storageKey = `imperium::${imperiumId}`;
-          if (localStorage.getItem(storageKey)) return JSON.parse(localStorage.getItem(storageKey));
-          var data = (await this.$http.get(`/api/imperium/${imperiumId}/unpack/`)).data;
-          localStorage.setItem(storageKey, JSON.stringify(data));
-          return data;
-        }
-      },
       updateInterpretedData() {
         var type = this.currentContainerKey ? this.containers[this.currentContainerKey].type : null;
         if (this.showInterpretedData && this.checkSupportType(type)) {
           // customized code dict
-          var code = this.interpreterEditor ? this.codeEditing : this.viewerJS[type].javascript;
+          var code = this.interpreterEditor ? this.codeEditing : null;
           var data = Object.assign({}, this.currentContainerData);
-          if (this.viewerJS.hasOwnProperty('$DataInit')) data = eval(this.viewerJS['$DataInit'].javascript)(data);
-          //console.log('init:', data);
-          var result = eval(code)(data);
-          if (result) {
-            // for async result
-            if (result.__proto__ === Promise.prototype) {
-              result.then((evalResult) => {
-                this.interpretedData = evalResult;
-              })
-            } else {
-              // console.log('result:', result);
-              this.interpretedData = result;
-            }
-          }
+          if (code) this.jsHelper.runCode(null, data, code);
+          else this.jsHelper.runCode(type, data, null);
         } else this.interpretedData = this.currentContainerData;
       }
     },
