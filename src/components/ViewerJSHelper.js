@@ -1,12 +1,12 @@
-export default class ViewerJSHelper{
+export default class ViewerJSHelper {
   constructor(vue) {
     this.vue = vue;
     this.viewerJS = {};
-    this.evalData= {};  // for plugin storage
+    this.evalData = {};  // for plugin storage
   }
 
   fetchViewerJS() {
-    this.vue.$http.get(`/api/viewer_js/`).then((response) => {
+    return this.vue.$http.get(`/api/viewer_js/`).then((response) => {
       response.data.forEach((value) => {
         this.viewerJS[value.unity_type] = {javascript: value.javascript, id: value.id}
         // execute $ViewerInit
@@ -21,7 +21,12 @@ export default class ViewerJSHelper{
     return this.viewerJS[type];
   }
 
+  getTypes() {
+    return Object.keys(this.viewerJS);
+  }
+
   submitViewerJS(type, code) {
+    if (!type) return this.toastMsg('No type yet');
     var _ = this.viewerJS[type];
     var p = undefined;
     if (_) p = this.vue.$http.put(`/api/viewer_js/${type}/`, {
@@ -55,9 +60,9 @@ export default class ViewerJSHelper{
     this.vue.$store.commit('toastMsg', msg)
   }
 
-  runCode(type, data, extraCode) {
+  runCode(type, data, extraCode, initFirst) {
     // because of async call, the func eval result should write to `this.vue.interpretedData`
-    var code = (type && !extraCode) ? this.getCode(type):extraCode;
+    var code = (type && !extraCode) ? this.getCode(type) : extraCode;
     if (this.viewerJS.hasOwnProperty('$DataInit')) data = eval(this.viewerJS['$DataInit'].javascript)(data);
     //console.log('init:', data);
     var result = eval(code)(data);
