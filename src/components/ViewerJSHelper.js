@@ -62,7 +62,7 @@ export default class ViewerJSHelper {
 
   runCode(type, data, extraCode, initFirst) {
     // because of async call, the func eval result should write to `this.vue.interpretedData`
-    var code = (type && !extraCode) ? this.getCode(type) : extraCode;
+    var code = (type && !extraCode) ? this.getCode(type).javascript : extraCode;
     if (this.viewerJS.hasOwnProperty('$DataInit')) data = eval(this.viewerJS['$DataInit'].javascript)(data);
     //console.log('init:', data);
     var result = eval(code)(data);
