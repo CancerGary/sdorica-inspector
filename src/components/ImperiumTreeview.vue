@@ -77,9 +77,18 @@
 </script>
 
 <style scoped>
-  >>> .v-treeview-node {
-    margin-left: 10px !important;
+  >>> .v-treeview {
+    white-space: pre-wrap;
   }
+
+  >>> .v-treeview-node .v-treeview-node--leaf {
+    margin-left: calc(13px + 24px)!important;
+  }
+
+  >>> .v-treeview-node {
+    margin-left: 13px!important;
+  }
+
 
   >>> .v-treeview-node__root {
     padding-top: 4px !important;
