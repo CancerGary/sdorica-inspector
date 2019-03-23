@@ -1,8 +1,12 @@
+import {openDB} from 'idb'
+
 export default class ViewerJSHelper {
   constructor(vue) {
     this.vue = vue;
     this.viewerJS = {};
     this.evalData = {};  // for plugin storage
+    this.dbName = 'Sdorica Inspector';
+    this.dbVersion = 1;
   }
 
   fetchViewerJS() {
@@ -46,14 +50,28 @@ export default class ViewerJSHelper {
     var typeId = this.vue.$imperiumType.indexOf(typeName);
     if (typeId < 0) return;
     const {data: result} = await this.vue.$http.get('/api/imperium/');
-    const imperiumId = result.reverse().find(x => x.type_id === typeId).id;
-    if (imperiumId) {
+    var i = result.reverse().find(x => x.type_id === typeId);
+    if (i) {
+      var imperiumId = i.id;
       var storageKey = `imperium::${imperiumId}`;
-      if (localStorage.getItem(storageKey)) return JSON.parse(localStorage.getItem(storageKey));
-      var data = (await this.vue.$http.get(`/api/imperium/${imperiumId}/unpack/`)).data;
-      localStorage.setItem(storageKey, JSON.stringify(data));
-      return data;
-    }
+      // query
+      const db = await openDB(this.dbName, this.dbVersion, {
+        upgrade(db) {
+          db.createObjectStore('imperium');
+        }
+      });
+      var queryResult = await db.get('imperium', storageKey);
+      if (queryResult) {
+        console.log('hit cache:',storageKey);
+        return queryResult;
+      }
+      else {
+        // or fetch & write
+        var data = (await this.vue.$http.get(`/api/imperium/${imperiumId}/unpack/`)).data;
+        await db.put('imperium', data, storageKey);
+        return data;
+      }
+    } else return this.toastMsg(`Can't find any ${typeName}`);
   }
 
   toastMsg(msg) {
