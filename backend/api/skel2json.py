@@ -13,11 +13,12 @@ CURVE_TYPE = ['linear', 'stepped', 'bezier']
 
 
 class Handler():
-    def __init__(self, f: BinaryIO):
+    def __init__(self, f: BinaryIO, for_new=True):
         self.f = f
         self.nonessential = False
         self._result = dict()
         self._skin_index = list()
+        self.for_new = for_new
 
     def read(self, l=1):
         b = self.f.read(l)
@@ -116,7 +117,7 @@ class Handler():
                 'scaleY': self.read_float(),
                 'shearY': self.read_float(),
                 'rotateMix': self.read_float(),
-                'translateMix':self.read_float(),
+                'translateMix': self.read_float(),
                 'scaleMix': self.read_float(),
                 'shearMix': self.read_float()
             })
@@ -210,6 +211,8 @@ class Handler():
                             'height': self.read_float()
                         })
                 elif type == 'weightedmesh':
+                    if type == 'weightedmesh' and self.for_new:
+                        d.update({'type': 'mesh'})
                     d.update({
                         'path': self.read_string(),
                         'color': self.read_rgba8888(), })
@@ -235,6 +238,10 @@ class Handler():
                             'width': self.read_float(),
                             'height': self.read_float(),
                         })
+                # js null
+                if d.get('path') is None:
+                    # print('get: ',d['path'])
+                    d.pop('path')
 
                 slot_result[placeholder_name] = d
             skin_result[self.get_slot_name(slot_index)] = slot_result
@@ -451,6 +458,9 @@ class Handler():
             if events:  # readAnimation error
                 animation['events'] = events
 
+            # check new (ffd->deform)
+            if self.for_new:
+                animation['deform'] = animation.pop('ffd')
             # add single animation data
             result[name] = animation
             # print(animation)
@@ -489,6 +499,6 @@ class Handler():
 
 
 if __name__ == '__main__':
-    result = Handler(open('b0037s5.skel', 'rb')).handle()
+    result = Handler(open('data.skel', 'rb')).handle()
     # pprint.pprint(result)
-    json.dump(result, open('b0037s5_t.json', 'w'))
+    json.dump(result, open('data.json', 'w'))

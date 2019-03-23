@@ -9,6 +9,7 @@ import ImperiumABDiff from "./components/ImperiumABDiff";
 import ContainerSearch from "./components/ContainerSearch";
 import AssetBundleViewer from "./components/AssetBundleViewer";
 import ViewerJSPlayground from './components/ViewerJSPlayground';
+import SpineWebPlayer from "./components/SpineWebPlayer";
 
 Vue.use(Router)
 
@@ -67,6 +68,12 @@ export default new Router({
       name: 'playground',
       component: ViewerJSPlayground,
       meta: {title: 'ViewerJS Playground'}
+    },
+    {
+      path: '/spine',
+      name: 'spine',
+      component: SpineWebPlayer,
+      meta: {title: 'Spine Web Player'}
     },
     {
       path: '*',

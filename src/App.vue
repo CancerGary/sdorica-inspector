@@ -89,6 +89,14 @@
               <v-list-tile-title>ViewerJS Playground</v-list-tile-title>
             </v-list-tile-content>
           </router-link>
+          <router-link tag="v-list-tile" to="/spine">
+            <v-list-tile-action>
+              <v-icon>mdi-animation-play</v-icon>
+            </v-list-tile-action>
+            <v-list-tile-content>
+              <v-list-tile-title>Spine Web Player</v-list-tile-title>
+            </v-list-tile-content>
+          </router-link>
         </v-list>
       </v-navigation-drawer>
       <v-toolbar color="indigo" dark fixed app>
