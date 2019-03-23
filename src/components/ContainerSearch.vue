@@ -49,7 +49,7 @@
             <div v-for="result in searchResult" :key="result.name">
               <div> {{result.name}}</div>
               <div class="ml-4 grey--text">
-                <div v-for="ab in result.asset_bundles.reverse()" :key="ab.md5">{{ab.md5}} |
+                <div v-for="ab in result.asset_bundles" :key="ab.md5">{{ab.md5}} |
                   <router-link
                       :to="{name:'asset_bundle_viewer',params:{ab_md5:ab.md5},query:{container_name:result.name}}"
                       class="grey--text">{{ab.name}}
