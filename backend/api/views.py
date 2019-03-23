@@ -1,7 +1,10 @@
 import errno
+import json
 import os
 import pickle
+import re
 import socket
+import uuid
 from collections import OrderedDict
 from io import BytesIO
 
@@ -10,6 +13,7 @@ from PIL import Image
 from celery.result import AsyncResult
 from django.contrib.auth.models import User
 from django.http import Http404, HttpResponse
+from django.http.response import HttpResponseBadRequest, FileResponse
 from django.shortcuts import redirect, render, get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from django.conf import settings
@@ -20,10 +24,11 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
 from rest_framework import viewsets, mixins, permissions
 from rest_framework.decorators import action
+from rest_framework.exceptions import bad_request, ValidationError
 from rest_framework.response import Response
 from unitypack.engine.texture import TextureFormat
 
-from backend.api import imperium_reader, ab_utils
+from backend.api import imperium_reader, ab_utils, skel2json
 from .models import GameVersion, GameVersionSerializer, Imperium, ImperiumSerializer, ImperiumDiffSerializer, \
     ImperiumType, ImperiumABDiffSerializer, ConvertRule, ConvertRuleSerializer, Container, ContainerSerializer, \
     AssetBundleSerializer, AssetBundle, ViewerJS, ViewerJSSerializer, UnityObject, UnityObjectSerializer
@@ -40,7 +45,10 @@ index_view = login_required(never_cache(TemplateView.as_view(template_name='inde
 
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 
-cache_dir = os.makedirs(os.path.join(settings.INSPECTOR_DATA_ROOT, 'object_cache'), exist_ok=True)
+cache_dir = os.path.join(settings.INSPECTOR_DATA_ROOT, 'object_cache')
+os.makedirs(cache_dir, exist_ok=True)
+spine_dir = os.path.join(settings.INSPECTOR_DATA_ROOT, 'spine')
+os.makedirs(spine_dir, exist_ok=True)
 os.makedirs(os.path.join(settings.STATIC_ROOT, 'audio'), exist_ok=True)
 
 
@@ -212,12 +220,18 @@ class ContainerViewSet(viewsets.GenericViewSet):
     @action(detail=False, methods=['GET'])
     def search(self, request):
         if not request.query_params.get('query'):
-            return Response('Query is too short')
+            raise ValidationError('Query is too short')
         result = self.get_queryset()
         result_uo = UnityObject.objects.all()
+        if request.query_params.get('imperium'):
+            imperium = get_object_or_404(Imperium, id=request.query_params.get('imperium'))
+            # result = result.select_related().filter(asset_bundles__in=imperium.assetbundle_set.get_queryset())
+            # print(result.query)
         for i in request.query_params.get('query').split(' '):
             result = result.filter(name__icontains=i)
             result_uo = result_uo.filter(name__icontains=i)
+
+        # TODO: serializer filter by imperium
         return Response(ContainerSerializer(result, many=True).data + UnityObjectSerializer(result_uo, many=True).data)
 
 
@@ -240,41 +254,12 @@ class AssetBundleViewSet(viewsets.GenericViewSet):
 
     @action(detail=True)
     def containers(self, request, md5=None):
-        # path_id has two types: only a path_id number (for container)
-        # or two numbers (asset_index and path_id) joined by a `:` (for multi assets)
-
-        # path_id maybe overflow in JavaScript
-        result = {v['asset'].object.path_id: {'name': k, 'type': v['asset'].object.type} for k, v in
-                  self.get_object().get_containers().items()}
-        # result.update(
-        #     {i[1]: {'name': i[0], 'type': i[5], 'asset_index': i[4]} for i in self.get_object().get_asset_objects()})
-        result.update(
-            {':'.join(map(str, (i.asset_index, i.path_id))): {'name': i.unityobject.name, 'type': i.unityobject.type}
-             for i
-             in self.get_object().unityobjectrelationship_set.all()})
-        return Response(result)
-
-    def split_path_id(self, path_id):
-        if isinstance(path_id, str) and ':' in path_id:
-            return int(path_id.split(':')[-2]), int(path_id.split(':')[-1])
-        else:
-            return None, int(path_id)
+        return Response(self.get_object().get_mixed_containers())
 
     @action(detail=True, url_path='containers/(?P<path_id>([0-9]+:)?-?[0-9]+)/?')
     def containers_retrieve(self, request, path_id, md5=None, *args, **kwargs):
-        asset_index, path_id = self.split_path_id(path_id)
-        data = None
-        bundle = self.get_object().load_unitypack()
-        if asset_index:
-            i = int(asset_index)
-            if i < len(bundle.assets):
-                data = bundle.assets[i].objects[path_id].read()
-        else:
-            # for legacy container search
-            for asset in bundle.assets:
-                if asset.objects.get(path_id):
-                    data = asset.objects[path_id].read()
-                    break
+        asset_index, path_id = ab_utils.split_path_id(path_id)
+        info, data = self.get_object().get_unity_object_by_path_id(asset_index, path_id)
 
         if data is None:
             raise Http404
@@ -291,20 +276,8 @@ class AssetBundleViewSet(viewsets.GenericViewSet):
         `/data` url is designed for object types already in Unity3D. For customized types (such as `DialogAsset` ),
         using JavaScript at frontend is better.
         '''
-        asset_index, path_id = self.split_path_id(path_id)
-        data = None
-        info = None
-        bundle = self.get_object().load_unitypack()
-        if asset_index:
-            if asset_index < len(bundle.assets):
-                info = bundle.assets[asset_index].objects[path_id]
-                data = bundle.assets[asset_index].objects[path_id].read()
-        else:
-            for asset in bundle.assets:
-                if asset.objects.get(path_id):
-                    info = asset.objects[path_id]
-                    data = asset.objects[path_id].read()
-                    break
+        asset_index, path_id = ab_utils.split_path_id(path_id)
+        info, data = self.get_object().get_unity_object_by_path_id(asset_index, path_id)
         if data is None:
             raise Http404
         else:
@@ -373,3 +346,92 @@ class StatusViewSet(viewsets.ViewSet):
                          'redis': redis_online,
                          'users': User.objects.all().count(),
                          'master_hash': get_git_master_hash(os.path.join(settings.BASE_DIR, '.git'))})
+
+
+class SpineViewSet(viewsets.ViewSet):
+    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
+    lookup_field = 'spine_uuid'
+    lookup_value_regex = '[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}'
+
+    # def retrieve(self, request, spine_uuid=None):
+    #     return Response(spine_uuid)
+
+    def get_ab_o(self, info):
+        return AssetBundle.objects.get(md5=info['md5']).get_unity_object_by_name(info['name'])
+
+    def create(self, request):
+        # skeleton
+        try:
+            info, skel_data = self.get_ab_o(request.data['skeleton'])
+            if info.type != 'TextAsset': raise TypeError
+            skel_json = skel2json.Handler(BytesIO(skel_data.script)).handle()
+        except Exception as e:
+            raise ValidationError("skeleton data error %s" % (e))
+
+        # atlas
+        try:
+            info, atlas_data = self.get_ab_o(request.data['atlas'])
+            b = atlas_data.bytes
+            atlas_text = (b if isinstance(b, str) else b.decode('utf8'))
+            if info.type != 'TextAsset': raise TypeError
+            # http://esotericsoftware.com/spine-atlas-format
+            atlas_pages = re.findall('\n([^\\\.\n/]+?.png)\nsize: ?(\d+),(\d+)', atlas_text)
+            # print(atlas_pages)
+        except Exception as e:
+            raise ValidationError("Atlas data error %s" % (e))
+
+        # images
+        if len(atlas_pages) != len(request.data['images']):
+            raise ValidationError('selected wrong count of images (need %d, given %d)' % (
+                len(atlas_pages), len(request.data['images'])))
+        try:
+            pil = []  # [(filename, resized PIL.Image)]
+            for page, img_info in zip(atlas_pages, request.data['images']):
+                info, texture_data = self.get_ab_o(img_info)
+                if info.type != 'Texture2D': raise TypeError
+                # resize by page description
+                pil.append((page[0],
+                            Image.open(BytesIO(handle_image_data(texture_data))).resize((int(page[1]), int(page[2])))))
+        except Exception as e:
+            raise ValidationError("Atlas data error %s" % (e))
+
+        # write task
+        try:
+            task_uuid = str(uuid.uuid4())
+            base = os.path.join(spine_dir, task_uuid)
+            os.makedirs(base, exist_ok=True)
+
+            json.dump(skel_json, open(os.path.join(base, 'data.json'), 'w'))
+            open(os.path.join(base, 'data.skel'), 'wb').write(skel_data.script)  # for debugging
+            open(os.path.join(base, 'data.atlas'), 'w').write(atlas_text)
+            for im_name, im in pil:
+                im.save(open(os.path.join(base, im_name), 'wb'), 'png')
+        except Exception as e:
+            raise ValidationError("Final writing error %s" % (e))
+
+        return Response({'task_uuid': task_uuid})
+
+    def check_spine_uuid(self, spine_uuid):
+        path = os.path.join(spine_dir, spine_uuid)
+        if os.path.isdir(path):
+            return path
+        else:
+            raise Http404
+
+    def retrieve(self, request, spine_uuid):
+        return Response(os.listdir(self.check_spine_uuid(spine_uuid)))
+
+    @action(detail=True, methods=['GET'], url_path='json')
+    def retrieve_json(self, request, spine_uuid=None):
+        path = self.check_spine_uuid(spine_uuid)
+        return HttpResponse(open(os.path.join(path, 'data.json'), encoding='utf8').read())
+
+    @action(detail=True, methods=['GET'], url_path='atlas')
+    def retrieve_atlas(self, request, spine_uuid=None):
+        path = self.check_spine_uuid(spine_uuid)
+        return HttpResponse(open(os.path.join(path, 'data.atlas'), encoding='utf8').read())
+
+    @action(detail=True, methods=['GET'], url_path='atlas/(?P<img_name>[^\\/:*?\"<|>]+)')
+    def retrieve_image(self, request, spine_uuid=None, img_name=None):
+        path = self.check_spine_uuid(spine_uuid)
+        return HttpResponse(open(os.path.join(path, img_name),'rb').read())

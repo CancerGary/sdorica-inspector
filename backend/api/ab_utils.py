@@ -89,3 +89,9 @@ def handle_fsb(data):
     for sample in fsb.samples:
         # assume 1 sample
         return fsb.rebuild_sample(sample).tobytes()
+
+def split_path_id(path_id):
+    if isinstance(path_id, str) and ':' in path_id:
+        return int(path_id.split(':')[-2]), int(path_id.split(':')[-1])
+    else:
+        return None, int(path_id)

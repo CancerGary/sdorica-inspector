@@ -92,6 +92,44 @@ class AssetBundle(models.Model):
         except RuntimeError:
             return {}
 
+    def get_mixed_containers(self):
+        # path_id has two types: only a path_id number (for container)
+        # or two numbers (asset_index and path_id) joined by a `:` (for multi assets)
+
+        # path_id maybe overflow in JavaScript
+        result = {v['asset'].object.path_id: {'name': k, 'type': v['asset'].object.type} for k, v in
+                  self.get_containers().items()}
+        # result.update(
+        #     {i[1]: {'name': i[0], 'type': i[5], 'asset_index': i[4]} for i in self.get_object().get_asset_objects()})
+        result.update(
+            {':'.join(map(str, (i.asset_index, i.path_id))): {'name': i.unityobject.name, 'type': i.unityobject.type}
+             for i
+             in self.unityobjectrelationship_set.all()})
+        return result
+
+    def get_unity_object_by_path_id(self, asset_index, path_id):
+        data = None
+        info = None
+        bundle = self.load_unitypack()
+        if asset_index:
+            if asset_index < len(bundle.assets):
+                info = bundle.assets[asset_index].objects[path_id]
+                data = bundle.assets[asset_index].objects[path_id].read()
+        else:
+            for asset in bundle.assets:
+                if asset.objects.get(path_id):
+                    info = asset.objects[path_id]
+                    data = asset.objects[path_id].read()
+                    break
+        return info, data
+
+    def get_unity_object_by_name(self, name):
+        for path_id, d in self.get_mixed_containers().items():
+            o_name = d['name']
+            if (o_name == name):
+                return self.get_unity_object_by_path_id(*ab_utils.split_path_id(path_id))
+        return None, None
+
     def get_asset_objects(self):
         try:
             bundle = self.load_unitypack()
@@ -144,6 +182,11 @@ class ViewerJS(models.Model):
     javascript = models.TextField()
     unity_type = models.CharField(max_length=40, unique=True)
 
+
+# class SpineData(models.Model):
+#     skeleton = models.CharField(max_length=100)
+#     atlas = models.CharField(max_length=100)
+#     images = models.TextField()
 
 class GameVersionSerializer(serializers.HyperlinkedModelSerializer):
     imperiums = serializers.HyperlinkedRelatedField(many=True, read_only=True, view_name='imperium-detail')
@@ -270,6 +313,7 @@ class ContainerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Container
         fields = ('id', 'name', 'asset_bundles')
+
 
 class UnityObjectSerializer(serializers.ModelSerializer):
     asset_bundles = AssetBundleSimpleSerializer(many=True, read_only=True)
