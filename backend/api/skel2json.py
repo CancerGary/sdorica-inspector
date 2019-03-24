@@ -103,7 +103,7 @@ class Handler():
                 # transform: Determines how parent bone transforms are inherited:
                 # normal, onlyTranslation, noRotationOrReflection, noScale, or noScaleOrReflection.
                 # Assume normal if omitted.
-                # print((r['name'],r['inheritRotation'],r['inheritScale']))
+                # print((r['name'], r['inheritRotation'], r['inheritScale']))
                 r['transform'] = {(True, True): 'normal',
                                   (True, False): 'noScale',
                                   (False, True): 'noRotationOrReflection',
@@ -128,14 +128,17 @@ class Handler():
                 'bones': [self.get_bone_name(self.rvit()) for i in range(self.rvit())],
                 'target': self.get_bone_name(self.rvit()),
                 'mix': self.read_float(),
-                'bendPositive': self.read_bool()
+                'bendPositive': (self.read_byte() == 1),
+                # for_new: Constraint order can be specified after `3.5.00-beta`
+                # The default value is `0`, which means if the value is lost, only first IK Constraint will work.
+                'order': i  # data.order = this.getValue(constraintMap, "order", 0);
             })
         return result
 
     def handle_transform(self):
         result = []
         for i in range(self.rvit()):
-            result.append({
+            d = {
                 'name': self.read_string(),
                 'bone': self.get_bone_name(self.rvit()),
                 'target': self.get_bone_name(self.rvit()),
@@ -148,8 +151,13 @@ class Handler():
                 'rotateMix': self.read_float(),
                 'translateMix': self.read_float(),
                 'scaleMix': self.read_float(),
-                'shearMix': self.read_float()
-            })
+                'shearMix': self.read_float(),
+                'order': i  # same to ik order
+            }
+            # for (JsonValue boneMap = constraintMap.getChild("bones"); boneMap != null; boneMap = boneMap.next) {
+            if self.for_new:
+                d['bones'] = [d.pop('bone')]
+            result.append(d)
         return result
 
     def handle_slots(self):
@@ -230,6 +238,9 @@ class Handler():
                             'height': self.read_float(),
                         })
                 elif type in ['linkedmesh', 'weightedlinkedmesh']:
+                    # print(type)
+                    if type == 'weightedlinkedmesh' and self.for_new:
+                        d.update({'type': 'linkedmesh'})
                     d.update({
                         'path': self.read_string(),
                         'color': self.read_rgba8888(),
@@ -387,7 +398,7 @@ class Handler():
                     d = {
                         'time': self.read_float(),
                         'mix': self.read_float(),
-                        'bendPositive': self.read_bool()
+                        'bendPositive': (self.read_byte() == 1)
                     }
                     if fi < frame_count - 1:
                         d.update({'curve': self.read_curve()})
@@ -493,6 +504,7 @@ class Handler():
             # check new (ffd->deform)
             if self.for_new:
                 animation['deform'] = animation.pop('ffd')
+
             # add single animation data
             result[name] = animation
             # print(animation)
@@ -524,6 +536,11 @@ class Handler():
 
     def read_bool(self):
         return self.read() != 0
+
+    def read_byte(self):
+        b = self.read()
+        # print(b)
+        return b - 256 if b > 127 else b
 
     def read_rgba8888(self):
         b = self.read(4)

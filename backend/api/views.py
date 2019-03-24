@@ -364,7 +364,6 @@ class SpineViewSet(viewsets.ViewSet):
         try:
             info, skel_data = self.get_ab_o(request.data['skeleton'])
             if info.type != 'TextAsset': raise TypeError
-            skel_json = skel2json.Handler(BytesIO(skel_data.script)).handle()
         except Exception as e:
             raise ValidationError("skeleton data error %s" % (e))
 
@@ -401,7 +400,7 @@ class SpineViewSet(viewsets.ViewSet):
             base = os.path.join(spine_dir, task_uuid)
             os.makedirs(base, exist_ok=True)
 
-            json.dump(skel_json, open(os.path.join(base, 'data.json'), 'w'))
+            # json.dump(skel_json, open(os.path.join(base, 'data.json'), 'w'))
             open(os.path.join(base, 'data.skel'), 'wb').write(skel_data.script)  # for debugging
             open(os.path.join(base, 'data.atlas'), 'w').write(atlas_text)
             for im_name, im in pil:
@@ -424,7 +423,13 @@ class SpineViewSet(viewsets.ViewSet):
     @action(detail=True, methods=['GET'], url_path='json')
     def retrieve_json(self, request, spine_uuid=None):
         path = self.check_spine_uuid(spine_uuid)
-        return HttpResponse(open(os.path.join(path, 'data.json'), encoding='utf8').read())
+        skel_json = skel2json.Handler(open(os.path.join(path, 'data.skel'), 'rb')).handle()
+        return Response(skel_json)
+
+    @action(detail=True, methods=['GET'], url_path='skel')
+    def retrieve_skel(self, request, spine_uuid=None):
+        path = self.check_spine_uuid(spine_uuid)
+        return HttpResponse(open(os.path.join(path, 'data.skel'), 'rb').read())
 
     @action(detail=True, methods=['GET'], url_path='atlas')
     def retrieve_atlas(self, request, spine_uuid=None):
@@ -434,4 +439,4 @@ class SpineViewSet(viewsets.ViewSet):
     @action(detail=True, methods=['GET'], url_path='atlas/(?P<img_name>[^\\/:*?\"<|>]+)')
     def retrieve_image(self, request, spine_uuid=None, img_name=None):
         path = self.check_spine_uuid(spine_uuid)
-        return HttpResponse(open(os.path.join(path, img_name),'rb').read())
+        return HttpResponse(open(os.path.join(path, img_name), 'rb').read())

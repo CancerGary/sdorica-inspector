@@ -4,7 +4,7 @@
     <v-flex xs12 md3>
       <v-layout column>
         <v-flex>
-          <v-card>
+          <v-card style="word-break: break-all">
             <v-toolbar card dense>
               <v-toolbar-title>Select Preview</v-toolbar-title>
               <v-spacer></v-spacer>
@@ -34,9 +34,9 @@
                 <v-icon>mdi-magnify</v-icon>
               </v-btn>
             </v-toolbar>
-            <v-card-text style="height: 400px;overflow-y:auto">
+            <v-card-text style="height: 400px;overflow-y:auto;word-break: break-all">
               <div v-for="result in searchResult" :key="result.name">
-                <div> {{result.name.split('/').pop()}}</div>
+                <div> {{result.name}}</div>
                 <div class="ml-4 grey--text">
                   <div v-for="ab in result.asset_bundles" :key="ab.md5">{{ab.md5}} | {{ab.name}}
                     <div class="span-selector">
