@@ -59,7 +59,7 @@ class Handler():
                         result |= (b & 127) << 28
         # return optimizePositive ? result : result >>> 1 ^ -(result & 1);
         # return result if optimizePositive else ((-1 & (2**32-1)) >> 1) ^ -(result & 1)
-        return int_overflow(result) if optimizePositive else unsigned_right_shitf(result,1) ^ -(result & 1)
+        return int_overflow(result) if optimizePositive else unsigned_right_shitf(result, 1) ^ -(result & 1)
 
     def read_string(self):
         char_count = self.read_var_int(True)
@@ -99,6 +99,15 @@ class Handler():
                 'inheritScale': self.read_bool(),
             }
             if self.nonessential: r['color'] = self.read_rgba8888()
+            if self.for_new:
+                # transform: Determines how parent bone transforms are inherited:
+                # normal, onlyTranslation, noRotationOrReflection, noScale, or noScaleOrReflection.
+                # Assume normal if omitted.
+                # print((r['name'],r['inheritRotation'],r['inheritScale']))
+                r['transform'] = {(True, True): 'normal',
+                                  (True, False): 'noScale',
+                                  (False, True): 'noRotationOrReflection',
+                                  (False, False): 'normal'}.get((r['inheritRotation'], r['inheritScale']), 'normal')
             result.append(r)
         return result
 
