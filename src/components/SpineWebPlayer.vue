@@ -9,7 +9,7 @@
               <v-toolbar-title>Select Preview</v-toolbar-title>
               <v-spacer></v-spacer>
               <v-btn icon @click="submitSpine">
-                <v-icon>mdi-magnify</v-icon>
+                <v-icon>play_arrow</v-icon>
               </v-btn>
             </v-toolbar>
             <v-card-text>

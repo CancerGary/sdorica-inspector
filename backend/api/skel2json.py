@@ -3,6 +3,24 @@ import struct
 from io import BytesIO
 from typing import BinaryIO
 import pprint
+import ctypes
+
+
+def int_overflow(val):
+    maxint = 2147483647
+    if not -maxint - 1 <= val <= maxint:
+        val = (val + (maxint + 1)) % (2 * (maxint + 1)) - maxint - 1
+    return val
+
+
+def unsigned_right_shitf(n, i):
+    if n < 0:
+        n = ctypes.c_uint32(n).value
+    if i < 0:
+        return -int_overflow(n << abs(i))
+    # print(n)
+    return int_overflow(n >> i)
+
 
 BLEND_MODE = ['normal', 'additive', 'multiply', 'screen']
 ATTACHMENT_TYPE = ['region', 'boundingbox', 'mesh', 'weightedmesh', 'linkedmesh', 'weightedlinkedmesh']
@@ -39,7 +57,9 @@ class Handler():
                     if ((b & 128) != 0):
                         b = this.read()
                         result |= (b & 127) << 28
-        return result if optimizePositive else result >> 1 ^ -(result & 1)
+        # return optimizePositive ? result : result >>> 1 ^ -(result & 1);
+        # return result if optimizePositive else ((-1 & (2**32-1)) >> 1) ^ -(result & 1)
+        return int_overflow(result) if optimizePositive else unsigned_right_shitf(result,1) ^ -(result & 1)
 
     def read_string(self):
         char_count = self.read_var_int(True)
@@ -129,13 +149,16 @@ class Handler():
         # print(slots_count)
         for i in range(slots_count):
             # print(i)
-            result.append({
+            d = {
                 'name': self.read_string(),
                 'bone': self.get_bone_name(self.rvit()),
-                'color': self.read_rgba8888(),
-                'attachment': self.read_string(),
+                'color': self.read_rgba8888(), }
+            a = self.read_string()
+            if a: d.update({'attachment': a})
+            d.update({
                 'blend': BLEND_MODE[self.rvit()]
             })
+            result.append(d)
         return result
 
     def read_float_array(self, length):
