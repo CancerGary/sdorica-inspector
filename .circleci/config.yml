@@ -75,8 +75,9 @@ jobs:
       - run:
           name: Deploy Over SSH
           # need to add deploy key , `git clone` and set before
+          # `-x` first so that `git pull` won't be interrupted by the difference of file permissions
           command: |
-            ssh -p $SSH_PORT $SSH_USER@$SSH_HOST "cd ~/sdorica-inspector && git pull && chmod +x ./*.sh && ./deploy.sh && ./run.sh"
+            ssh -p $SSH_PORT $SSH_USER@$SSH_HOST "cd ~/sdorica-inspector && chmod -x ./*.sh && git pull && chmod +x ./*.sh && ./deploy.sh && ./run.sh"
 
 workflows:
   version: 2

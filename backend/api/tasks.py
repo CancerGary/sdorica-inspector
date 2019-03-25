@@ -30,7 +30,7 @@ def _ab_task_db_index(ab_info, target):
     ab, created = AssetBundle.objects.get_or_create(md5=md5, defaults={'name': ab_name, 'url': url})
     if created:
         _build_index_from_ab(ab, target_md5)
-    return md5, target_md5
+    return md5, ab_name
 
 
 def _ab_task_download(ab_info, target):

@@ -544,7 +544,7 @@ class Handler():
 
     def read_rgba8888(self):
         b = self.read(4)
-        return '#%02x%02x%02x%02x' % (b[1], b[2], b[3], b[0])
+        return '#%02x%02x%02x%02x' % (b[0], b[1], b[2], b[3])
 
 
 if __name__ == '__main__':
