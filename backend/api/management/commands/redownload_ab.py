@@ -5,7 +5,7 @@ import os
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
-from backend.api.tasks import _ab_task
+from backend.api.tasks import _ab_task_download
 
 
 class Command(BaseCommand):
@@ -17,6 +17,6 @@ class Command(BaseCommand):
         target_dir = os.path.join(settings.INSPECTOR_DATA_ROOT, 'assetbundle')
         os.makedirs(target_dir, exist_ok=True)
         for ab in AssetBundle.objects.all():
-            print(_ab_task((ab.md5, '', ab.url), target_dir))
+            print(_ab_task_download((ab.md5, '', ab.url), target_dir))
 
         print('Done!')

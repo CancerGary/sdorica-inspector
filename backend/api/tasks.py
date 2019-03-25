@@ -15,20 +15,31 @@ from .celery import app
 from django.conf import settings
 import requests
 import traceback
+from django.core.cache import cache
+
+MARK_CACHE_TIMEOUT = 60 * 60
 
 
 @app.task
 def ab_task(ab_info, target):
-    return _ab_task(ab_info, target)
+    return _ab_task_db_index(ab_info, target)
 
 
-def _ab_task(ab_info, target):
-    md5, uid, url = ab_info
+def _ab_task_db_index(ab_info, target):
+    md5, ab_name, url, target_md5 = _ab_task_download(ab_info, target)
+    ab, created = AssetBundle.objects.get_or_create(md5=md5, defaults={'name': ab_name, 'url': url})
+    if created:
+        _build_index_from_ab(ab, target_md5)
+    return md5, target_md5
+
+
+def _ab_task_download(ab_info, target):
+    md5, ab_name, url = ab_info
     target_md5 = os.path.join(target, md5)
     if os.path.exists(target_md5):
         if hashlib.md5(open(target_md5, 'rb').read()).hexdigest() == md5:
             # print('pass:',md5,uid)
-            return md5, url, target_md5
+            return md5, ab_name, url, target_md5
 
     # print('start:', md5, uid, url)
     retry = 5
@@ -44,12 +55,12 @@ def _ab_task(ab_info, target):
                 continue
             else:
                 raise e
-    return md5, url, target_md5
+    return md5, ab_name, url, target_md5
 
 
 @app.task
-def build_index_and_done(finished_ab_info, imperium_id):
-    return _build_index_and_done(finished_ab_info, imperium_id)
+def add_to_imperium_set(finished_ab_info, imperium_id):
+    return _add_to_imperium_set(finished_ab_info, imperium_id)
 
 
 def _build_index_from_ab(ab, target_md5):
@@ -109,27 +120,16 @@ def _build_index_from_ab(ab, target_md5):
     UnityObjectRelationship.objects.bulk_create(relationships)
 
 
-def _build_index_and_done(finished_ab_info, imperium_id):
+def _add_to_imperium_set(finished_ab_info, imperium_id):
     # handle ab content centrally to reduce database IO times (bulk_create ?)
     # print(imperium_id)
     imperium = Imperium.objects.get(id=imperium_id)
-    # add new assetbundles
     data = imperium.load_data()
-    rev_dict = {w['H']: k for k, w in data['A'].items()}
 
-    ab_objects = []
+    ab_md5 = [w['H'] for k, w in data['A'].items()]
 
-    with transaction.atomic():
-        for md5, url, target_md5 in finished_ab_info:
-            ab = AssetBundle(md5=md5, name=rev_dict[md5], url=url)
-            ab.save()  # save to gain the PK
-            _build_index_from_ab(ab, target_md5)
-
-            # successfully analyzed
-            ab_objects.append(ab)
-
-    # add relations by group too
-    imperium.assetbundle_set.add(*ab_objects)
+    # add relations by group
+    imperium.assetbundle_set.add(*AssetBundle.objects.filter(md5__in=ab_md5))
     # mark finished
     imperium.finished = True
     imperium.save()
@@ -143,21 +143,22 @@ def ab_list_task(imperium_id):
         target_dir = os.path.join(settings.INSPECTOR_DATA_ROOT, 'assetbundle')
         os.makedirs(target_dir, exist_ok=True)
         subtasks_info = []
-        ab_objects = []
-        for each_dict in data['A'].values():
+        for ab_name, each_dict in data['A'].items():
             md5, uid, url = each_dict['H'], each_dict['I'], each_dict['L']
             target_md5 = os.path.join(target_dir, md5)
-            if os.path.exists(target_md5) and hashlib.md5(open(target_md5, 'rb').read()).hexdigest() == md5:
-                try:
-                    ab = AssetBundle.objects.get(md5=md5)
-                    ab_objects.append(ab)
-                except AssetBundle.DoesNotExist:
-                    subtasks_info.append((md5, uid, url))
+            cache_key = 'AB::' + md5
+            if cache.get(cache_key):
+                # other recent tasks added.
+                continue
             else:
-                subtasks_info.append((md5, uid, url))
+                # check if this ab has in the db
+                cache.set(key=cache_key, value=True, timeout=MARK_CACHE_TIMEOUT)
+                try:
+                    AssetBundle.objects.get(md5=md5)
+                except AssetBundle.DoesNotExist:
+                    subtasks_info.append((md5, ab_name, url))
+
         # create not existed
-        result = chord([ab_task.s(i, target_dir) for i in subtasks_info])(build_index_and_done.s(imperium_id))
-        # add relation to existed
-        imperium.assetbundle_set.add(*ab_objects)
+        result = chord([ab_task.s(i, target_dir) for i in subtasks_info])(add_to_imperium_set.s(imperium_id))
         # print('group result',result.ready())
         return result
