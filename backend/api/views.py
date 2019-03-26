@@ -111,7 +111,7 @@ class ImperiumViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows imperiums to be viewed or edited.
     """
-    queryset = Imperium.objects.all()
+    queryset = Imperium.objects.all().order_by('-create_time')
     serializer_class = ImperiumSerializer
     filter_backends = (DjangoFilterBackend,)
     filter_fields = ('game_version', 'type_id', 'finished')

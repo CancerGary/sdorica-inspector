@@ -37,8 +37,12 @@
                             :items="gameVersionSelect"></v-select>
                 </v-flex>
                 <v-flex xs12>
-                  <upload-button :fileChangedCallback="fileChanged"></upload-button>
-                  <span v-if="editedItem.upload_file">{{editedItem.upload_file.name}}</span></v-flex>
+                  <label class="pr-2">Create Time</label><input v-model="editedItem.create_time" type="datetime-local">
+                </v-flex>
+                <v-flex xs12>
+                  <upload-button :fileChangedCallback="fileChanged" title="Select"></upload-button>
+                  <span v-if="editedItem.upload_file">{{editedItem.upload_file.name}}</span>
+                </v-flex>
               </v-layout>
             </v-container>
           </v-card-text>
@@ -55,6 +59,7 @@
         :headers="headers"
         :items="table_data"
         class="elevation-1"
+        :pagination.sync="pagination"
         :rows-per-page-items='[  10, 20,40, { "text": "$vuetify.dataIterator.rowsPerPageAll", "value": -1 } ]'
     >
       <template slot="items" slot-scope="props">
@@ -122,6 +127,7 @@
         {text: 'Type', value: 'type_id', sortable: false},
         {text: 'Actions', value: 'name', sortable: false}
       ],
+      pagination: {sortBy: 'create_time', descending: true},
       table_data: [],
       editedIndex: -1,
       editedItem: {},
@@ -185,6 +191,7 @@
       editItem(item) {
         this.editedIndex = this.table_data.indexOf(item)
         this.editedItem = Object.assign({}, item)
+        this.editedItem.create_time = this.$moment(this.editedItem.create_time).format("YYYY-MM-DDTHH:mm");
         this.dialog = true
       },
 
@@ -217,6 +224,7 @@
         form.append('name', this.editedItem.name);
         form.append('type_id', this.editedItem.type_id);
         form.append('game_version', this.editedItem.game_version);
+        if (this.editedItem.create_time) form.append('create_time', this.editedItem.create_time);
         if (this.editedItem.uuid) form.append('uuid', this.editedItem.uuid);
         if (this.editedItem.upload_file) form.append('upload_file', this.editedItem.upload_file);
         if (this.editedIndex > -1) {

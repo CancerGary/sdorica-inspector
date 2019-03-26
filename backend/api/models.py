@@ -11,6 +11,7 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils import timezone
 from django.utils.six import BytesIO
 from rest_framework import serializers
 from django.core.files.storage import default_storage
@@ -38,7 +39,7 @@ class GameVersion(models.Model):
 class Imperium(models.Model):
     game_version = models.ForeignKey(GameVersion, related_name='imperiums', on_delete=models.CASCADE,
                                      null=True)  # maybe change delete mode here ?
-    create_time = models.DateTimeField(auto_now_add=True)
+    create_time = models.DateTimeField(default=timezone.now)
     type_id = models.IntegerField(default=0, choices=[(itype.value, itype.name) for itype in ImperiumType])
     name = models.CharField(max_length=100)
     md5 = models.CharField(max_length=32)
@@ -202,7 +203,7 @@ class ImperiumSerializer(serializers.Serializer):
     type_id = serializers.ChoiceField(choices=[(itype.value, itype.name) for itype in ImperiumType])
     game_version = serializers.PrimaryKeyRelatedField(queryset=GameVersion.objects.all())
     upload_file = serializers.FileField(write_only=True, required=False)
-    create_time = serializers.DateTimeField(read_only=True)
+    create_time = serializers.DateTimeField(default=timezone.now)
     uuid = serializers.UUIDField(required=False)
     md5 = serializers.CharField(read_only=True)
     url = serializers.HyperlinkedIdentityField(view_name='imperium-detail')
@@ -212,7 +213,8 @@ class ImperiumSerializer(serializers.Serializer):
     def create(self, validated_data):
         i = Imperium.objects.create(name=validated_data['name'], type_id=validated_data['type_id'],
                                     game_version=validated_data['game_version'],
-                                    md5='0' * 32, uuid=validated_data.get('uuid'))
+                                    md5='0' * 32, uuid=validated_data.get('uuid'),
+                                    create_time=validated_data['create_time'])
         if validated_data.get('upload_file'):
             i.save_data(validated_data.get('upload_file').open())
         i.save()
