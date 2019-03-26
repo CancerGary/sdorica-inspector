@@ -50,7 +50,7 @@ export default class ViewerJSHelper {
     var typeId = this.vue.$imperiumType.indexOf(typeName);
     if (typeId < 0) return;
     const {data: result} = await this.vue.$http.get('/api/imperium/');
-    var i = result.reverse().find(x => x.type_id === typeId);
+    var i = result.find(x => x.type_id === typeId);
     if (i) {
       var imperiumId = i.id;
       var storageKey = `imperium::${imperiumId}`;
