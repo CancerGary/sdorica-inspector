@@ -107,7 +107,8 @@ class Handler():
                 r['transform'] = {(True, True): 'normal',
                                   (True, False): 'noScale',
                                   (False, True): 'noRotationOrReflection',
-                                  (False, False): 'normal'}.get((r['inheritRotation'], r['inheritScale']), 'normal')
+                                  (False, False): 'onlyTranslation'}.get((r['inheritRotation'], r['inheritScale']),
+                                                                         'normal')
             result.append(r)
         return result
 
