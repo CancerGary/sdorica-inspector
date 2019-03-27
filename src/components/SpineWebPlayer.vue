@@ -63,8 +63,11 @@
             <v-toolbar card dense>
               <v-toolbar-title>Player</v-toolbar-title>
               <v-spacer></v-spacer>
-              <v-btn icon @click="submitSpine" v-if="$route.query.uuid">
-                <v-icon>mdi-package-down</v-icon>
+              <v-btn icon v-if="$route.query.uuid">
+                <a :href="`/api/spine/${$route.query.uuid}/zip/`" download
+                   style="color: inherit;text-decoration: none;">
+                  <v-icon>mdi-package-down</v-icon>
+                </a>
               </v-btn>
               <v-btn icon @click="submitSpine">
                 <v-icon>play_arrow</v-icon>

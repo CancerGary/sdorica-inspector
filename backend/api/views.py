@@ -7,6 +7,7 @@ import socket
 import uuid
 from collections import OrderedDict
 from io import BytesIO
+from zipfile import ZipFile
 
 import redis
 from PIL import Image
@@ -440,3 +441,16 @@ class SpineViewSet(viewsets.ViewSet):
     def retrieve_image(self, request, spine_uuid=None, img_name=None):
         path = self.check_spine_uuid(spine_uuid)
         return HttpResponse(open(os.path.join(path, img_name), 'rb').read())
+
+    @action(detail=True, methods=['GET'], url_path='zip')
+    def retrieve_zip(self, request, spine_uuid=None):
+        path = self.check_spine_uuid(spine_uuid)
+        f = BytesIO()
+        with ZipFile(f, 'w') as zipfile:
+            for fn in os.listdir(path):
+                if fn.endswith('.skel') or fn.endswith('.png') or fn.endswith('.atlas'):
+                    zipfile.write(os.path.join(path, fn), fn)
+            zipfile.writestr('data.json',
+                             data=json.dumps(skel2json.Handler(open(os.path.join(path, 'data.skel'), 'rb')).handle()))
+        f.seek(0)  # when being closed , it goes to end
+        return FileResponse(f, as_attachment=True, filename=spine_uuid + '.zip')
