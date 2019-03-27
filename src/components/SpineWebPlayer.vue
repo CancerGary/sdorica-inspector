@@ -8,9 +8,6 @@
             <v-toolbar card dense>
               <v-toolbar-title>Select Preview</v-toolbar-title>
               <v-spacer></v-spacer>
-              <v-btn icon @click="submitSpine">
-                <v-icon>play_arrow</v-icon>
-              </v-btn>
             </v-toolbar>
             <v-card-text>
               <div>Select resource first, then submit the selection.</div>
@@ -66,8 +63,17 @@
             <v-toolbar card dense>
               <v-toolbar-title>Player</v-toolbar-title>
               <v-spacer></v-spacer>
+              <v-btn icon @click="submitSpine" v-if="$route.query.uuid">
+                <v-icon>mdi-package-down</v-icon>
+              </v-btn>
+              <v-btn icon @click="submitSpine">
+                <v-icon>play_arrow</v-icon>
+              </v-btn>
             </v-toolbar>
             <v-card-text>
+              <div class="text-xs-center" v-if="playerLoading">
+                <v-progress-linear :indeterminate="true"></v-progress-linear>
+              </div>
               <div id="player-container" style="width: 100%; height: 500px;"></div>
             </v-card-text>
           </v-card>
@@ -87,7 +93,8 @@
         selectedSkel: {},
         selectedAtlas: {},
         selectedImages: [],
-        spinePlayer: null
+        spinePlayer: null,
+        playerLoading: false
       }
     },
     mounted() {
@@ -97,6 +104,7 @@
           jsonUrl: `/api/spine/${uuid}/json/`,
           atlasUrl: `/api/spine/${uuid}/atlas/`,
           backgroundColor: "#666666",
+          // backgroundImage:{url:'/api/asset_bundle/f5c8fdfe349362aa734fc2af7f1b4f10/containers/-2952096878925393890/data/'},
           premultipliedAlpha: false
         });
       }
@@ -121,12 +129,14 @@
         this.selectedImages.push({md5: md5, name: name})
       },
       submitSpine() {
+        this.playerLoading = true;
         this.$http.post('/api/spine/', {
           skeleton: this.selectedSkel,
           atlas: this.selectedAtlas,
           images: this.selectedImages
         }).then((res) => {
           var uuid = res.data.task_uuid;
+          this.playerLoading = false;
           if (this.spinePlayer) {
             delete this.spinePlayer;
             document.getElementsByClassName('spine-player')[0].remove()
@@ -139,7 +149,8 @@
           });
           this.$router.push({name: 'spine', query: {uuid: uuid}});
         }).catch((err) => {
-          this.$store.commit('toastMsg', err.msg)
+          this.playerLoading = false;
+          this.$store.commit('toastMsg', err.message + err.response.data)
         })
       }
     }
