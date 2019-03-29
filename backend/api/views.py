@@ -9,6 +9,7 @@ from collections import OrderedDict
 from io import BytesIO
 from zipfile import ZipFile
 
+import pydub
 import redis
 from PIL import Image
 from celery.result import AsyncResult
@@ -23,6 +24,7 @@ from django.views.generic import TemplateView
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
+from pydub import AudioSegment
 from rest_framework import viewsets, mixins, permissions
 from rest_framework.decorators import action
 from rest_framework.exceptions import bad_request, ValidationError
@@ -295,11 +297,10 @@ class AssetBundleViewSet(viewsets.GenericViewSet):
                 img.save(f, 'png')
                 return HttpResponse(f.getvalue(), content_type="image/png")
             elif info.type == 'AudioClip':
-                filename = "%s,%s" % (md5, path_id)
+                filename = "%s,%s.mp3" % (md5, path_id)
                 filepath = os.path.join(settings.STATIC_ROOT, 'audio', filename)
                 if not os.path.exists(filepath):
-                    cache = ab_utils.handle_fsb(data.data)
-                    open(filepath, 'wb').write(cache)
+                    AudioSegment.from_ogg(BytesIO(ab_utils.handle_fsb(data.data))).export(filepath)
                 return redirect('/static/audio/' + filename)
             else:
                 return Http404

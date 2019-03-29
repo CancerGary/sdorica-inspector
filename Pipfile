@@ -29,6 +29,7 @@ coverage = "*"
 djangorestframework-stubs = "*"
 codecov = "*"
 tornado = ">=4.2.0,<6.0.0"
+pydub = "*"
 
 [dev-packages]
 
