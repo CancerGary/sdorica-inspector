@@ -75,6 +75,15 @@
             <v-toolbar card dense>
               <v-toolbar-title>Viewer</v-toolbar-title>
               <v-spacer></v-spacer>
+              <v-tooltip bottom v-show="source">
+                <v-btn icon slot="activator" @click="">
+                  <a :href="source + '?attachment=1'" download
+                     style="color: inherit;text-decoration: none;">
+                    <v-icon>mdi-package-down</v-icon>
+                  </a>
+                </v-btn>
+                <span>Download Attachment</span>
+              </v-tooltip>
               <v-tooltip bottom>
                 <v-btn icon slot="activator" @click="interpreterEditor = !interpreterEditor">
                   <v-icon>code</v-icon>
@@ -128,7 +137,8 @@
         interpreterEditor: false,
         codeEditing: 'alert("hello")',
         interpretedData: {},
-        jsHelper: new ViewerJSHelper()
+        jsHelper: new ViewerJSHelper(),
+        source: null
       }
     },
     mounted() {
@@ -199,7 +209,7 @@
         } else {
           // check interpreting
           var type = this.containers[this.currentContainerKey].type;
-          // internal type check
+          // internal (media) type check
           if (['Sprite', 'AudioClip', 'Texture2D'].indexOf(type) > -1) {
             this.showInterpretedData = true;
             this.showMedia = true;
@@ -230,9 +240,11 @@
         if (!this.showMedia) return "<div>If you see this, maybe there's a bug occurred.</div>";
         var type = this.containers[this.currentContainerKey].type;
         var source = `/api/asset_bundle/${this.currentABMd5}/containers/${this.currentContainerKey}/data/`;
+        this.source = source;
         if (type === 'Sprite') return `<img src="${source}" style="max-width: 100%">`;
         else if (type === 'AudioClip') return `<audio controls style="width: 100%"> <source src="${source}" type="audio/ogg"></audio>`;
         else if (type === 'Texture2D') return `<img src="${source}" style="max-width: 100%">`;
+        else this.source = null;
       },
       containerFilters() {
         if (this.containersFiltersInput) return this.containersFiltersInput.trim().split(' '); else return [];

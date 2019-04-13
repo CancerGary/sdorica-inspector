@@ -281,12 +281,15 @@ class AssetBundleViewSet(viewsets.GenericViewSet):
         '''
         asset_index, path_id = ab_utils.split_path_id(path_id)
         info, data = self.get_object().get_unity_object_by_path_id(asset_index, path_id)
+        as_attachment=True if request.query_params.get('attachment') else False
         if data is None:
             raise Http404
         else:
             if info.type == 'Texture2D':
-                return HttpResponse(handle_image_data(data), content_type="image/png")
+                name = "%s.png"%(data.name) if data.name else "data.png"
+                return FileResponse(BytesIO(handle_image_data(data)), as_attachment=as_attachment,filename=name)
             elif info.type == 'Sprite':
+                name = "%s.png"%(data.name) if data.name else "data.png"
                 rect = data.rd['textureRect']
                 # load texture first, then crop the area
                 img = Image.open(BytesIO(handle_image_data(data.rd['texture'].object.read()))) \
@@ -295,7 +298,8 @@ class AssetBundleViewSet(viewsets.GenericViewSet):
                     .transpose(Image.FLIP_TOP_BOTTOM)
                 f = BytesIO()
                 img.save(f, 'png')
-                return HttpResponse(f.getvalue(), content_type="image/png")
+                f.seek(0)
+                return FileResponse(f, as_attachment=as_attachment,filename=name)
             elif info.type == 'AudioClip':
                 filename = "%s,%s.mp3" % (md5, path_id)
                 filepath = os.path.join(settings.STATIC_ROOT, 'audio', filename)
