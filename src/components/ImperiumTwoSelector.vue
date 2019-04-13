@@ -8,26 +8,39 @@
             <p>Caution: You should select two files which their type are same.</p></div>
         </v-card-title>
         <v-card-text>
-          <v-layout row wrap>
-            <v-flex sm5 order-sm1>
-              <v-select
-                  :items="imperiumList"
-                  v-model="oldSelect"
-                  label="Old"
-              ></v-select>
+          <v-layout justify-center column>
+            <v-flex>
+              <v-layout row wrap>
+                <v-flex sm4>
+                  <v-select
+                      :items="imperiumType"
+                      v-model="typeFilter"
+                      label="Type Filter"
+                      placeholder="All"
+                  ></v-select>
+                </v-flex>
+                <v-flex sm4>
+                  <v-select
+                      :items="imperiumSelectList"
+                      v-model="oldSelect"
+                      label="Old"
+                  ></v-select>
+                </v-flex>
+                <v-flex sm4>
+                  <v-select
+                      :items="imperiumSelectList"
+                      v-model="newSelect"
+                      label="New"
+                  ></v-select>
+                </v-flex>
+              </v-layout>
             </v-flex>
-            <v-flex sm5 order-sm3>
-              <v-select
-                  :items="imperiumList"
-                  v-model="newSelect"
-                  label="New"
-              ></v-select>
-            </v-flex>
-            <v-flex xs12 sm2 order-sm2 class="d-flex">
-                  <v-btn color="primary" @click="imperiumInfoNew.type_id===imperiumInfoOld.type_id?$emit('compare',oldSelect,newSelect):$store.commit('toastMsg', 'Type not same')">
-                    <v-icon>compare_arrows</v-icon>
-                    Start
-                  </v-btn>
+            <v-flex>
+              <v-btn color="primary"
+                     @click="imperiumInfoNew.type_id===imperiumInfoOld.type_id?$emit('compare',oldSelect,newSelect):$store.commit('toastMsg', 'Type not same')">
+                <v-icon>compare_arrows</v-icon>
+                Start
+              </v-btn>
             </v-flex>
           </v-layout>
         </v-card-text>
@@ -63,13 +76,16 @@
 <script>
   export default {
     name: "ImperiumTwoSelector",
-    props: ['imperiumList'],
+    props: {
+      imperiumList: Array
+    },
     data() {
       return {
         oldSelect: null,
         newSelect: null,
         imperiumInfoOld: {},
         imperiumInfoNew: {},
+        typeFilter: null
       }
     },
     watch: {
@@ -84,6 +100,22 @@
         })
       }
     },
+    computed: {
+      imperiumSelectList() {
+        var a = Array();
+        this.imperiumList.forEach((v, i) => {
+          if (!this.typeFilter || this.typeFilter === v.type_id) a.push({'text': v.name, 'value': v.id})
+        })
+        return a;
+      },
+      imperiumType() {
+        var a = Array();
+        this.$imperiumType.forEach((v, i) => {
+          a.push({'text': v, 'value': i})
+        });
+        return a;
+      }
+    }
   }
 </script>
 

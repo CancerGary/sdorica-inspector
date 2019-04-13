@@ -194,8 +194,8 @@ class ImperiumViewSet(viewsets.ModelViewSet):
                 if cl == cr and ol == or_:
                     nochange[k] = (d_left[k].md5, d_right[k].md5)
                 else:
-                    change[k] = {'delete': sorted(list(cl - cr)) + sorted([i[0] for i in ol - or_]),
-                                 'add': sorted(list(cr - cl)) + sorted([i[0] for i in or_ - ol]),
+                    change[k] = {'delete': sorted(cl - cr) + sorted([i[0] for i in ol - or_]),
+                                 'add': sorted(cr - cl) + sorted([i[0] for i in or_ - ol]),
                                  'md5': (d_left[k].md5, d_right[k].md5)}
             return Response({'delete': delete, 'add': add, 'change': change, 'nochange': nochange})
 
@@ -281,15 +281,15 @@ class AssetBundleViewSet(viewsets.GenericViewSet):
         '''
         asset_index, path_id = ab_utils.split_path_id(path_id)
         info, data = self.get_object().get_unity_object_by_path_id(asset_index, path_id)
-        as_attachment=True if request.query_params.get('attachment') else False
+        as_attachment = True if request.query_params.get('attachment') else False
         if data is None:
             raise Http404
         else:
             if info.type == 'Texture2D':
-                name = "%s.png"%(data.name) if data.name else "data.png"
-                return FileResponse(BytesIO(handle_image_data(data)), as_attachment=as_attachment,filename=name)
+                name = "%s.png" % (data.name) if data.name else "data.png"
+                return FileResponse(BytesIO(handle_image_data(data)), as_attachment=as_attachment, filename=name)
             elif info.type == 'Sprite':
-                name = "%s.png"%(data.name) if data.name else "data.png"
+                name = "%s.png" % (data.name) if data.name else "data.png"
                 rect = data.rd['textureRect']
                 # load texture first, then crop the area
                 img = Image.open(BytesIO(handle_image_data(data.rd['texture'].object.read()))) \
@@ -299,7 +299,7 @@ class AssetBundleViewSet(viewsets.GenericViewSet):
                 f = BytesIO()
                 img.save(f, 'png')
                 f.seek(0)
-                return FileResponse(f, as_attachment=as_attachment,filename=name)
+                return FileResponse(f, as_attachment=as_attachment, filename=name)
             elif info.type == 'AudioClip':
                 filename = "%s,%s.mp3" % (md5, path_id)
                 filepath = os.path.join(settings.STATIC_ROOT, 'audio', filename)
