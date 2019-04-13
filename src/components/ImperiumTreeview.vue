@@ -81,7 +81,7 @@
     white-space: pre-wrap;
   }
 
-  >>> .v-treeview-node .v-treeview-node--leaf {
+  >>> .v-treeview-node.v-treeview-node--leaf {
     margin-left: calc(13px + 24px)!important;
   }
 
