@@ -9,7 +9,9 @@ import zlib
 
 RECORD_UNITY_TYPES = ['Texture2D', 'TextAsset']
 
-md5 = lambda x:hashlib.md5(x).hexdigest()
+md5 = lambda x: hashlib.md5(x).hexdigest()
+
+
 def get_containers_from_ab(bundle: upAssetBundle) -> dict:
     result = dict()
     for asset in bundle.assets:
@@ -73,8 +75,11 @@ def strip_pointers(object):
         return {k: strip_pointers(v) for k, v in object.items()}
     elif type(object) in [list]:
         return [strip_pointers(i) for i in object]
+    elif type(object) in [tuple]:
+        return tuple(strip_pointers(i) for i in object)
     elif type(object) is ObjectPointer:
-        return object.path_id
+        # use string to prevent JS float overflow
+        return {'file_id': object.file_id, 'path_id': str(object.path_id)}
     elif type(object) is bytes:
         return base64.b64encode(object)
     else:
@@ -89,6 +94,7 @@ def handle_fsb(data):
     for sample in fsb.samples:
         # assume 1 sample
         return fsb.rebuild_sample(sample).tobytes()
+
 
 def split_path_id(path_id):
     if isinstance(path_id, str) and ':' in path_id:
