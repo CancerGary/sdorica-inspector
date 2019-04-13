@@ -194,8 +194,8 @@ class ImperiumViewSet(viewsets.ModelViewSet):
                 if cl == cr and ol == or_:
                     nochange[k] = (d_left[k].md5, d_right[k].md5)
                 else:
-                    change[k] = {'delete': list(cl - cr) + [i[0] for i in ol - or_],
-                                 'add': list(cr - cl) + [i[0] for i in or_ - ol],
+                    change[k] = {'delete': sorted(list(cl - cr)) + sorted([i[0] for i in ol - or_]),
+                                 'add': sorted(list(cr - cl)) + sorted([i[0] for i in or_ - ol]),
                                  'md5': (d_left[k].md5, d_right[k].md5)}
             return Response({'delete': delete, 'add': add, 'change': change, 'nochange': nochange})
 
