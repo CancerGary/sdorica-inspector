@@ -7,8 +7,20 @@
             <v-toolbar card dense>
               <v-toolbar-title>Select</v-toolbar-title>
               <v-spacer></v-spacer>
+              <v-tooltip bottom v-show="hideJS">
+                <v-btn icon slot="activator" @click="hideJS = false">
+                  <v-icon>mdi-eye</v-icon>
+                </v-btn>
+                <span>Show @</span>
+              </v-tooltip>
+              <v-tooltip bottom v-show="!hideJS">
+                <v-btn icon slot="activator" @click="hideJS = true">
+                  <v-icon>mdi-eye-off</v-icon>
+                </v-btn>
+                <span>Hide not @</span>
+              </v-tooltip>
               <v-tooltip bottom>
-                <v-btn icon slot="activator" @click="types = jsHelper.getTypes()">
+                <v-btn icon slot="activator" @click="types_ = jsHelper.getTypes()">
                   <v-icon>mdi-reload</v-icon>
                 </v-btn>
                 <span>Reload type list</span>
@@ -95,15 +107,16 @@
         codeEditing: "()=>{return {result:'hello world'}}",
         jsHelper: new ViewerJSHelper(),
         codeEditingType: null,
-        types: [],
-        interpretedData: {writeCode: 'Then run it!'}
+        types_: [],
+        interpretedData: {writeCode: 'Then run it!'},
+        hideJS: true
       }
     },
     mounted() {
       this.jsHelper = new ViewerJSHelper(this);
       this.jsHelper.fetchViewerJS().then(() => {
         this.setCodeEditing();
-        this.types = this.jsHelper.getTypes();
+        this.types_ = this.jsHelper.getTypes();
       });
     },
     methods: {
@@ -125,6 +138,15 @@
     watch: {
       codeEditingType() {
         this.setCodeEditing()
+      }
+    },
+    computed: {
+      types: {
+        get: function () {
+          if (this.hideJS) {
+            return this.types_.filter(x => x[0] === '@')
+          } else return this.types_
+        }
       }
     }
   }
