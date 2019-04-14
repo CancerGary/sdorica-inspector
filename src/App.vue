@@ -112,7 +112,7 @@
           <helper-side-drawer :current-a-b-data="currentABData"></helper-side-drawer>
         </v-menu>
       </v-toolbar>
-      <v-content>
+      <v-content v-scroll="onScroll">
         <v-container fluid grid-list-lg>
           <keep-alive>
             <router-view v-if="$route.meta.keepAlive"></router-view>
@@ -141,9 +141,17 @@
                  :position-y="convertTooltipY">
         <span>{{convertResult?convertResult:'Nothing matched.'}}</span>
       </v-tooltip>
+      <transition name="fade">
+        <v-btn v-show="showGotoTop" bottom fixed right float dark fab color="red" class="goto-top"
+               @click="$vuetify.goTo(0, {
+          duration: 300,
+          offset: 0
+        })">
+          <v-icon dark>keyboard_arrow_up</v-icon>
+        </v-btn>
+      </transition>
     </v-app>
   </div>
-
 </template>
 
 <script>
@@ -161,6 +169,7 @@
       convertTooltipShow: false,
       lastTouchmoveEvent: null,
       currentABData: null,
+      showGotoTop: false,
       user: {
         username: "[loading]",
         avatar: null,
@@ -201,6 +210,11 @@
         //
         this.convertSelectedText();
         this.changeConvertTooltipPosition(e)
+      },
+      onScroll(e) {
+        // console.log(e);
+        if (e.target.scrollingElement.scrollTop > 100) this.showGotoTop = true;
+        else this.showGotoTop = false;
       }
     },
     created() {
@@ -234,5 +248,14 @@
     /*text-align: center;*/
     color: #2c3e50;
     /*margin-top: 60px;*/
+  }
+
+  .fade-enter-active, .fade-leave-active {
+    transition: opacity .5s;
+    /*transform: scale(.5);*/
+  }
+
+  .fade-enter, .fade-leave-to {
+    opacity: 0;
   }
 </style>

@@ -24,3 +24,7 @@
 #app .v-overlay {
     z-index: 10;
 }
+
+#app .goto-top {
+    z-index:8;
+}
