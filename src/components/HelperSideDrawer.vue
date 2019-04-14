@@ -6,7 +6,7 @@
           <v-icon>create</v-icon>
         </v-list-tile-action>
         <v-list-tile-content>
-          <v-list-tile-title>New Convert Rule</v-list-tile-title>
+          <v-list-tile-title>New convert rule</v-list-tile-title>
         </v-list-tile-content>
       </v-list-tile>
       <v-list-tile @click="ruleListDialog=true">
@@ -14,15 +14,31 @@
           <v-icon>list_alt</v-icon>
         </v-list-tile-action>
         <v-list-tile-content>
-          <v-list-tile-title>Convert Rules list</v-list-tile-title>
+          <v-list-tile-title>Convert rules list</v-list-tile-title>
         </v-list-tile-content>
       </v-list-tile>
-      <v-list-tile v-if="currentABData" @click="0" class="copy-button" data-clipboard-action="copy">
+      <v-list-tile v-show="currentABData" @click="promptUrl">
         <v-list-tile-action>
-          <v-icon>mdi-content-copy</v-icon>
+          <v-icon>link</v-icon>
         </v-list-tile-action>
         <v-list-tile-content>
-          <v-list-tile-title>Copy selected md5 url</v-list-tile-title>
+          <v-list-tile-title>Prompt selected md5 URL</v-list-tile-title>
+        </v-list-tile-content>
+      </v-list-tile>
+      <v-list-tile @click="toContainerSearch">
+        <v-list-tile-action>
+          <v-icon>search</v-icon>
+        </v-list-tile-action>
+        <v-list-tile-content>
+          <v-list-tile-title>Search selected</v-list-tile-title>
+        </v-list-tile-content>
+      </v-list-tile>
+      <v-list-tile @click="toLogout">
+        <v-list-tile-action>
+          <v-icon>mdi-logout-variant</v-icon>
+        </v-list-tile-action>
+        <v-list-tile-content>
+          <v-list-tile-title>Logout</v-list-tile-title>
         </v-list-tile-content>
       </v-list-tile>
     </v-list>
@@ -85,7 +101,6 @@
 
 <script>
   import {mapState} from 'vuex'
-  import ClipboardJS from 'clipboard';
 
   export default {
     name: "HelperSideDrawer",
@@ -110,19 +125,6 @@
       }
     },
     mounted() {
-      this.copyButton = new ClipboardJS('.copy-button', {
-        // eslint-disable-next-line
-        text: (trigger) => {
-          return this.currentABData.url
-        }
-      });
-
-      this.copyButton.on('success', () => {
-        this.$store.commit('toastMsg', 'Copied.')
-      });
-      this.copyButton.on('error', () => {
-        this.$store.commit('toastMsg', this.currentABData.url)
-      });
     },
     methods: {
       // console.log(item);
@@ -160,6 +162,15 @@
           })
         }
       },
+      promptUrl() {
+        prompt('AB URL', this.currentABData.url);
+      },
+      toContainerSearch() {
+        this.$router.push({name: 'container_search', query: {q: window.getSelection().toString()}});
+      },
+      toLogout() {
+        confirm('Are you sure to logout?') && (window.location.href = '/api-auth/logout/?next=/');
+      }
     },
     computed: {
       ...mapState(['convertRule']),
