@@ -63,6 +63,9 @@
             <v-toolbar card dense>
               <v-toolbar-title>Player</v-toolbar-title>
               <v-spacer></v-spacer>
+              <v-btn icon v-if="$route.query.uuid" @click="recordGIF">
+                <v-icon>mdi-gif</v-icon>
+              </v-btn>
               <v-btn icon v-if="$route.query.uuid">
                 <a :href="`/api/spine/${$route.query.uuid}/zip/`" download
                    style="color: inherit;text-decoration: none;">
@@ -97,7 +100,8 @@
         selectedAtlas: {},
         selectedImages: [],
         spinePlayer: null,
-        playerLoading: false
+        playerLoading: false,
+        caputurer: null
       }
     },
     mounted() {
@@ -154,6 +158,35 @@
         }).catch((err) => {
           this.playerLoading = false;
           this.$store.commit('toastMsg', err.message + err.response.data)
+        })
+      },
+      recordGIF() {
+        this.spinePlayer.pause();
+        var animation = this.spinePlayer.animationState.getCurrent(0).animation;
+        var name = animation.name;
+        this.spinePlayer.setAnimation(animation.name);
+        let recording = true;
+        this.capturer = new CCapture({
+          format: 'gif',
+          workersPath: 'static/js/',
+          framerate: 60,
+          timeLimit: this.spinePlayer.animationState.getCurrent(0).animation.duration,
+          name: `${this.$route.query.uuid}_${name}_peanuts.hentai.animation`
+        });
+        this.spinePlayer.play();
+
+        let capturer = this.capturer;
+        let canvas = document.getElementsByClassName('spine-player-canvas')[0]
+        function render() {
+          if (recording) requestAnimationFrame(render);
+          // TODO: black frames -> `preserveDrawingBuffer`
+          capturer.capture(canvas);
+        }
+
+        render();
+        capturer.start();
+        setTimeout(animation * 2000, () => {
+          recording = false;
         })
       }
     }
