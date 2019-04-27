@@ -265,6 +265,7 @@ class ImperiumDiffSerializer(serializers.Serializer):
     show_type = serializers.BooleanField(required=False, default=False)
     show_index = serializers.BooleanField(required=False, default=True)
     cell_lines = serializers.BooleanField(required=False, default=False)
+    expand_lines = serializers.IntegerField(required=False,default=0)
 
     def validate(self, data):
         if data['old'].type_id != data['new'].type_id:

@@ -161,7 +161,8 @@ class ImperiumViewSet(viewsets.ModelViewSet):
                                                         show_type=serializer.validated_data.get('show_type'),
                                                         show_index=serializer.validated_data.get('show_index'),
                                                         cell_cep='\n' if serializer.validated_data.get(
-                                                            'cell_lines') else ', '))
+                                                            'cell_lines') else ', ',
+                                                        n=abs(serializer.validated_data.get('expand_lines'))))
 
     @action(detail=False, methods=['GET'])
     def ab_diff(self, request):

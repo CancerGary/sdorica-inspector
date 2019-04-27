@@ -68,7 +68,7 @@ def c_diff(old_i, new_i):
         # check old table deletion
         for old_table_title, old_table in old.items():
             if old_table_title not in new.keys():
-                result[old_table + ' [-]'] = old_table
+                result[old_table_title + ' [-]'] = old_table
         return {'C': result}
 
 
@@ -98,7 +98,7 @@ def c_to_text(c: dict, e: dict, title_subfix="", show_type=False, show_index=Tru
     return result
 
 
-def c_diff_text(old_i, new_i, show_type, show_index, str_func=repr, cell_cep=', '):
+def c_diff_text(old_i, new_i, show_type, show_index, str_func=repr, cell_cep=', ', n=0):
     old: dict = old_i.get('C')
     new: dict = new_i.get('C')
     # remove no change table to make the result more concise
@@ -112,4 +112,4 @@ def c_diff_text(old_i, new_i, show_type, show_index, str_func=repr, cell_cep=', 
                       cell_cep=cell_cep).splitlines(),
             c_to_text(new, new_i.get('E'), show_type=show_type, show_index=show_index, str_func=str_func,
                       cell_cep=cell_cep, title_subfix='$').splitlines(),
-            lineterm="", fromfile='left', tofile='right', n=0))
+            lineterm="", fromfile='left', tofile='right', n=n))
