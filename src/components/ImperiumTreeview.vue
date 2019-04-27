@@ -82,10 +82,6 @@
 </script>
 
 <style scoped>
-  >>> .v-treeview {
-    white-space: pre-wrap;
-  }
-
   >>> .v-treeview-node.v-treeview-node--leaf {
     margin-left: calc(13px + 24px) !important;
   }
@@ -106,5 +102,6 @@
 
   >>> .v-treeview-node__label {
     width: 100px !important;
+    white-space: pre-wrap;
   }
 </style>
