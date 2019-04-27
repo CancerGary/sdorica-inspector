@@ -1,5 +1,5 @@
 <template>
-  <v-treeview :items="items"></v-treeview>
+  <v-treeview :items="items" ref="treeview"></v-treeview>
 </template>
 
 <script>
@@ -72,6 +72,11 @@
         // console.log('treeview called');
         return handle(this.imperiumData, null, this.sortCKeys);
       }
+    },
+    methods: {
+      updateAll(value) {
+        this.$refs.treeview.updateAll(value ? true : false);
+      }
     }
   }
 </script>
@@ -82,11 +87,11 @@
   }
 
   >>> .v-treeview-node.v-treeview-node--leaf {
-    margin-left: calc(13px + 24px)!important;
+    margin-left: calc(13px + 24px) !important;
   }
 
   >>> .v-treeview-node {
-    margin-left: 13px!important;
+    margin-left: 13px !important;
   }
 
 

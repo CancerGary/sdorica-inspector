@@ -56,10 +56,12 @@
         <v-card>
           <v-card-title>
             <div class="headline">Compare Result</div>
+            <v-btn @click="expandTreeview">Expand/Collapse</v-btn>
           </v-card-title>
           <v-card-text>
             <div v-if="!textDiff">
-              <ImperiumTreeview :imperium-data="imperiumDiffData" :sort-c-keys="sortCKeys"></ImperiumTreeview>
+              <ImperiumTreeview :imperium-data="imperiumDiffData" :sort-c-keys="sortCKeys"
+                                ref="itreeview"></ImperiumTreeview>
               <p v-if="!loading && Object.keys(imperiumDiffData).length === 0">No Comparison yet.</p>
               <p v-if="loading">Loading...</p>
             </div>
@@ -119,6 +121,9 @@
           this.imperiumDiffTextData = response.data;
           this.loading = false;
         })
+      },
+      expandTreeview() {
+        this.$refs.itreeview.updateAll(this.expanded = !this.expanded);
       }
     }
   }

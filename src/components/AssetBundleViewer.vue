@@ -91,6 +91,13 @@
                 <span>Edit Interpreter</span>
               </v-tooltip>
               <v-tooltip bottom>
+                <v-btn icon slot="activator" @click="expandTreeview">
+                  <v-icon v-show="!expanded">mdi-arrow-expand-vertical</v-icon>
+                  <v-icon v-show="expanded">mdi-arrow-collapse-vertical</v-icon>
+                </v-btn>
+                <span>Expand/Collapse</span>
+              </v-tooltip>
+              <v-tooltip bottom>
                 <v-btn icon slot="activator" @click="onInterpret">
                   <v-icon>{{showInterpretedData?'pause':'play_arrow'}}</v-icon>
                 </v-btn>
@@ -101,7 +108,8 @@
               <div style="word-break: break-all" v-if="currentContainerKey">{{containers[currentContainerKey].name}}
                 &#40;{{containers[currentContainerKey].type}}&#41; | {{currentContainerKey}}
               </div>
-              <imperium-treeview :imperiumData="interpretedData" v-show="!showMedia"></imperium-treeview>
+              <imperium-treeview :imperiumData="interpretedData" v-show="!showMedia"
+                                 ref="itreeview"></imperium-treeview>
               <div v-if="showMedia" v-html="interpretedMedia"></div>
             </v-card-text>
           </v-card>
@@ -138,7 +146,8 @@
         codeEditing: 'alert("hello")',
         interpretedData: {},
         jsHelper: new ViewerJSHelper(),
-        source: null
+        source: null,
+        expanded: false
       }
     },
     mounted() {
@@ -233,6 +242,9 @@
           if (code) this.jsHelper.runCode(null, data, code);
           else this.jsHelper.runCode(type, data, null);
         } else this.interpretedData = this.currentContainerData;
+      },
+      expandTreeview() {
+        this.$refs.itreeview.updateAll(this.expanded = !this.expanded);
       }
     },
     computed: {

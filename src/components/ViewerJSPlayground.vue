@@ -80,9 +80,17 @@
           <v-card>
             <v-toolbar card dense>
               <v-toolbar-title>Treeview Output</v-toolbar-title>
+              <v-spacer></v-spacer>
+              <v-tooltip bottom>
+                <v-btn icon slot="activator" @click="expandTreeview">
+                  <v-icon v-show="!expanded">mdi-arrow-expand-vertical</v-icon>
+                  <v-icon v-show="expanded">mdi-arrow-collapse-vertical</v-icon>
+                </v-btn>
+                <span>Expand/Collapse</span>
+              </v-tooltip>
             </v-toolbar>
             <v-card-text>
-              <imperium-treeview :imperium-data="interpretedData"></imperium-treeview>
+              <imperium-treeview :imperium-data="interpretedData" ref="itreeview"></imperium-treeview>
             </v-card-text>
           </v-card>
         </v-flex>
@@ -109,7 +117,8 @@
         codeEditingType: null,
         types_: [],
         interpretedData: {writeCode: 'Then run it!'},
-        hideJS: true
+        hideJS: true,
+        expanded: false
       }
     },
     mounted() {
@@ -133,6 +142,9 @@
         // TODO: add special support for `$ViewerInit`
         var data = {};
         this.jsHelper.runCode(null, data, this.codeEditing, true);
+      },
+      expandTreeview() {
+        this.$refs.itreeview.updateAll(this.expanded = !this.expanded);
       }
     },
     watch: {
