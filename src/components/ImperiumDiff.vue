@@ -20,22 +20,26 @@
                 <v-switch
                     v-model="showIndex"
                     label="Show index"
-                    color="indigo"
+                    color="indigo" hide-details
                 ></v-switch>
                 <v-switch
                     v-model="showType"
                     label="Show type"
-                    color="indigo"
+                    color="indigo" hide-details
                 ></v-switch>
                 <v-switch
                     v-model="cellLines"
                     label="One cell one line (better for long text)"
-                    color="indigo"
+                    color="indigo" hide-details
                 ></v-switch>
                 <v-radio-group v-model="outputFormat">
+                  <template v-slot:label>
+                    <div>Diff display type</div>
+                  </template>
                   <v-radio :value="'line-by-line'" label="Line by line" color="indigo"></v-radio>
                   <v-radio :value="'side-by-side'" label="Side by side" color="indigo"></v-radio>
                 </v-radio-group>
+                <v-text-field v-model="expandLines" type="number" label="Expand lines"></v-text-field>
               </v-flex>
               <v-flex v-else>
                 <div class="v-subheader pa-0">Treeview Diff Option</div>
@@ -92,7 +96,8 @@
         showIndex: true,
         showType: false,
         cellLines: false,
-        outputFormat: 'line-by-line'
+        outputFormat: 'line-by-line',
+        expandLines: 0
       }
     },
     created() {
@@ -114,7 +119,8 @@
             new: new_id,
             show_index: this.showIndex,
             show_type: this.showType,
-            cell_lines: this.cellLines
+            cell_lines: this.cellLines,
+            expand_lines: this.expandLines
           }
         }).then(response => {
           //console.log(response.data);
