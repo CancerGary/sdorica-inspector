@@ -24,7 +24,7 @@
                 <v-text-field
                     v-model="query"
                     label="Query keywords"
-                    required
+                    required @keyup.enter="$router.push({name:'container_search',query:{q:query}})">
                 ></v-text-field>
               </v-flex>
               <v-flex xs12 sm2 class="d-flex">
