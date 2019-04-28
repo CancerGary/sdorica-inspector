@@ -203,9 +203,10 @@
       },
       setCodeEditing() {
         var _ = this.jsHelper.getCode(this.containers[this.currentContainerKey].type);
+        var t = this.jsHelper.getCode('$template');
         // console.log(_);
-        this.codeEditing = _ ? _.javascript : "(data) => {\nconsole.log('handling');\nconsole.log(data);\n" +
-          "return {result:data.m_Name}\n}";
+        this.codeEditing = _ ? _.javascript : (t ? t.javascript : "(data) => {\nconsole.log('handling');\nconsole.log(data);\n" +
+          "return {result:data.m_Name}\n}");
       },
       checkSupportType(type) {
         return this.interpreterEditor || this.jsHelper.getCode(type);
