@@ -84,18 +84,30 @@
                 </v-btn>
                 <span>Download Attachment</span>
               </v-tooltip>
-              <v-tooltip bottom>
+              <v-tooltip bottom v-show="!showMedia">
                 <v-btn icon slot="activator" @click="interpreterEditor = !interpreterEditor">
                   <v-icon>code</v-icon>
                 </v-btn>
                 <span>Edit Interpreter</span>
               </v-tooltip>
-              <v-tooltip bottom>
+              <v-tooltip bottom v-show="!showMedia">
                 <v-btn icon slot="activator" @click="expandTreeview">
                   <v-icon v-show="!expanded">mdi-arrow-expand-vertical</v-icon>
                   <v-icon v-show="expanded">mdi-arrow-collapse-vertical</v-icon>
                 </v-btn>
                 <span>Expand/Collapse</span>
+              </v-tooltip>
+              <v-tooltip bottom v-show="showMedia">
+                <v-btn icon slot="activator" @click="prevContainer">
+                  <v-icon>mdi-arrow-left</v-icon>
+                </v-btn>
+                <span>Prev</span>
+              </v-tooltip>
+              <v-tooltip bottom v-show="showMedia">
+                <v-btn icon slot="activator" @click="nextContainer">
+                  <v-icon>mdi-arrow-right</v-icon>
+                </v-btn>
+                <span>Next</span>
               </v-tooltip>
               <v-tooltip bottom>
                 <v-btn icon slot="activator" @click="onInterpret">
@@ -133,6 +145,7 @@
     data() {
       return {
         containers: {},
+        containersOrder: [],
         containersFiltersInput: "",
         forceContainersList: false,
         showContainersFilters: false,
@@ -180,12 +193,14 @@
         this.$http.get(`/api/asset_bundle/${this.$route.params.ab_md5}/containers/`).then((response) => {
           for (var k in response.data) response.data[k] = {shortName: response.data[k].name.split('/').pop(), ...response.data[k]};
           this.containers = response.data;
+          this.containersOrder = Object.keys(this.containers);
           if (this.$route.query.container_name) {
-            for (var key in this.containers)
+            for (var key in this.containers) {
               if (this.containers[key].name === this.$route.query.container_name) {
                 this.fetchContainerData(key);
                 break;
               }
+            }
           }
           // v-if
           this.currentABMd5 = this.$route.params.ab_md5;
@@ -246,6 +261,19 @@
       },
       expandTreeview() {
         this.$refs.itreeview.updateAll(this.expanded = !this.expanded);
+      },
+      // TODO: follow filters
+      prevContainer() {
+        var i = this.containersOrder.indexOf(this.currentContainerKey);
+        console.log(i);
+        if (i > 0) this.fetchContainerData(this.containersOrder[i - 1]);
+        else this.$store.commit('toastMsg', "First one");
+      },
+      nextContainer() {
+        var i = this.containersOrder.indexOf(this.currentContainerKey);
+        console.log(i);
+        if (i === this.containersOrder.length - 1) this.$store.commit('toastMsg', "Last one");
+        else this.fetchContainerData(this.containersOrder[i + 1]);
       }
     },
     computed: {
