@@ -7666,10 +7666,10 @@ vuetify-upload-button@^1.2.1:
   resolved "https://registry.npm.taobao.org/vuetify-upload-button/download/vuetify-upload-button-1.2.2.tgz#0ab36c491b8a3fa7b4b8ec2fb7366b86c98bf8e1"
   integrity sha1-CrNsSRuKP6e0uOwvtzZrhsmL+OE=
 
-vuetify@1.5.0:
-  version "1.5.0"
-  resolved "https://registry.npm.taobao.org/vuetify/download/vuetify-1.5.0.tgz#b7334f525b5dd416b01d5e9ddbadad22beeb9d7f"
-  integrity sha1-tzNPUltd1BawHV6d262tIr7rnX8=
+vuetify@1.5.13:
+  version "1.5.13"
+  resolved "https://registry.npm.taobao.org/vuetify/download/vuetify-1.5.13.tgz#b2e406ebdc59723c5ecbd2d0595d3d2ae0cac812"
+  integrity sha1-suQG69xZcjxey9LQWV09KuDKyBI=
 
 vuex@^3.0.1:
   version "3.1.0"

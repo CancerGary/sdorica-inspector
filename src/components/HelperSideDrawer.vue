@@ -1,7 +1,7 @@
 <template>
   <div>
     <v-list dense>
-      <v-list-tile @click="openRuleEditDialog()">
+      <v-list-tile @click.stop="openRuleEditDialog()">
         <v-list-tile-action>
           <v-icon>create</v-icon>
         </v-list-tile-action>
@@ -9,7 +9,7 @@
           <v-list-tile-title>New convert rule</v-list-tile-title>
         </v-list-tile-content>
       </v-list-tile>
-      <v-list-tile @click="ruleListDialog=true">
+      <v-list-tile @click.stop="ruleListDialog=true">
         <v-list-tile-action>
           <v-icon>list_alt</v-icon>
         </v-list-tile-action>
@@ -46,7 +46,7 @@
     <!--convert rule edit form-->
     <v-dialog
         v-model="ruleEditDialog"
-        width="500"
+        width="500" persistent
     >
       <v-card>
         <v-card-title class="headline">Edit Convert Rule</v-card-title>
@@ -61,6 +61,12 @@
         <v-divider></v-divider>
         <v-card-actions>
           <v-spacer></v-spacer>
+          <v-btn
+              flat
+              @click="ruleEditDialog=false"
+          >
+            Cancel
+          </v-btn>
           <v-btn
               color="primary"
               flat
