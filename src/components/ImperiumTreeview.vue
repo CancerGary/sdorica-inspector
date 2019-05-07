@@ -103,5 +103,6 @@
   >>> .v-treeview-node__label {
     width: 100px !important;
     white-space: pre-wrap;
+    word-break: break-word;
   }
 </style>

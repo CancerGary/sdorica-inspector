@@ -90,6 +90,9 @@
               </v-tooltip>
             </v-toolbar>
             <v-card-text>
+              <div class="text-xs-center" v-if="loading">
+                <v-progress-linear :indeterminate="true"></v-progress-linear>
+              </div>
               <imperium-treeview :imperium-data="interpretedData" ref="itreeview"></imperium-treeview>
             </v-card-text>
           </v-card>
@@ -118,7 +121,8 @@
         types_: [],
         interpretedData: {writeCode: 'Then run it!'},
         hideJS: true,
-        expanded: false
+        expanded: false,
+        loading: false
       }
     },
     mounted() {
@@ -141,7 +145,11 @@
       onInterpret() {
         // TODO: add special support for `$ViewerInit`
         var data = {};
-        this.jsHelper.runCode(null, data, this.codeEditing, true);
+        this.loading = true;
+        this.jsHelper.runCode(null, data, this.codeEditing, (result) => {
+          this.interpretedData = result;
+          this.loading = false
+        });
       },
       expandTreeview() {
         this.$refs.itreeview.updateAll(this.expanded = !this.expanded);

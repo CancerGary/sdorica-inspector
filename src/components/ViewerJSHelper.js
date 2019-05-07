@@ -78,22 +78,22 @@ export default class ViewerJSHelper {
     this.vue.$store.commit('toastMsg', msg)
   }
 
-  runCode(type, data, extraCode, initFirst) {
+  runCode(type, data, extraCode, callback) {
     // because of async call, the func eval result should write to `this.vue.interpretedData`
     var code = (type && !extraCode) ? this.getCode(type).javascript : extraCode;
+    // check initFirst here?
     if (this.viewerJS.hasOwnProperty('$DataInit')) data = eval(this.viewerJS['$DataInit'].javascript)(data);
     //console.log('init:', data);
     var result = eval(code)(data);
-    if (result) {
+    if (callback) {
       // for async result
       if (result.__proto__ === Promise.prototype) {
-        result.then((evalResult) => {
-          this.vue.interpretedData = evalResult;
-        })
+        return result.then(callback);
       } else {
         // console.log('result:', result);
-        this.vue.interpretedData = result;
+        return callback(result);
       }
     }
+    else return result;
   }
 }

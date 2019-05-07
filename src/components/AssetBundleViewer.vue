@@ -255,8 +255,12 @@
           // customized code dict
           var code = this.interpreterEditor ? this.codeEditing : null;
           var data = Object.assign({}, this.currentContainerData);
-          if (code) this.jsHelper.runCode(null, data, code);
-          else this.jsHelper.runCode(type, data, null);
+          if (code) this.jsHelper.runCode(null, data, code, (result) => {
+            this.interpretedData = result;
+          });
+          else this.jsHelper.runCode(type, data, null, (result) => {
+            this.interpretedData = result;
+          });
         } else this.interpretedData = this.currentContainerData;
       },
       expandTreeview() {
