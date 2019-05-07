@@ -1,6 +1,18 @@
 <template>
-  <div id="app" @click="convertSelectedText" @mouseup="changeConvertTooltipPosition" v-touchend="tooltipTouchend">
+  <div id="app" @click="convertSelectedText" @mouseup="changeConvertTooltipPosition" v-touchend="tooltipTouchend"
+       @loading="loading=true">
     <v-app id="inspire">
+      <div id="progress" v-show="loading">
+        <div role="progressbar" aria-valuemin="0" aria-valuemax="100" class="v-progress-linear"
+             style="height: 3px; margin: 0">
+          <div class="v-progress-linear__background" style="height: 7px; opacity: 0.3; width: 100%;"></div>
+          <div class="v-progress-linear__bar">
+            <div class="v-progress-linear__bar__indeterminate v-progress-linear__bar__indeterminate--active">
+              <div class="v-progress-linear__bar__indeterminate long error"></div>
+              <div class="v-progress-linear__bar__indeterminate short error"></div>
+            </div><!----></div>
+        </div>
+      </div>
       <v-navigation-drawer
           fixed
           v-model="drawer"
@@ -117,7 +129,9 @@
           <keep-alive>
             <router-view v-if="$route.meta.keepAlive"></router-view>
           </keep-alive>
-          <router-view v-if="!$route.meta.keepAlive"></router-view>
+          <transition name="fade" mode="out-in">
+            <router-view v-if="!$route.meta.keepAlive"></router-view>
+          </transition>
         </v-container>
       </v-content>
 
@@ -174,7 +188,8 @@
         username: "[loading]",
         avatar: null,
         groups: []
-      }
+      },
+      loading: false
     }),
     methods: {
       convertSelectedText() {
@@ -251,11 +266,20 @@
   }
 
   .fade-enter-active, .fade-leave-active {
-    transition: opacity .5s;
+    transition: opacity .25s;
     /*transform: scale(.5);*/
   }
 
   .fade-enter, .fade-leave-to {
     opacity: 0;
+  }
+
+  #progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    z-index: 100;
   }
 </style>

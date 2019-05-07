@@ -1,7 +1,14 @@
 <template>
   <div>
     <div>
-      <h1 class="font-weight-regular">Status</h1>
+      <h1 class="font-weight-regular">Status
+        <v-progress-circular
+            indeterminate
+            color="primary"
+            v-if="loading"
+            :size="30"
+        ></v-progress-circular>
+      </h1>
     </div>
 
     <v-container grid-list-xl fluid>
@@ -110,12 +117,14 @@
           "users": 0,
           "master_hash": null
         },
-        miniClass: 'lg3 sm6 xs12'
+        miniClass: 'lg3 sm6 xs12',
+        loading: true
       }
     },
     created() {
       this.$http.get('/api/status/').then((response) => {
-        this.status = response.data
+        this.status = response.data;
+        this.loading = false;
       })
     }
   }
