@@ -122,7 +122,7 @@
               </div>
               <imperium-treeview :imperiumData="interpretedData" v-show="!showMedia"
                                  ref="itreeview"></imperium-treeview>
-              <div v-if="showMedia" v-html="interpretedMedia"></div>
+              <div v-if="showMedia" v-html="interpretedMedia" class="interpreted-media"></div>
             </v-card-text>
           </v-card>
         </v-flex>
@@ -314,5 +314,9 @@
 <style scoped>
   .active {
     background-color: rgba(0, 0, 0, .08);
+  }
+
+  >>> .interpreted-media img {
+    background: #fff url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAAAAAA6mKC9AAAAGElEQVQYV2N4DwX/oYBhgARgDJjEAAkAAEC99wFuu0VFAAAAAElFTkSuQmCC) repeat;
   }
 </style>
