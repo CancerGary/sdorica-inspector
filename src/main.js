@@ -4,6 +4,8 @@ import App from '@/App.vue'
 import router from '@/router'
 import $backend from '@/backend'
 
+import '@/assets/nprogress.css'
+
 Vue.prototype.$backend = $backend
 Vue.prototype.$imperiumType = ['unknown', 'gamedata', 'android', 'androidExp', 'localization', 'charAssets', 'settings']
 
@@ -15,7 +17,7 @@ import 'vuetify/dist/vuetify.min.css'
 
 const axios = require('axios');
 axios.defaults.withCredentials = true;
-Vue.prototype.$http = axios;
+Vue.prototype.$http = $backend;
 // Vue.prototype.$http = axios.create({withCredentials: true});
 
 import moment from "moment";

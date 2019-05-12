@@ -17,6 +17,7 @@
     "idb": "^4.0.0",
     "js-cookie": "^2.2.0",
     "moment": "^2.23.0",
+    "nprogress": "^0.2.0",
     "prismjs": "^1.15.0",
     "vue": "^2.5.17",
     "vue-codemirror": "^4.0.6",

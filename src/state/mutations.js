@@ -7,6 +7,10 @@ export const setToastState = (state, payload) => {
   state.snackbarState = payload;
 }
 
-export const updateConvertRule = (state,payload) => {
+export const updateConvertRule = (state, payload) => {
   state.convertRule = payload
+}
+
+export const setLoading = (state, payload) => {
+  state.onLoading = payload
 }

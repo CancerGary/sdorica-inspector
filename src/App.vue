@@ -1,18 +1,17 @@
 <template>
-  <div id="app" @click="convertSelectedText" @mouseup="changeConvertTooltipPosition" v-touchend="tooltipTouchend"
-       @loading="loading=true">
+  <div id="app" @click="convertSelectedText" @mouseup="changeConvertTooltipPosition" v-touchend="tooltipTouchend">
     <v-app id="inspire">
-      <div id="progress" v-show="loading">
-        <div role="progressbar" aria-valuemin="0" aria-valuemax="100" class="v-progress-linear"
-             style="height: 3px; margin: 0">
-          <div class="v-progress-linear__background" style="height: 7px; opacity: 0.3; width: 100%;"></div>
-          <div class="v-progress-linear__bar">
-            <div class="v-progress-linear__bar__indeterminate v-progress-linear__bar__indeterminate--active">
-              <div class="v-progress-linear__bar__indeterminate long error"></div>
-              <div class="v-progress-linear__bar__indeterminate short error"></div>
-            </div><!----></div>
-        </div>
-      </div>
+<!--      <div id="progress" v-show="loading">-->
+<!--        <div role="progressbar" aria-valuemin="0" aria-valuemax="100" class="v-progress-linear"-->
+<!--             style="height: 3px; margin: 0">-->
+<!--          <div class="v-progress-linear__background" style="height: 7px; opacity: 0.3; width: 100%;"></div>-->
+<!--          <div class="v-progress-linear__bar">-->
+<!--            <div class="v-progress-linear__bar__indeterminate v-progress-linear__bar__indeterminate&#45;&#45;active">-->
+<!--              <div class="v-progress-linear__bar__indeterminate long error"></div>-->
+<!--              <div class="v-progress-linear__bar__indeterminate short error"></div>-->
+<!--            </div>&lt;!&ndash;&ndash;&gt;</div>-->
+<!--        </div>-->
+<!--      </div>-->
       <v-navigation-drawer
           fixed
           v-model="drawer"
@@ -241,7 +240,7 @@
       })
     },
     computed: {
-      ...mapState(['snackbarMessage']),
+      ...mapState(['snackbarMessage', 'onLoading']),
       snackbarState: {
         get: function () {
           return this.$store.state.snackbarState
@@ -280,6 +279,6 @@
     left: 0;
     right: 0;
     height: 2px;
-    z-index: 100;
+    z-index: 10000;
   }
 </style>
