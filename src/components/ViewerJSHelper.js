@@ -62,10 +62,9 @@ export default class ViewerJSHelper {
       });
       var queryResult = await db.get('imperium', storageKey);
       if (queryResult) {
-        console.log('hit cache:',storageKey);
+        console.log('hit cache:', storageKey);
         return queryResult;
-      }
-      else {
+      } else {
         // or fetch & write
         var data = (await this.vue.$http.get(`/api/imperium/${imperiumId}/unpack/`)).data;
         await db.put('imperium', data, storageKey);
@@ -80,20 +79,24 @@ export default class ViewerJSHelper {
 
   runCode(type, data, extraCode, callback) {
     // because of async call, the func eval result should write to `this.vue.interpretedData`
-    var code = (type && !extraCode) ? this.getCode(type).javascript : extraCode;
-    // check initFirst here?
-    if (this.viewerJS.hasOwnProperty('$DataInit')) data = eval(this.viewerJS['$DataInit'].javascript)(data);
-    //console.log('init:', data);
-    var result = eval(code)(data);
-    if (callback) {
-      // for async result
-      if (result.__proto__ === Promise.prototype) {
-        return result.then(callback);
-      } else {
-        // console.log('result:', result);
-        return callback(result);
-      }
+    try {
+      var code = (type && !extraCode) ? this.getCode(type).javascript : extraCode;
+      // check initFirst here?
+      if (this.viewerJS.hasOwnProperty('$DataInit')) data = eval(this.viewerJS['$DataInit'].javascript)(data);
+      //console.log('init:', data);
+      var result = eval(code)(data);
+      if (callback) {
+        // for async result
+        if (result.__proto__ === Promise.prototype) {
+          return result.then(callback);
+        } else {
+          // console.log('result:', result);
+          return callback(result);
+        }
+      } else return result;
+    } catch (error) {
+      this.toastMsg(error.message);
+      throw error;
     }
-    else return result;
   }
 }

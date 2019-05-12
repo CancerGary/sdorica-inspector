@@ -20,7 +20,8 @@ $backend.interceptors.request.use(config => {
   NProgress.start();
   return config;
 }, error => {
-  store.commit('toastMsg', error);
+  NProgress.done();
+  store.commit('toastMsg', error.message);
   return Promise.reject(error);
 });
 
@@ -32,7 +33,8 @@ $backend.interceptors.response.use(function (response) {
 }, function (error) {
   // eslint-disable-next-line
   //console.log(error)
-  store.commit('toastMsg', error);
+  NProgress.done();
+  store.commit('toastMsg', error.message + (error.response ? ' ' + JSON.stringify(error.response.data) : ""));
   return Promise.reject(error);
 });
 

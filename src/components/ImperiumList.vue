@@ -233,16 +233,12 @@
             Object.assign(this.table_data[this.editedIndex], response.data);
             this.showSnackbarMessage('Success');
             this.close();
-          }).catch(error => {
-            this.showSnackbarMessage(error.response.data)
           })
         } else {
           this.$http.post('/api/imperium/', form).then(response => {
             this.table_data.push(response.data);
             this.showSnackbarMessage('Success');
             this.close();
-          }).catch(error => {
-            this.showSnackbarMessage(error.response.data)
           })
         }
       },

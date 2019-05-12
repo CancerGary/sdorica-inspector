@@ -254,7 +254,10 @@ class AssetBundleViewSet(viewsets.GenericViewSet):
         try:
             return Response(AssetBundleSerializer(self.queryset.get(md5=md5)).data)
         except AssetBundle.DoesNotExist:
-            return Response(AssetBundleSerializer(get_object_or_404(self.queryset, pk=md5)).data)
+            try:
+                return Response(AssetBundleSerializer(get_object_or_404(self.queryset, pk=md5)).data)
+            except ValueError:
+                raise Http404
 
     @action(detail=True)
     def containers(self, request, md5=None):
