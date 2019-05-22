@@ -86,12 +86,12 @@
         </v-flex>
       </v-layout>
     </v-flex>
-    <v-flex>
+    <v-flex xs12 v-bind:class="{md6:showCode}">
       <v-layout row wrap>
         <v-flex xs12>
           <v-card>
             <v-toolbar card dense>
-              <v-toolbar-title>Treeview Output</v-toolbar-title>
+              <v-toolbar-title>Output</v-toolbar-title>
               <v-spacer></v-spacer>
               <v-tooltip bottom>
                 <v-btn icon slot="activator" @click="expandTreeview">
@@ -105,7 +105,8 @@
               <div class="text-xs-center" v-if="loading">
                 <v-progress-linear :indeterminate="true"></v-progress-linear>
               </div>
-              <imperium-treeview :imperium-data="interpretedData" ref="itreeview"></imperium-treeview>
+              <Chart ref="chart" :options="interpretedData" v-if="dataType==='highcharts'"></Chart>
+              <imperium-treeview v-else :imperium-data="interpretedData" ref="itreeview"></imperium-treeview>
             </v-card-text>
           </v-card>
         </v-flex>
@@ -116,6 +117,7 @@
 
 <script>
   import ViewerJSHelper from './ViewerJSHelper'
+  import {Chart} from 'highcharts-vue'
   import {codemirror} from 'vue-codemirror'
   import 'codemirror/mode/javascript/javascript.js'
   import 'codemirror/lib/codemirror.css'
@@ -124,7 +126,7 @@
 
   export default {
     name: "ViewerJSPlayground",
-    components: {ImperiumTreeview, codemirror},
+    components: {ImperiumTreeview, codemirror, Chart},
     data() {
       return {
         codeEditing: "()=>{return {result:'hello world'}}",
@@ -135,7 +137,8 @@
         hideJS: true,
         expanded: false,
         loading: false,
-        showCode: false
+        showCode: false,
+        dataType: "object",
       }
     },
     mounted() {
@@ -161,6 +164,12 @@
         this.loading = true;
         this.jsHelper.runCode(null, data, this.codeEditing, (result) => {
           this.interpretedData = result;
+          if (result && result._highcharts) {
+            this.dataType = "highcharts";
+            // ref may not exist because of v-if
+            if (this.$refs.chart) this.$refs.chart.chart.setSize();
+          }
+          else this.dataType = "object";
           this.loading = false
         });
       },
