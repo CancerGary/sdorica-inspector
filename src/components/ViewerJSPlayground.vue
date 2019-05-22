@@ -1,8 +1,8 @@
 <template>
   <v-layout row wrap>
-    <v-flex xs12 md6>
-      <v-layout row wrap>
-        <v-flex xs12>
+    <v-flex xs12 v-bind:class="{md6:showCode}">
+      <v-layout column>
+        <v-flex>
           <v-card>
             <v-toolbar card dense>
               <v-toolbar-title>Select</v-toolbar-title>
@@ -18,6 +18,18 @@
                   <v-icon>mdi-eye-off</v-icon>
                 </v-btn>
                 <span>Hide not @</span>
+              </v-tooltip>
+              <v-tooltip bottom>
+                <v-btn icon slot="activator" @click="showCode = !showCode">
+                  <v-icon>mdi-code-tags</v-icon>
+                </v-btn>
+                <span>Show/Hide code</span>
+              </v-tooltip>
+              <v-tooltip bottom>
+                <v-btn icon slot="activator" @click="onInterpret">
+                  <v-icon>play_arrow</v-icon>
+                </v-btn>
+                <span>Run</span>
               </v-tooltip>
               <v-tooltip bottom>
                 <v-btn icon slot="activator" @click="types_ = jsHelper.getTypes()">
@@ -41,7 +53,7 @@
             </v-card-text>
           </v-card>
         </v-flex>
-        <v-flex>
+        <v-flex v-if="showCode">
           <v-card>
             <v-toolbar card dense>
               <v-toolbar-title>Interpreter JavaScript - {{codeEditingType}}</v-toolbar-title>
@@ -74,7 +86,7 @@
         </v-flex>
       </v-layout>
     </v-flex>
-    <v-flex xs12 md6>
+    <v-flex>
       <v-layout row wrap>
         <v-flex xs12>
           <v-card>
@@ -122,7 +134,8 @@
         interpretedData: {writeCode: 'Then run it!'},
         hideJS: true,
         expanded: false,
-        loading: false
+        loading: false,
+        showCode: false
       }
     },
     mounted() {
