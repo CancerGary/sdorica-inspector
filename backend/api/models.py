@@ -83,13 +83,18 @@ class AssetBundle(models.Model):
     url = models.CharField(max_length=200, null=True)
     imperiums = models.ManyToManyField(Imperium)
 
+    def __init__(self, *args, **kwargs):
+        super(AssetBundle, self).__init__(*args,**kwargs)
+        self.bundle = None
+
     def load_unitypack(self):
-        return unitypack.load(open(os.path.join(settings.INSPECTOR_DATA_ROOT, 'assetbundle', self.md5), 'rb'))
+        if not self.bundle:
+            self.bundle = unitypack.load(open(os.path.join(settings.INSPECTOR_DATA_ROOT, 'assetbundle', self.md5), 'rb'))
 
     def get_containers(self):
         try:
-            bundle = self.load_unitypack()
-            return ab_utils.get_containers_from_ab(bundle)
+            self.load_unitypack()
+            return ab_utils.get_containers_from_ab(self.bundle)
         except RuntimeError:
             return {}
 
@@ -111,13 +116,13 @@ class AssetBundle(models.Model):
     def get_unity_object_by_path_id(self, asset_index, path_id):
         data = None
         info = None
-        bundle = self.load_unitypack()
+        if not self.bundle:self.load_unitypack()
         if asset_index:
-            if asset_index < len(bundle.assets):
-                info = bundle.assets[asset_index].objects[path_id]
-                data = bundle.assets[asset_index].objects[path_id].read()
+            if asset_index < len(self.bundle.assets):
+                info = self.bundle.assets[asset_index].objects[path_id]
+                data = self.bundle.assets[asset_index].objects[path_id].read()
         else:
-            for asset in bundle.assets:
+            for asset in self.bundle.assets:
                 if asset.objects.get(path_id):
                     info = asset.objects[path_id]
                     data = asset.objects[path_id].read()
@@ -133,8 +138,8 @@ class AssetBundle(models.Model):
 
     def get_asset_objects(self):
         try:
-            bundle = self.load_unitypack()
-            return ab_utils.get_objects_from_ab(bundle)
+            self.load_unitypack()
+            return ab_utils.get_objects_from_ab(self.bundle)
         except RuntimeError:
             return {}
 
