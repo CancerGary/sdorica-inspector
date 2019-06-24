@@ -238,6 +238,23 @@ class ContainerViewSet(viewsets.GenericViewSet):
         # TODO: serializer filter by imperium
         return Response(ContainerSerializer(result, many=True).data + UnityObjectSerializer(result_uo, many=True).data)
 
+    @action(detail=False, methods=['POST'])
+    def multi_search(self, request):
+        queries = request.data.get('queries')
+        # print(queries)
+        if queries is not list and not all(isinstance(q,str) for q in queries):
+            raise ValidationError('No queries list')
+
+        result_list = []
+        for q in queries:
+            result = self.get_queryset()
+            result_uo = UnityObject.objects.all()
+            for i in q.split(' '):
+                result = result.filter(name__icontains=i)
+                result_uo = result_uo.filter(name__icontains=i)
+            result_list.append(ContainerSerializer(result, many=True).data + UnityObjectSerializer(result_uo, many=True).data)
+        return Response(result_list)
+
 
 class AssetBundleViewSet(viewsets.GenericViewSet):
     """
@@ -276,6 +293,29 @@ class AssetBundleViewSet(viewsets.GenericViewSet):
             # remove too long base64 data
             if d.get('image data'): d.pop('image data')
             return Response(d)
+
+    @action(detail=False, methods=['POST'], url_path='containers/multi_retrieve/?')
+    def multi_retrieve(self, request):
+        queries = request.data.get('queries')
+        if queries is not list and not all((isinstance(q,list) and len(q)==2 and isinstance(q[0],str) and isinstance(q[1],str)) for q in queries):
+            raise ValidationError('No queries list')
+        result = []
+        ab_cache = dict()
+        for md5,path_id in queries:
+            asset_index, path_id = ab_utils.split_path_id(path_id)
+            if ab_cache.get(md5,None) is None:
+                ab_cache[md5] = get_object_or_404(AssetBundle,md5=md5)
+            info, data = ab_cache[md5].get_unity_object_by_path_id(asset_index, path_id)
+
+            if data is None:
+                result.append(None)
+            else:
+                # TODO: maybe bugs
+                d = ab_utils.strip_pointers(data) if type(data) is OrderedDict else ab_utils.strip_pointers(data._obj)
+                # remove too long base64 data
+                if d.get('image data'): d.pop('image data')
+                result.append(d)
+        return Response(result)
 
     @action(detail=True, url_path='containers/(?P<path_id>([0-9]+:)?-?[0-9]+)/data')
     def containers_data(self, request, md5=None, path_id=None, *args, **kwargs):
