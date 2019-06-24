@@ -26,8 +26,10 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
 from pydub import AudioSegment
 from rest_framework import viewsets, mixins, permissions
+from rest_framework.decorators import permission_classes as permission_classes_d
 from rest_framework.decorators import action
 from rest_framework.exceptions import bad_request, ValidationError
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from unitypack.engine.texture import TextureFormat
 
@@ -217,7 +219,7 @@ class ContainerViewSet(viewsets.GenericViewSet):
     API endpoint that allows containers to be viewed or edited.
     """
     authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
-    permission_classes = (permissions.DjangoModelPermissions,)
+    permission_classes = (IsAuthenticated,)
 
     queryset = Container.objects.all()
 
@@ -238,7 +240,7 @@ class ContainerViewSet(viewsets.GenericViewSet):
         # TODO: serializer filter by imperium
         return Response(ContainerSerializer(result, many=True).data + UnityObjectSerializer(result_uo, many=True).data)
 
-    @action(detail=False, methods=['GET'])
+    @action(detail=False, methods=['POST'])
     def multi_search(self, request):
         queries = request.data.get('queries')
         # print(queries)
@@ -261,7 +263,7 @@ class AssetBundleViewSet(viewsets.GenericViewSet):
     API endpoint that allows containers to be viewed or edited.
     """
     authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
-    permission_classes = (permissions.DjangoModelPermissions,)
+    permission_classes = (IsAuthenticated,)
 
     queryset = AssetBundle.objects.all()
     serializer_class = AssetBundleSerializer
@@ -294,7 +296,7 @@ class AssetBundleViewSet(viewsets.GenericViewSet):
             if d.get('image data'): d.pop('image data')
             return Response(d)
 
-    @action(detail=False, methods=['GET'], url_path='containers/multi_retrieve/?')
+    @action(detail=False, methods=['POST'], url_path='containers/multi_retrieve/?')
     def multi_retrieve(self, request):
         queries = request.data.get('queries')
         if not isinstance(queries,list) or not all((isinstance(q,list) and len(q)==2 and isinstance(q[0],str) and isinstance(q[1],str)) for q in queries):
