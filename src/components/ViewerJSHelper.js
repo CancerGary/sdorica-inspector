@@ -87,7 +87,7 @@ export default class ViewerJSHelper {
       var result = eval(code)(data);
       if (callback) {
         // for async result
-        if (result.__proto__ === Promise.prototype) {
+        if (result && (typeof result.then == "function")) {
           return result.then(callback);
         } else {
           // console.log('result:', result);
