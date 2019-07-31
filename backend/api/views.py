@@ -26,10 +26,9 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
 from pydub import AudioSegment
 from rest_framework import viewsets, mixins, permissions
-from rest_framework.decorators import permission_classes as permission_classes_d
 from rest_framework.decorators import action
 from rest_framework.exceptions import bad_request, ValidationError
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from unitypack.engine.texture import TextureFormat
 
@@ -244,7 +243,7 @@ class ContainerViewSet(viewsets.GenericViewSet):
     def multi_search(self, request):
         queries = request.data.get('queries')
         # print(queries)
-        if not isinstance(queries,list) or not all(isinstance(q,str) for q in queries):
+        if not isinstance(queries, list) or not all(isinstance(q, str) for q in queries):
             raise ValidationError('No queries list')
 
         result_list = []
@@ -254,7 +253,8 @@ class ContainerViewSet(viewsets.GenericViewSet):
             for i in q.split(' '):
                 result = result.filter(name__icontains=i)
                 result_uo = result_uo.filter(name__icontains=i)
-            result_list.append(ContainerSerializer(result, many=True).data + UnityObjectSerializer(result_uo, many=True).data)
+            result_list.append(
+                ContainerSerializer(result, many=True).data + UnityObjectSerializer(result_uo, many=True).data)
         return Response(result_list)
 
 
@@ -299,13 +299,15 @@ class AssetBundleViewSet(viewsets.GenericViewSet):
     @action(detail=False, methods=['POST'], url_path='containers/multi_retrieve/?')
     def multi_retrieve(self, request):
         queries = request.data.get('queries')
-        if not isinstance(queries,list) or not all((isinstance(q,list) and len(q)==2 and isinstance(q[0],str) and isinstance(q[1],str)) for q in queries):
+        if not isinstance(queries, list) or not all(
+                (isinstance(q, list) and len(q) == 2 and isinstance(q[0], str) and isinstance(q[1], str)) for q in
+                queries):
             raise ValidationError('No queries list')
         result = []
         ab_cache = dict()
-        for md5,path_id in queries:
+        for md5, path_id in queries:
             asset_index, path_id = ab_utils.split_path_id(path_id)
-            if ab_cache.get(md5,None) is None:
+            if ab_cache.get(md5, None) is None:
                 try:
                     ab_cache[md5] = AssetBundle.objects.get(md5=md5)
                 except:
@@ -316,7 +318,8 @@ class AssetBundleViewSet(viewsets.GenericViewSet):
                     result.append(None)
                 else:
                     # TODO: maybe bugs
-                    d = ab_utils.strip_pointers(data) if type(data) is OrderedDict else ab_utils.strip_pointers(data._obj)
+                    d = ab_utils.strip_pointers(data) if type(data) is OrderedDict else ab_utils.strip_pointers(
+                        data._obj)
                     # remove too long base64 data
                     if d.get('image data'): d.pop('image data')
                     result.append(d)
@@ -412,6 +415,14 @@ class SpineViewSet(viewsets.ViewSet):
 
     # def retrieve(self, request, spine_uuid=None):
     #     return Response(spine_uuid)
+
+    def get_permissions(self):
+        '''
+        A dummy way to fix spine-ts loadTexture `crossOrigin: "anonymous"` problem
+        '''
+        if self.action == 'retrieve_image':
+            return [AllowAny(), ]
+        return super(SpineViewSet, self).get_permissions()
 
     def get_ab_o(self, info):
         return AssetBundle.objects.get(md5=info['md5']).get_unity_object_by_name(info['name'])
