@@ -7,7 +7,7 @@ NProgress.configure({showSpinner: false});
 
 let $backend = axios.create({
   //baseURL: '/api',
-  timeout: 20000,
+  timeout: 60000,
   headers: {
     'Content-Type': 'application/json',
     'X-CSRFToken': Cookies.get('csrftoken')
