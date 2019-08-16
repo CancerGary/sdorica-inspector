@@ -1,48 +1,39 @@
-import errno
+import json
+import hashlib
 import json
 import os
 import pickle
 import re
-import socket
+import subprocess
 import uuid
 from collections import OrderedDict
 from io import BytesIO
 from zipfile import ZipFile
 
-import pydub
 import redis
 from PIL import Image
-from celery.result import AsyncResult
+from django.conf import settings
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import Http404, HttpResponse
-from django.http.response import HttpResponseBadRequest, FileResponse
-from django.shortcuts import redirect, render, get_object_or_404
-from django_filters.rest_framework import DjangoFilterBackend
-from django.conf import settings
-from django.core.files.storage import default_storage
-from django.views.generic import TemplateView
-from django.contrib.auth import authenticate, login
-from django.contrib.auth.decorators import login_required
+from django.http.response import FileResponse
+from django.shortcuts import redirect, get_object_or_404
 from django.views.decorators.cache import never_cache
+from django.views.generic import TemplateView
+from django_filters.rest_framework import DjangoFilterBackend
 from pydub import AudioSegment
-from rest_framework import viewsets, mixins, permissions
+from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
-from rest_framework.exceptions import bad_request, ValidationError
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from unitypack.engine.texture import TextureFormat
 
 from backend.api import imperium_reader, ab_utils, skel2json
+from . import tasks
 from .models import GameVersion, GameVersionSerializer, Imperium, ImperiumSerializer, ImperiumDiffSerializer, \
     ImperiumType, ImperiumABDiffSerializer, ConvertRule, ConvertRuleSerializer, Container, ContainerSerializer, \
     AssetBundleSerializer, AssetBundle, ViewerJS, ViewerJSSerializer, UnityObject, UnityObjectSerializer
-import hashlib
-
-from . import tasks
-from .celery import app as celery_app
-
-from . import ETC2ImagePlugin
-import subprocess
 
 # Serve Vue Application
 index_view = login_required(never_cache(TemplateView.as_view(template_name='index.html')))
@@ -60,13 +51,14 @@ def handle_image_data(object_data):
     try:
         f = BytesIO()
         object_data.image.transpose(Image.FLIP_TOP_BOTTOM).save(f, 'png')
-        return f.getvalue()
+        f.seek(0)
+        return f
     except NotImplementedError:
         pass
     data_md5 = hashlib.md5(object_data.image_data).hexdigest()
     cache_file_path = os.path.join(settings.INSPECTOR_DATA_ROOT, 'object_cache', data_md5)
     if os.path.exists(cache_file_path):
-        return open(cache_file_path, 'rb').read()
+        return open(cache_file_path, 'rb')
     else:
         # print(object_data.format,object_data.format.pixel_format)
         args = ["RGB" if object_data.format.pixel_format in ("RGB", "RGB;16") else (
@@ -85,12 +77,13 @@ def handle_image_data(object_data):
             if p.returncode == 0:
                 os.remove(cache_file_path + '.pypy.data')
                 os.remove(cache_file_path + '.pypy.pkl')
-                return open(cache_file_path, 'rb').read()
+                return open(cache_file_path, 'rb')
         else:
             f = BytesIO()
             Image.frombytes(*args).transpose(Image.FLIP_TOP_BOTTOM).save(f, 'png')
             open(cache_file_path, 'wb').write(f.getvalue())
-            return f.getvalue()
+            f.seek(0)
+            return f
 
 
 # disable csrf check
@@ -336,22 +329,32 @@ class AssetBundleViewSet(viewsets.GenericViewSet):
         asset_index, path_id = ab_utils.split_path_id(path_id)
         info, data = self.get_object().get_unity_object_by_path_id(asset_index, path_id)
         as_attachment = True if request.query_params.get('attachment') else False
+        jpeg_format = True if request.query_params.get('jpeg') else False
         if data is None:
             raise Http404
         else:
             if info.type == 'Texture2D':
-                name = "%s.png" % (data.name) if data.name else "data.png"
-                return FileResponse(BytesIO(handle_image_data(data)), as_attachment=as_attachment, filename=name)
+                name = "%s.%s" % ((data.name) if data.name else "data", 'jpg' if jpeg_format else "png")
+                if jpeg_format:
+                    f = BytesIO()
+                    Image.open(handle_image_data(data)).convert('RGB').save(f, 'jpeg')
+                    f.seek(0)
+                    return FileResponse(f, as_attachment=as_attachment, filename=name)
+                else:
+                    return FileResponse(handle_image_data(data), as_attachment=as_attachment, filename=name)
             elif info.type == 'Sprite':
-                name = "%s.png" % (data.name) if data.name else "data.png"
+                name = "%s.%s" % ((data.name) if data.name else "data", 'jpg' if jpeg_format else "png")
                 rect = data.rd['textureRect']
                 # load texture first, then crop the area
-                img = Image.open(BytesIO(handle_image_data(data.rd['texture'].object.read()))) \
+                img = Image.open(handle_image_data(data.rd['texture'].object.read())) \
                     .transpose(Image.FLIP_TOP_BOTTOM) \
                     .crop(box=(rect['x'], rect['y'], rect['x'] + rect['width'], rect['y'] + rect['height'])) \
                     .transpose(Image.FLIP_TOP_BOTTOM)
                 f = BytesIO()
-                img.save(f, 'png')
+                if jpeg_format:
+                    img.convert("RGB").save(f, 'jpeg')
+                else:
+                    img.save(f, 'png')
                 f.seek(0)
                 return FileResponse(f, as_attachment=as_attachment, filename=name)
             elif info.type == 'AudioClip':
@@ -417,9 +420,9 @@ class SpineViewSet(viewsets.ViewSet):
     #     return Response(spine_uuid)
 
     def get_permissions(self):
-        '''
+        """
         A dummy way to fix spine-ts loadTexture `crossOrigin: "anonymous"` problem
-        '''
+        """
         if self.action == 'retrieve_image':
             return [AllowAny(), ]
         return super(SpineViewSet, self).get_permissions()
@@ -458,7 +461,7 @@ class SpineViewSet(viewsets.ViewSet):
                 if info.type != 'Texture2D': raise TypeError
                 # resize by page description
                 pil.append((page[0],
-                            Image.open(BytesIO(handle_image_data(texture_data))).resize((int(page[1]), int(page[2])))))
+                            Image.open(handle_image_data(texture_data)).resize((int(page[1]), int(page[2])))))
         except Exception as e:
             raise ValidationError("Atlas data error %s" % (e))
 

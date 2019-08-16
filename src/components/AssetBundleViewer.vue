@@ -84,6 +84,15 @@
                 </v-btn>
                 <span>Download Attachment</span>
               </v-tooltip>
+              <v-tooltip bottom v-show="source">
+                <v-btn icon slot="activator" @click="">
+                  <a :href="source + '?attachment=1&jpeg=1'" download
+                     style="color: inherit;text-decoration: none;">
+                    <v-icon>mdi-image</v-icon>
+                  </a>
+                </v-btn>
+                <span>Download As JPEG (RGB)</span>
+              </v-tooltip>
               <v-tooltip bottom v-show="!showMedia">
                 <v-btn icon slot="activator" @click="interpreterEditor = !interpreterEditor">
                   <v-icon>code</v-icon>
