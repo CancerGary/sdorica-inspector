@@ -14,3 +14,7 @@ export const updateConvertRule = (state, payload) => {
 export const setLoading = (state, payload) => {
   state.onLoading = payload
 }
+
+export const setDarkMode = (state, payload) => {
+  state.darkMode = payload
+}

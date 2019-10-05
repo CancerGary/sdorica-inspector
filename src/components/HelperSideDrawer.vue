@@ -33,6 +33,14 @@
           <v-list-tile-title>Search selected</v-list-tile-title>
         </v-list-tile-content>
       </v-list-tile>
+      <v-list-tile @click="toggleDark">
+        <v-list-tile-action>
+          <v-icon>mdi-theme-light-dark</v-icon>
+        </v-list-tile-action>
+        <v-list-tile-content>
+          <v-list-tile-title>Toggle Light / Dark</v-list-tile-title>
+        </v-list-tile-content>
+      </v-list-tile>
       <v-list-tile @click="toLogout">
         <v-list-tile-action>
           <v-icon>mdi-logout-variant</v-icon>
@@ -176,10 +184,17 @@
       },
       toLogout() {
         confirm('Are you sure to logout?') && (window.location.href = '/api-auth/logout/?next=/');
+      },
+      toggleDark() {
+        // this.$vuetify.dark = this.dark;
+        // console.log(this.darkMode);
+
+        this.$store.commit('setDarkMode', !this.darkMode);
+        localStorage.setItem('darkMode', this.darkMode);
       }
     },
     computed: {
-      ...mapState(['convertRule']),
+      ...mapState(['convertRule', 'darkMode']),
     },
   }
 </script>

@@ -1,17 +1,17 @@
 <template>
   <div id="app" @click="convertSelectedText" @mouseup="changeConvertTooltipPosition" v-touchend="tooltipTouchend">
-    <v-app id="inspire">
-<!--      <div id="progress" v-show="loading">-->
-<!--        <div role="progressbar" aria-valuemin="0" aria-valuemax="100" class="v-progress-linear"-->
-<!--             style="height: 3px; margin: 0">-->
-<!--          <div class="v-progress-linear__background" style="height: 7px; opacity: 0.3; width: 100%;"></div>-->
-<!--          <div class="v-progress-linear__bar">-->
-<!--            <div class="v-progress-linear__bar__indeterminate v-progress-linear__bar__indeterminate&#45;&#45;active">-->
-<!--              <div class="v-progress-linear__bar__indeterminate long error"></div>-->
-<!--              <div class="v-progress-linear__bar__indeterminate short error"></div>-->
-<!--            </div>&lt;!&ndash;&ndash;&gt;</div>-->
-<!--        </div>-->
-<!--      </div>-->
+    <v-app id="inspire" :dark="darkMode">
+      <!--      <div id="progress" v-show="loading">-->
+      <!--        <div role="progressbar" aria-valuemin="0" aria-valuemax="100" class="v-progress-linear"-->
+      <!--             style="height: 3px; margin: 0">-->
+      <!--          <div class="v-progress-linear__background" style="height: 7px; opacity: 0.3; width: 100%;"></div>-->
+      <!--          <div class="v-progress-linear__bar">-->
+      <!--            <div class="v-progress-linear__bar__indeterminate v-progress-linear__bar__indeterminate&#45;&#45;active">-->
+      <!--              <div class="v-progress-linear__bar__indeterminate long error"></div>-->
+      <!--              <div class="v-progress-linear__bar__indeterminate short error"></div>-->
+      <!--            </div>&lt;!&ndash;&ndash;&gt;</div>-->
+      <!--        </div>-->
+      <!--      </div>-->
       <v-navigation-drawer
           fixed
           v-model="drawer"
@@ -232,6 +232,8 @@
       }
     },
     created() {
+      this.$store.commit('setDarkMode', localStorage.getItem('darkMode') === 'true');
+
       this.$http.get('/api/convert_rule/').then((response) => {
         this.$store.commit('updateConvertRule', response.data);
       });
@@ -240,7 +242,7 @@
       })
     },
     computed: {
-      ...mapState(['snackbarMessage', 'onLoading']),
+      ...mapState(['snackbarMessage', 'onLoading', 'darkMode']),
       snackbarState: {
         get: function () {
           return this.$store.state.snackbarState

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-toolbar flat color="white">
+    <v-toolbar flat>
       <v-toolbar-title>Game Version</v-toolbar-title>
       <v-divider
           class="mx-2"

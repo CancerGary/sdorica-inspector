@@ -2,6 +2,7 @@ const state = {
   snackbarMessage: "",
   snackbarState: false,
   convertRule: [],
-  onLoading: false
+  onLoading: false,
+  darkMode: false
 };
 export default state;
