@@ -233,7 +233,7 @@
     },
     created() {
       this.$store.commit('setDarkMode', localStorage.getItem('darkMode') === 'true');
-      this.$vuetify.lang.current = localStorage.getItem('locale');
+      this.$vuetify.lang.current = localStorage.getItem('locale') || 'en';
 
       this.$http.get('/api/convert_rule/').then((response) => {
         this.$store.commit('updateConvertRule', response.data);
