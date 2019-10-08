@@ -6,7 +6,7 @@
           <v-icon>create</v-icon>
         </v-list-tile-action>
         <v-list-tile-content>
-          <v-list-tile-title>New convert rule</v-list-tile-title>
+          <v-list-tile-title>{{ $vuetify.t('$vuetify.sideHelper.newConvertRule') }}</v-list-tile-title>
         </v-list-tile-content>
       </v-list-tile>
       <v-list-tile @click.stop="ruleListDialog=true">
@@ -14,7 +14,7 @@
           <v-icon>list_alt</v-icon>
         </v-list-tile-action>
         <v-list-tile-content>
-          <v-list-tile-title>Convert rules list</v-list-tile-title>
+          <v-list-tile-title>{{ $vuetify.t('$vuetify.sideHelper.convertRulesList') }}</v-list-tile-title>
         </v-list-tile-content>
       </v-list-tile>
       <v-list-tile v-show="currentABData" @click="promptUrl">
@@ -22,7 +22,7 @@
           <v-icon>link</v-icon>
         </v-list-tile-action>
         <v-list-tile-content>
-          <v-list-tile-title>Prompt selected md5 URL</v-list-tile-title>
+          <v-list-tile-title>{{ $vuetify.t('$vuetify.sideHelper.promptMD5url') }}</v-list-tile-title>
         </v-list-tile-content>
       </v-list-tile>
       <v-list-tile @click="toContainerSearch">
@@ -30,7 +30,7 @@
           <v-icon>search</v-icon>
         </v-list-tile-action>
         <v-list-tile-content>
-          <v-list-tile-title>Search selected</v-list-tile-title>
+          <v-list-tile-title>{{ $vuetify.t('$vuetify.sideHelper.searchSelected') }}</v-list-tile-title>
         </v-list-tile-content>
       </v-list-tile>
       <v-list-tile @click="toggleDark">
@@ -38,7 +38,15 @@
           <v-icon>mdi-theme-light-dark</v-icon>
         </v-list-tile-action>
         <v-list-tile-content>
-          <v-list-tile-title>Toggle Light / Dark</v-list-tile-title>
+          <v-list-tile-title>{{ $vuetify.t('$vuetify.sideHelper.darkMode') }}</v-list-tile-title>
+        </v-list-tile-content>
+      </v-list-tile>
+      <v-list-tile @click="changeLocale">
+        <v-list-tile-action>
+          <v-icon>mdi-google-translate</v-icon>
+        </v-list-tile-action>
+        <v-list-tile-content>
+          <v-list-tile-title>{{ $vuetify.t('$vuetify.sideHelper.locale') }}</v-list-tile-title>
         </v-list-tile-content>
       </v-list-tile>
       <v-list-tile @click="toLogout">
@@ -46,7 +54,7 @@
           <v-icon>mdi-logout-variant</v-icon>
         </v-list-tile-action>
         <v-list-tile-content>
-          <v-list-tile-title>Logout</v-list-tile-title>
+          <v-list-tile-title>{{ $vuetify.t('$vuetify.sideHelper.logout') }}</v-list-tile-title>
         </v-list-tile-content>
       </v-list-tile>
     </v-list>
@@ -57,14 +65,13 @@
         width="500" persistent
     >
       <v-card>
-        <v-card-title class="headline">Edit Convert Rule</v-card-title>
+        <v-card-title class="headline">{{ $vuetify.t('$vuetify.sideHelper.editConvertRule') }}</v-card-title>
         <v-card-text>
-          <p>Pattern supports regular expression. You can select the code you want to create pattern for before opening
-            editor. You can also submit by API
-            <code>POST /api/convert_rule/ {pattern:String,text:String}</code>.
-          </p>
-          <v-text-field label="Pattern" v-model="ruleOnEditing.pattern"></v-text-field>
-          <v-textarea label="Text" rows="2" v-model="ruleOnEditing.text"></v-textarea>
+          <div v-html="$vuetify.t('$vuetify.sideHelper.editConvertRuleIntro')"></div>
+          <v-text-field :label="$vuetify.t('$vuetify.sideHelper.editPattern')"
+                        v-model="ruleOnEditing.pattern"></v-text-field>
+          <v-textarea :label="$vuetify.t('$vuetify.sideHelper.editText')" rows="2"
+                      v-model="ruleOnEditing.text"></v-textarea>
         </v-card-text>
         <v-divider></v-divider>
         <v-card-actions>
@@ -73,14 +80,14 @@
               flat
               @click="ruleEditDialog=false"
           >
-            Cancel
+            {{ $vuetify.t('$vuetify.form.cancel') }}
           </v-btn>
           <v-btn
               color="primary"
               flat
               @click="submitRuleEdit()"
           >
-            Submit
+            {{ $vuetify.t('$vuetify.form.submit') }}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -91,7 +98,7 @@
         width="500"
     >
       <v-card>
-        <v-card-title class="headline">Convert Rules</v-card-title>
+        <v-card-title class="headline">{{ $vuetify.t('$vuetify.sideHelper.convertRulesList') }}</v-card-title>
         <v-card-text>
           <v-list>
             <v-list-tile
@@ -191,6 +198,11 @@
 
         this.$store.commit('setDarkMode', !this.darkMode);
         localStorage.setItem('darkMode', this.darkMode);
+      },
+      changeLocale() {
+        let locales = ['en', 'zhHant'];
+        this.$vuetify.lang.current = locales[(locales.indexOf(this.$vuetify.lang.current) + 1) % locales.length];
+        localStorage.setItem('locale', this.$vuetify.lang.current);
       }
     },
     computed: {

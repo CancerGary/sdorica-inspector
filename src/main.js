@@ -24,7 +24,16 @@ import moment from "moment";
 
 Vue.prototype.$moment = moment;
 
-Vue.use(Vuetify)
+import zhHant from './locale/zh-Hant'
+import en from './locale/en'
+
+
+Vue.use(Vuetify, {
+  lang: {
+    locales: {zhHant, en},
+    current: 'zhHant'
+  }
+})
 
 // for tooltip touch event
 Vue.directive("touchend", {
