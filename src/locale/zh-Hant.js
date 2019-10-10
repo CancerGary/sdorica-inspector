@@ -22,6 +22,7 @@ export default {
     searchSelected:'搜尋選定文字',
     darkMode: '明暗外觀切換',
     locale: '更換語言',
+    eruda: '召喚Eruda (偵錯)',
     logout: '登出',
 
     editConvertRule: '編輯轉換規則',

@@ -49,6 +49,14 @@
           <v-list-tile-title>{{ $vuetify.t('$vuetify.sideHelper.locale') }}</v-list-tile-title>
         </v-list-tile-content>
       </v-list-tile>
+      <v-list-tile @click="eruda">
+        <v-list-tile-action>
+          <v-icon>mdi-bug</v-icon>
+        </v-list-tile-action>
+        <v-list-tile-content>
+          <v-list-tile-title>{{ $vuetify.t('$vuetify.sideHelper.eruda') }}</v-list-tile-title>
+        </v-list-tile-content>
+      </v-list-tile>
       <v-list-tile @click="toLogout">
         <v-list-tile-action>
           <v-icon>mdi-logout-variant</v-icon>
@@ -203,6 +211,16 @@
         let locales = ['en', 'zhHant'];
         this.$vuetify.lang.current = locales[(locales.indexOf(this.$vuetify.lang.current) + 1) % locales.length];
         localStorage.setItem('locale', this.$vuetify.lang.current);
+      },
+      eruda() {
+        (function () {
+          var script = document.createElement('script');
+          script.src = "//cdn.jsdelivr.net/npm/eruda";
+          document.body.appendChild(script);
+          script.onload = function () {
+            eruda.init()
+          }
+        })();
       }
     },
     computed: {

@@ -22,6 +22,7 @@ export default {
     searchSelected: 'Search selected',
     darkMode: 'Toggle light / dark',
     locale: 'Change locale',
+    eruda:'Call Eruda Console',
     logout: 'Logout',
 
     editConvertRule: 'Edit Convert Rule',
