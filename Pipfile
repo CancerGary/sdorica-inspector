@@ -4,14 +4,13 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-django = "<2.2"
+django = "==2.1.14"
 djangorestframework = "*"
 gunicorn = "*"
 whitenoise = "==4.0"
 dj-database-url = "*"
 "psycopg2" = "*"
 unitypack = "*"
-httpie = "*"
 coreapi = "*"
 coreapi-cli = "*"
 pyyaml = "*"
@@ -32,7 +31,9 @@ tornado = ">=4.2.0,<6.0.0"
 pydub = "*"
 urllib3 = ">=1.24.2"
 Jinja2 = ">=2.10.1"
-
+pillow = ">=6.2.0"
+httpie = ">=1.0.3"
+django-stubs = "==1.1.0"
 [dev-packages]
 
 [requires]
