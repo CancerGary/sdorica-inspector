@@ -1,6 +1,8 @@
 """ Production Settings """
 
 import os
+import secrets
+
 import dj_database_url
 from .dev import *
 
@@ -22,6 +24,8 @@ DATABASES = {
 ############
 # SECURITY #
 ############
+
+SECRET_KEY = os.getenv("SECRET_KEY", secrets.token_urlsafe(64))
 
 DEBUG = False
 # Set to your Domain here (eg. 'django-vue-template-demo.herokuapp.com')
