@@ -445,7 +445,7 @@ class SpineViewSet(viewsets.ViewSet):
             atlas_text = (b if isinstance(b, str) else b.decode('utf8'))
             if info.type != 'TextAsset': raise TypeError
             # http://esotericsoftware.com/spine-atlas-format
-            atlas_pages = re.findall('\n([^\\\.\n/]+?.png)\nsize: ?(\d+),(\d+)', atlas_text)
+            atlas_pages = re.findall('\n(.*?.png)\nsize: ?(\d+),(\d+)', atlas_text)
             # print(atlas_pages)
         except Exception as e:
             raise ValidationError("Atlas data error %s" % (e))
