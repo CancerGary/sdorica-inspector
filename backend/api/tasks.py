@@ -18,6 +18,7 @@ import traceback
 from django.core.cache import cache
 
 MARK_CACHE_TIMEOUT = 60 * 60
+AB_NAME_SKIP = ["scene.ab"]
 
 
 @app.task
@@ -129,7 +130,11 @@ def _add_to_imperium_set(finished_ab_info, imperium_id):
     ab_md5 = [w['H'] for k, w in data['A'].items()]
 
     # add relations by group
-    imperium.assetbundle_set.add(*AssetBundle.objects.filter(md5__in=ab_md5))
+    imperium.assetbundle_set.set([])
+    # django.db.utils.OperationalError: too many SQL variables
+    # SQLITE_MAX_VARIABLE_NUMBER = 999
+    for i in range(0, len(ab_md5), 500):
+        imperium.assetbundle_set.add(*list(AssetBundle.objects.filter(md5__in=ab_md5[i:i + 500])))
     # mark finished
     imperium.finished = True
     imperium.save()
@@ -144,6 +149,10 @@ def ab_list_task(imperium_id):
         os.makedirs(target_dir, exist_ok=True)
         subtasks_info = []
         for ab_name, each_dict in data['A'].items():
+            # TODO: scene.ab can't be parsed correctly
+            if ab_name in AB_NAME_SKIP:
+                logger.info("ab_list_task skip %s" % ab_name)
+                continue
             md5, uid, url = each_dict['H'], each_dict['I'], each_dict['L']
             target_md5 = os.path.join(target_dir, md5)
             cache_key = 'AB::' + md5

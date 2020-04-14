@@ -13,7 +13,7 @@ class ImperiumHandleError(Exception):
 def handle_file(f):
     # You have reinvented the wheel again!
     try:
-        j = msgpack.load(f, encoding='utf8')
+        j = msgpack.load(f)
         if j.get('C'):
             j['C'] = {k: sort_table_keys(j['C'][k]) for k in sorted(j['C'])}
         return j
