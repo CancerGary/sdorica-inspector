@@ -16,6 +16,7 @@ from django.utils.six import BytesIO
 from rest_framework import serializers
 from django.core.files.storage import default_storage
 from . import imperium_reader, ab_utils
+from .ab_utils import download_with_md5_validation
 
 
 class ImperiumType(Enum):
@@ -84,12 +85,15 @@ class AssetBundle(models.Model):
     imperiums = models.ManyToManyField(Imperium)
 
     def __init__(self, *args, **kwargs):
-        super(AssetBundle, self).__init__(*args,**kwargs)
+        super(AssetBundle, self).__init__(*args, **kwargs)
         self.bundle = None
 
     def load_unitypack(self):
         if not self.bundle:
-            self.bundle = unitypack.load(open(os.path.join(settings.INSPECTOR_DATA_ROOT, 'assetbundle', self.md5), 'rb'))
+            target = os.path.join(settings.INSPECTOR_DATA_ROOT, 'assetbundle', self.md5)
+            if not os.path.exists(target):
+                download_with_md5_validation(self.url, target, self.md5)
+            self.bundle = unitypack.load(open(target, 'rb'))
 
     def get_containers(self):
         try:
@@ -116,7 +120,7 @@ class AssetBundle(models.Model):
     def get_unity_object_by_path_id(self, asset_index, path_id):
         data = None
         info = None
-        if not self.bundle:self.load_unitypack()
+        if not self.bundle: self.load_unitypack()
         if asset_index:
             if asset_index < len(self.bundle.assets):
                 info = self.bundle.assets[asset_index].objects[path_id]
@@ -270,7 +274,7 @@ class ImperiumDiffSerializer(serializers.Serializer):
     show_type = serializers.BooleanField(required=False, default=False)
     show_index = serializers.BooleanField(required=False, default=True)
     cell_lines = serializers.BooleanField(required=False, default=False)
-    expand_lines = serializers.IntegerField(required=False,default=0)
+    expand_lines = serializers.IntegerField(required=False, default=0)
 
     def validate(self, data):
         if data['old'].type_id != data['new'].type_id:

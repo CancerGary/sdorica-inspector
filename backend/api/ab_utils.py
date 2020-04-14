@@ -1,8 +1,10 @@
 import base64
 import hashlib
+import os
 from collections import OrderedDict
 
 import fsb5
+import requests
 from unitypack.assetbundle import AssetBundle as upAssetBundle
 from unitypack.object import ObjectPointer
 import zlib
@@ -10,6 +12,32 @@ import zlib
 RECORD_UNITY_TYPES = ['Texture2D', 'TextAsset']
 
 md5 = lambda x: hashlib.md5(x).hexdigest()
+
+
+class MD5ValidationError(Exception):
+    pass
+
+
+def download_with_md5_validation(url, target_file, md5_hash):
+    if os.path.exists(target_file):
+        if md5(open(target_file, 'rb').read()) == md5_hash:
+            return
+    retry = 5
+    while True:
+        try:
+            c = requests.get(url, timeout=5).content
+            if md5(c) != md5_hash:
+                raise MD5ValidationError("The content of %s doesn't match %s" % (url, md5))
+            open(target_file, 'wb').write(c)
+            break
+        except (requests.RequestException, MD5ValidationError) as e:
+            if retry:
+                retry -= 1
+                # traceback.print_exc()
+                continue
+            else:
+                raise e
+    return
 
 
 def get_containers_from_ab(bundle: upAssetBundle) -> dict:

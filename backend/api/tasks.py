@@ -8,7 +8,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-from .ab_utils import get_containers_from_ab, get_objects_from_ab
+from .ab_utils import get_containers_from_ab, get_objects_from_ab, download_with_md5_validation
 from .models import Imperium, AssetBundle, Container, UnityObject, UnityObjectRelationship
 import unitypack
 from .celery import app
@@ -36,27 +36,11 @@ def _ab_task_db_index(ab_info, target):
 
 def _ab_task_download(ab_info, target):
     md5, ab_name, url = ab_info
-    target_md5 = os.path.join(target, md5)
-    if os.path.exists(target_md5):
-        if hashlib.md5(open(target_md5, 'rb').read()).hexdigest() == md5:
-            # print('pass:',md5,uid)
-            return md5, ab_name, url, target_md5
+    target_file = os.path.join(target, md5)
 
     # print('start:', md5, uid, url)
-    retry = 5
-    while True:
-        try:
-            c = requests.get(url, timeout=5).content
-            open(target_md5, 'wb').write(c)
-            break
-        except requests.RequestException as e:
-            if retry:
-                retry -= 1
-                # traceback.print_exc()
-                continue
-            else:
-                raise e
-    return md5, ab_name, url, target_md5
+    download_with_md5_validation(url, target_file, md5)
+    return md5, ab_name, url, target_file
 
 
 @app.task
